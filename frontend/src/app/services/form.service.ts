@@ -13,8 +13,8 @@ export class FormService {
     this.mainForm = this.fb.group({
       boxJobs: this.fb.array([]),
       fileWatchers: this.fb.array([]),
-      dqJobs: this.fb.array([]),
-      ingestionJobs: this.fb.array([])
+      cmdJobs: this.fb.array([]),
+      cfwJobs: this.fb.array([]) // renamed from ingestionJobs
     });
 
     this.mainForm.valueChanges.pipe(
@@ -33,12 +33,12 @@ export class FormService {
     return this.mainForm.get('fileWatchers') as FormArray;
   }
 
-  get dqJobs(): FormArray {
-    return this.mainForm.get('dqJobs') as FormArray;
+  get cmdJobs(): FormArray {
+    return this.mainForm.get('cmdJobs') as FormArray;
   }
 
-  get ingestionJobs(): FormArray {
-    return this.mainForm.get('ingestionJobs') as FormArray;
+  get cfwJobs(): FormArray {
+    return this.mainForm.get('cfwJobs') as FormArray;
   }
 
   loadFormsFromLocalStorage() {
@@ -49,8 +49,8 @@ export class FormService {
 
       parsedData.boxJobs.forEach((jobData: any) => this.boxJobs.push(this.createBoxJobForm(jobData)));
       parsedData.fileWatchers.forEach((jobData: any) => this.fileWatchers.push(this.createFileWatcherForm(jobData)));
-      parsedData.dqJobs.forEach((jobData: any) => this.dqJobs.push(this.createDQJobForm(jobData)));
-      parsedData.ingestionJobs.forEach((jobData: any) => this.ingestionJobs.push(this.createIngestionJobForm(jobData)));
+      parsedData.cmdJobs.forEach((jobData: any) => this.cmdJobs.push(this.createCmdJobForm(jobData)));
+      parsedData.cfwJobs.forEach((jobData: any) => this.cfwJobs.push(this.createCfwJobForm(jobData)));
     }
   }
 
@@ -65,12 +65,12 @@ export class FormService {
   clearLocalStorage() {
     localStorage.removeItem(this.storageKey);
   }
-  
+
   clearAllForms() {
     this.boxJobs.clear();
     this.fileWatchers.clear();
-    this.dqJobs.clear();
-    this.ingestionJobs.clear();
+    this.cmdJobs.clear();
+    this.cfwJobs.clear();
   }
 
   createBoxJobForm(data?: any): FormGroup {
@@ -125,7 +125,7 @@ export class FormService {
     return formGroup;
   }
 
-  createDQJobForm(data?: any): FormGroup {
+  createCmdJobForm(data?: any): FormGroup {
     const formGroup = this.fb.group({
       description: ['', Validators.required],
       machine: ['', Validators.required],
@@ -146,7 +146,7 @@ export class FormService {
     return formGroup;
   }
 
-  createIngestionJobForm(data?: any): FormGroup {
+  createCfwJobForm(data?: any): FormGroup {
     const formGroup = this.fb.group({
       description: ['', Validators.required],
       machine: ['', Validators.required],
@@ -207,4 +207,4 @@ export class FormService {
 
     return jil;
   }
-} 
+}

@@ -1,17 +1,17 @@
 import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
-import { FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { FormService } from '../../services/form.service';
 
 @Component({
-  selector: 'app-ingestion-job',
+  selector: 'app-cmd-job',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
-  templateUrl: './ingestion-job.component.html',
-  styleUrl: './ingestion-job.component.css'
+  templateUrl: './cmd-job.component.html',
+  styleUrls: ['./cmd-job.component.css']
 })
-export class IngestionJobComponent implements OnInit {
-  @Input() ingestionJobForm!: FormGroup;
+export class CmdJobComponent implements OnInit {
+  @Input() cmdJobForm!: FormGroup;
   @Input() boxJobNaming: string = '';
   @Output() formChange = new EventEmitter<void>();
   @Output() delete = new EventEmitter<void>();
@@ -25,10 +25,11 @@ export class IngestionJobComponent implements OnInit {
 
   ngOnInit() {
     this.updateAutoFields();
-    this.ingestionJobForm.valueChanges.subscribe(() => this.updateAutoFields());
+    this.cmdJobForm.valueChanges.subscribe(() => this.updateAutoFields());
   }
 
   updateAutoFields() {
+    // insert_job: same as boxJobNaming, but last value after _ is BOX
     const parts = this.boxJobNaming.split('_');
     this.insertJob = parts.slice(0, -1).concat('BOX').join('_');
     this.boxName = this.insertJob;
@@ -48,7 +49,7 @@ export class IngestionJobComponent implements OnInit {
   }
 
   clearForm() {
-    const defaultForm = this.formService.createIngestionJobForm();
-    this.ingestionJobForm.reset(defaultForm.getRawValue());
+    const defaultForm = this.formService.createCmdJobForm();
+    this.cmdJobForm.reset(defaultForm.getRawValue());
   }
-} 
+}

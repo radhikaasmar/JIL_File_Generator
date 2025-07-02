@@ -4,8 +4,8 @@ import { CommonModule } from '@angular/common';
 import { BoxJobComponent } from '../components/box-job/box-job.component';
 import { FileWatcherComponent } from '../components/file-watcher/file-watcher.component';
 import { JilOutputComponent } from '../components/jil-output/jil-output.component';
-import { DqJobComponent } from '../components/dq-job/dq-job.component';
-import { IngestionJobComponent } from '../components/ingestion-job/ingestion-job.component';
+import { CmdJobComponent } from '../components/cmd-job/cmd-job.component';
+import { CfwJobComponent } from '../components/cfw-job/cfw-job.component';
 import { FormService } from '../services/form.service';
 import { AbstractControl } from '@angular/forms';
 
@@ -14,7 +14,7 @@ import { AbstractControl } from '@angular/forms';
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
   standalone: true,
-  imports: [CommonModule, BoxJobComponent, FileWatcherComponent, JilOutputComponent, DqJobComponent, IngestionJobComponent]
+  imports: [CommonModule, BoxJobComponent, FileWatcherComponent, JilOutputComponent, CmdJobComponent, CfwJobComponent]
 })
 export class DashboardComponent implements OnInit {
   generatedJIL: string = '';
@@ -58,11 +58,11 @@ export class DashboardComponent implements OnInit {
   get fileWatcherJobs(): FormArray {
     return this.formService.fileWatchers;
   }
-  get dqJobs(): FormArray {
-    return this.formService.dqJobs;
+  get cmdJobs(): FormArray {
+    return this.formService.cmdJobs;
   }
-  get ingestionJobs(): FormArray {
-    return this.formService.ingestionJobs;
+  get cfwJobs(): FormArray {
+    return this.formService.cfwJobs;
   }
 
   addInitialBoxJob() {
@@ -71,7 +71,7 @@ export class DashboardComponent implements OnInit {
       this.boxJobs.push(boxJobForm);
     }
   }
-  
+
   updateNamingConventions(boxJobForm: FormGroup) {
     const v = boxJobForm.getRawValue();
     const csi = v.csi || '';
@@ -99,24 +99,24 @@ export class DashboardComponent implements OnInit {
     this.fileWatcherJobs.push(this.formService.createFileWatcherForm());
   }
 
-  addDQJob() {
-    this.dqJobs.push(this.formService.createDQJobForm());
+  addCmdJob() {
+    this.cmdJobs.push(this.formService.createCmdJobForm());
   }
 
-  addIngestionJob() {
-    this.ingestionJobs.push(this.formService.createIngestionJobForm());
+  addCfwJob() {
+    this.cfwJobs.push(this.formService.createCfwJobForm());
   }
 
   onDeleteFileWatcherJob(index: number) {
     this.fileWatcherJobs.removeAt(index);
   }
 
-  onDeleteDQJob(index: number) {
-    this.dqJobs.removeAt(index);
+  onDeleteCmdJob(index: number) {
+    this.cmdJobs.removeAt(index);
   }
 
-  onDeleteIngestionJob(index: number) {
-    this.ingestionJobs.removeAt(index);
+  onDeleteCfwJob(index: number) {
+    this.cfwJobs.removeAt(index);
   }
 
   isFormInvalid(formArray: FormArray): boolean {
@@ -126,4 +126,4 @@ export class DashboardComponent implements OnInit {
   toFormGroup(control: AbstractControl): FormGroup {
     return control as FormGroup;
   }
-} 
+}

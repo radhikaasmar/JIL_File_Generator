@@ -1,13 +1,13 @@
 <div class="form-box">
   <div class="collapsible-header">
-    <h2>DQ Job Definition</h2>
+    <h2>CMD Job Definition</h2>
     <div style="display: flex; align-items: center; gap: 0.5rem;">
-      <button type="button" class="close-btn" (click)="$event.stopPropagation(); onDelete()" title="Delete DQ Job">&times;</button>
+      <button type="button" class="close-btn" (click)="$event.stopPropagation(); onDelete()" title="Delete CMD Job">&times;</button>
       <button type="button" class="collapse-btn" (click)="toggleCollapse()">{{ collapsed ? 'Expand' : 'Collapse' }}</button>
     </div>
   </div>
   <div *ngIf="!collapsed">
-    <div class="form-fields" [formGroup]="dqJobForm">
+    <div class="form-fields" [formGroup]="cmdJobForm">
       <div class="form-field">
         <label>Insert Job:</label>
         <input [value]="insertJob" readonly />
@@ -90,4 +90,4 @@
       <button (click)="onDelete()" class="close-btn">X</button>
     </div>
   </div>
-</div> 
+</div>

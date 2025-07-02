@@ -1,7 +1,7 @@
 <div class="dashboard-container">
   <form (ngSubmit)="generateJIL()">
     <ng-container *ngFor="let boxJob of boxJobs.controls; let i = index">
-      <app-box-job 
+      <app-box-job
         [boxJobForm]="toFormGroup(boxJob)"
         [namingConvention]="boxJobNaming"
         (formChange)="subscribeToBoxJobChanges(i)">
@@ -9,39 +9,39 @@
     </ng-container>
 
     <ng-container *ngFor="let fw of fileWatcherJobs.controls; let i = index">
-      <app-file-watcher 
+      <app-file-watcher
         [fileWatcherForm]="toFormGroup(fw)"
         [namingConvention]="fileWatcherNaming"
         (delete)="onDeleteFileWatcherJob(i)">
       </app-file-watcher>
     </ng-container>
 
-    <ng-container *ngFor="let dq of dqJobs.controls; let i = index">
-      <app-dq-job
-        [dqJobForm]="toFormGroup(dq)"
+    <ng-container *ngFor="let cmd of cmdJobs.controls; let i = index">
+      <app-cmd-job
+        [cmdJobForm]="toFormGroup(cmd)"
         [boxJobNaming]="boxJobNaming"
-        (delete)="onDeleteDQJob(i)">
-      </app-dq-job>
+        (delete)="onDeleteCmdJob(i)">
+      </app-cmd-job>
     </ng-container>
 
-    <ng-container *ngFor="let ing of ingestionJobs.controls; let i = index">
-      <app-ingestion-job
-        [ingestionJobForm]="toFormGroup(ing)"
+    <ng-container *ngFor="let cfw of cfwJobs.controls; let i = index">
+      <app-cfw-job
+        [cfwJobForm]="toFormGroup(cfw)"
         [boxJobNaming]="boxJobNaming"
-        (delete)="onDeleteIngestionJob(i)">
-      </app-ingestion-job>
+        (delete)="onDeleteCfwJob(i)">
+      </app-cfw-job>
     </ng-container>
 
     <div class="form-actions">
       <button type="button" (click)="addFileWatcherJob()">Add File Watcher Job</button>
-      <button type="button" (click)="addDQJob()">Add DQ Job</button>
-      <button type="button" (click)="addIngestionJob()">Add Ingestion Job</button>
-      <button type="submit" [disabled]="isFormInvalid(boxJobs) || isFormInvalid(fileWatcherJobs) || isFormInvalid(dqJobs) || isFormInvalid(ingestionJobs)">Generate txt JIL</button>
+      <button type="button" (click)="addCmdJob()">Add CMD Job</button>
+      <button type="button" (click)="addCfwJob()">Add CFW Job</button>
+      <button type="submit" [disabled]="isFormInvalid(boxJobs) || isFormInvalid(fileWatcherJobs) || isFormInvalid(cmdJobs) || isFormInvalid(cfwJobs)">Generate txt JIL</button>
     </div>
   </form>
 
-  <app-jil-output 
+  <app-jil-output
     [generatedJIL]="generatedJIL"
     [showJIL]="showJIL">
   </app-jil-output>
-</div> 
+</div>

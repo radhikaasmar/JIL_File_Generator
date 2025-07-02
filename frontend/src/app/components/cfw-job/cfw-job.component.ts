@@ -1,17 +1,17 @@
 import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
-import { FormGroup, FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { FormService } from '../../services/form.service';
 
 @Component({
-  selector: 'app-dq-job',
+  selector: 'app-cfw-job',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
-  templateUrl: './dq-job.component.html',
-  styleUrl: './dq-job.component.css'
+  templateUrl: './cfw-job.component.html',
+  styleUrl: './cfw-job.component.css'
 })
-export class DqJobComponent implements OnInit {
-  @Input() dqJobForm!: FormGroup;
+export class CfwJobComponent implements OnInit {
+  @Input() cfwJobForm!: FormGroup;
   @Input() boxJobNaming: string = '';
   @Output() formChange = new EventEmitter<void>();
   @Output() delete = new EventEmitter<void>();
@@ -20,16 +20,21 @@ export class DqJobComponent implements OnInit {
   insertJob = '';
   boxName = '';
   condition = '';
+  ingestionJobForm: FormGroup;
 
-  constructor(private formService: FormService) {}
+  constructor(private formService: FormService, private formBuilder: FormBuilder) {
+    this.ingestionJobForm = this.formBuilder.group({
+      // define your form controls here, e.g.:
+      // fieldName: ['', Validators.required]
+    });
+  }
 
   ngOnInit() {
     this.updateAutoFields();
-    this.dqJobForm.valueChanges.subscribe(() => this.updateAutoFields());
+    this.cfwJobForm.valueChanges.subscribe(() => this.updateAutoFields());
   }
 
   updateAutoFields() {
-    // insert_job: same as boxJobNaming, but last value after _ is BOX
     const parts = this.boxJobNaming.split('_');
     this.insertJob = parts.slice(0, -1).concat('BOX').join('_');
     this.boxName = this.insertJob;
@@ -49,7 +54,7 @@ export class DqJobComponent implements OnInit {
   }
 
   clearForm() {
-    const defaultForm = this.formService.createDQJobForm();
-    this.dqJobForm.reset(defaultForm.getRawValue());
+    const defaultForm = this.formService.createCfwJobForm();
+    this.cfwJobForm.reset(defaultForm.getRawValue());
   }
-} 
+}
