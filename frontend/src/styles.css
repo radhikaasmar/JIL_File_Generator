@@ -1,0 +1,123 @@
+/* You can add global styles to this file, and also import other style files */
+:root {
+  --primary-color: #3b82f6;
+  --primary-color-hover: #2563eb;
+  --secondary-color: #f4f4f5;
+  --background-color: #f9fafb;
+  --text-color: #111827;
+  --text-color-light: #6b7280;
+  --border-color: #d1d5db;
+  --border-radius: 8px;
+  --box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', 'Segoe UI', 'Roboto', Arial, sans-serif;
+  background: linear-gradient(120deg, #f8fafc 0%, #e0e7ef 100%);
+  min-height: 100vh;
+  color: #23272f;
+  transition: background 0.3s, color 0.3s;
+}
+
+.radio-group {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex: 1;
+}
+
+.radio-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-size: 0.97rem;
+}
+
+input[type="radio"] {
+  accent-color: var(--primary-color);
+  width: 1.15em;
+  height: 1.15em;
+}
+
+body.dark-theme input[type="radio"] {
+  accent-color: #a5b4fc;
+}
+
+.dashboard-container {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 8px 32px 0 rgba(31, 41, 55, 0.10);
+  border: 1px solid #e5e7eb;
+  margin-top: 2.5rem;
+  margin-bottom: 2.5rem;
+  padding: 2.5rem 2rem 2rem 2rem;
+  transition: background 0.3s, box-shadow 0.3s;
+}
+
+body.dark-theme .dashboard-container {
+  background: #23272f;
+  border: 1px solid #374151;
+  box-shadow: 0 8px 32px 0 rgba(0,0,0,0.25);
+}
+
+/* Dark Theme Global Styles */
+body.dark-theme {
+  --header-bg: rgba(35, 39, 47, 0.92);
+  --header-text: #f1f5f9;
+  --border-color: #374151;
+  --primary-color: #a5b4fc;
+  --primary-color-hover: #818cf8;
+  --secondary-color: #1f2937;
+  --text-color: #e5e7eb;
+  background: linear-gradient(120deg, #23272f 0%, #181a20 100%);
+  color: #f1f5f9;
+}
+
+body.dark-theme .app-header {
+  background: var(--header-bg);
+  color: var(--header-text);
+  border-bottom: 1px solid var(--border-color);
+}
+
+body.dark-theme .theme-toggle:hover {
+  background: #374151;
+}
+
+body.dark-theme .header-datetime:hover {
+  background: #23272f;
+  color: #a5b4fc;
+}
+
+body.dark-theme .form-box,
+body.dark-theme .collapsible-header,
+body.dark-theme .naming-convention {
+  background-color: var(--secondary-color);
+  border-color: var(--border-color);
+  color: var(--text-color);
+}
+body.dark-theme input, body.dark-theme select {
+  background-color: #374151;
+  border-color: #4b5563;
+  color: #f1f5f9;
+}
+body.dark-theme .close-btn:hover {
+  background: #4a2222;
+}
+
+body.dark-theme button:not(.theme-toggle, .collapse-btn, .close-btn) {
+    background-color: var(--primary-color);
+    color: #111827;
+}
+body.dark-theme button:hover:not(.theme-toggle, .collapse-btn, .close-btn) {
+    background-color: var(--primary-color-hover);
+}
+body.dark-theme button:disabled {
+  background: #4b5563;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+

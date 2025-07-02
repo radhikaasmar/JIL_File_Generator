@@ -1,0 +1,10 @@
+<header class="app-header">
+  <div class="header-title">JIL Job Dashboard</div>
+  <div class="header-actions">
+    <button class="theme-toggle" (click)="toggleTheme()" [attr.aria-label]="isDark ? 'Switch to light mode' : 'Switch to dark mode'">
+      <span *ngIf="!isDark">🌞</span>
+      <span *ngIf="isDark">🌙</span>
+    </button>
+    <span class="header-datetime">{{ dateTime }}</span>
+  </div>
+</header> 

@@ -1,0 +1,140 @@
+<div class="form-box">
+  <div class="collapsible-header">
+    <h2>File Watcher Job Definition</h2>
+    <div style="display: flex; align-items: center; gap: 0.5rem;">
+      <button type="button" class="close-btn" (click)="$event.stopPropagation(); onDelete()" title="Delete File Watcher">&times;</button>
+      <button type="button" class="collapse-btn" (click)="toggleCollapse()">{{ collapsed ? 'Expand' : 'Collapse' }}</button>
+    </div>
+  </div>
+  <div *ngIf="!collapsed" class="naming-convention">Naming convention: {{ namingConvention }}</div>
+  <div *ngIf="!collapsed">
+    <div [formGroup]="fileWatcherForm" (ngModelChange)="onFormChange()" class="form-fields">
+      <div class="form-field">
+        <label>CSI:</label>
+        <input formControlName="csi" type="text" />
+      </div>
+      <div class="form-field">
+        <label>Effort Type:</label>
+        <select formControlName="efforttype">
+          <option value="reg">REG</option>
+          <option value="bau">BAU</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Prod/LOB Name:</label>
+        <select formControlName="prodlob">
+          <option value="dep">DEP</option>
+          <option value="bcd">BCD</option>
+          <option value="crs">CRS</option>
+          <option value="mtg">MTG</option>
+          <option value="inv">INV</option>
+          <option value="pln">PLn</option>
+          <option value="xlob">XLOB</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Purpose:</label>
+        <input formControlName="purpose" type="text" placeholder="ebsim, ppnr, acq, ..." />
+      </div>
+      <div class="form-field">
+        <label>Load Frequency:</label>
+        <select formControlName="loadfreq">
+          <option value="d">D</option>
+          <option value="w">W</option>
+          <option value="m">M</option>
+          <option value="c">C</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Load Layer:</label>
+        <select formControlName="loadlayer">
+          <option value="stg">STG</option>
+          <option value="std">STD</option>
+          <option value="ext">EXT</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Function of Job:</label>
+        <select formControlName="funofjob">
+          <option value="master">MASTER</option>
+          <option value="ing">ING</option>
+          <option value="dq">DQ</option>
+          <option value="ext">EXT</option>
+          <option value="ld">LD</option>
+          <option value="ndm">NDM</option>
+          <option value="pg">PG</option>
+          <option value="rp">RP</option>
+          <option value="re">RE</option>
+          <option value="cs">CS</option>
+          <option value="purge">PURGE</option>
+          <option value="pub">PUB</option>
+          <option value="drv">DRV</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Job Title:</label>
+        <select formControlName="jobtitle">
+          <option value="fw">FW</option>
+          <option value="cfw">CFW</option>
+          <option value="cmd">CMD</option>
+          <option value="box">BOX</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Owner:</label>
+        <input formControlName="owner" type="text" />
+      </div>
+      <div class="form-field">
+        <label>Alarm if Fail:</label>
+        <div class="radio-group">
+          <label class="radio-inline"><input type="radio" formControlName="alarmFail" value="y"> Yes</label>
+          <label class="radio-inline"><input type="radio" formControlName="alarmFail" value="n"> No</label>
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Alarm if Terminated:</label>
+        <div class="radio-group">
+          <label class="radio-inline"><input type="radio" formControlName="alarmTerm" value="y"> Yes</label>
+          <label class="radio-inline"><input type="radio" formControlName="alarmTerm" value="n"> No</label>
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Date Conditions:</label>
+        <div class="radio-group">
+          <label class="radio-inline"><input type="radio" formControlName="dateCond" value="y"> Yes</label>
+          <label class="radio-inline"><input type="radio" formControlName="dateCond" value="n"> No</label>
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Timezone:</label>
+        <select formControlName="timezone">
+          <option value="us central">US CENTRAL</option>
+          <option value="us eastern">US EASTERN</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Run Calendar:</label>
+        <input formControlName="runCalendar" type="text" />
+      </div>
+      <div class="form-field">
+        <label>Start Time:</label>
+        <input formControlName="startTime" type="text" />
+      </div>
+      <div class="form-field">
+        <label>Send Notifications:</label>
+        <div class="radio-group">
+          <label class="radio-inline"><input type="radio" formControlName="sendNotif" value="y"> Yes</label>
+          <label class="radio-inline"><input type="radio" formControlName="sendNotif" value="n"> No</label>
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Status:</label>
+        <input formControlName="status" type="text" />
+      </div>
+    </div>
+    <div class="form-footer">
+      <button type="button" (click)="clearForm()" class="clear-btn">Clear Form</button>
+      <button (click)="onDelete()" class="close-btn">X</button>
+    </div>
+  </div>
+</div> 
