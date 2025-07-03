@@ -6,7 +6,7 @@ import { FormService } from '../../services/form.service';
 @Component({
   selector: 'app-box-job',
   templateUrl: './box-job.component.html',
-  styleUrl: './box-job.component.css',
+  styleUrls: ['../../styles.css'],
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule]
 })

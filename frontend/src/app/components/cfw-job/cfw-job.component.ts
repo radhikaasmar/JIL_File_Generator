@@ -8,7 +8,7 @@ import { FormService } from '../../services/form.service';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './cfw-job.component.html',
-  styleUrl: './cfw-job.component.css'
+  styleUrls: ['../../styles.css']
 })
 export class CfwJobComponent implements OnInit {
   @Input() cfwJobForm!: FormGroup;

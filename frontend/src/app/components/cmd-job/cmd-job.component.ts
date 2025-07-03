@@ -9,7 +9,7 @@ import { FormArray, FormControl } from '@angular/forms';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './cmd-job.component.html',
-  styleUrls: ['./cmd-job.component.css']
+  styleUrls: ['../../styles.css']
 })
 export class CmdJobComponent implements OnInit {
   @Input() cmdJobForm!: FormGroup;

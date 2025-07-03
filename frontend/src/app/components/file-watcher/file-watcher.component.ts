@@ -6,7 +6,7 @@ import { FormService } from '../../services/form.service';
 @Component({
   selector: 'app-file-watcher',
   templateUrl: './file-watcher.component.html',
-  styleUrl: './file-watcher.component.css',
+  styleUrls: ['../../styles.css'],
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule]
 })
