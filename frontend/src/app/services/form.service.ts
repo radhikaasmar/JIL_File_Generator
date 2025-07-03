@@ -207,4 +207,42 @@ export class FormService {
 
     return jil;
   }
+
+  // Add CMD JIL generator
+  generateCmdJIL(cmdJobForm: FormGroup): string {
+    const v = cmdJobForm.getRawValue();
+    const jobName = `csi_${v.csi}_${v.efforttype}_${v.prodlob}_${v.purpose}_${v.loadfreq}_${v.loadlayer}_${v.funofjob}_${v.jobtitle}`;
+    return `insert_job: ${jobName}
+job_type: CMD
+owner: ${v.owner}
+permission: gx,ge,wx,we,mx,me
+alarm_if_fail: ${v.alarmFail === 'y' || v.alarm_if_fail === 1 ? 1 : 0}
+alarm_if_terminated: ${v.alarmTerm === 'y' || v.alarm_if_terminated === 1 ? 1 : 0}
+timezone: ${v.timezone}
+profile: ${v.profile || ''}
+send_notification: ${v.sendNotif === 'y' ? 1 : 0}
+std_out_file: ${v.stdOutFile || ''}
+std_err_file: ${v.stdErrFile || ''}
+command: ${v.command || ''}
+status: ${v.status}`;
+  }
+
+  // Add CFW JIL generator
+  generateCfwJIL(cfwJobForm: FormGroup): string {
+    const v = cfwJobForm.getRawValue();
+    const jobName = `csi_${v.csi}_${v.efforttype}_${v.prodlob}_${v.purpose}_${v.loadfreq}_${v.loadlayer}_${v.funofjob}_${v.jobtitle}`;
+    return `insert_job: ${jobName}
+job_type: CFW
+owner: ${v.owner}
+permission: gx,ge,wx,we,mx,me
+alarm_if_fail: ${v.alarmFail === 'y' || v.alarm_if_fail === 1 ? 1 : 0}
+alarm_if_terminated: ${v.alarmTerm === 'y' || v.alarm_if_terminated === 1 ? 1 : 0}
+timezone: ${v.timezone}
+profile: ${v.profile || ''}
+send_notification: ${v.sendNotif === 'y' ? 1 : 0}
+std_out_file: ${v.stdOutFile || ''}
+std_err_file: ${v.stdErrFile || ''}
+command: ${v.command || ''}
+status: ${v.status}`;
+  }
 }

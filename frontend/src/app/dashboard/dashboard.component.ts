@@ -95,6 +95,55 @@ export class DashboardComponent implements OnInit {
     }
   }
 
+  // Add this method to generate combined JIL for all jobs
+  generateAllJIL(): string {
+    let jil = '';
+
+    // Box Jobs
+    this.boxJobs.controls.forEach((ctrl, idx) => {
+      jil += this.formService.generateJIL(ctrl as FormGroup);
+      jil += '\n\n';
+    });
+
+    // File Watcher Jobs
+    this.fileWatcherJobs.controls.forEach((ctrl, idx) => {
+      jil += this.formService.generateJIL(ctrl as FormGroup);
+      jil += '\n\n';
+    });
+
+    // CMD Jobs
+    this.cmdJobs.controls.forEach((ctrl, idx) => {
+      // You may want to implement generateCmdJIL in FormService for proper formatting
+      if (this.formService.generateCmdJIL) {
+        jil += this.formService.generateCmdJIL(ctrl as FormGroup);
+        jil += '\n\n';
+      }
+    });
+
+    // CFW Jobs
+    this.cfwJobs.controls.forEach((ctrl, idx) => {
+      // You may want to implement generateCfwJIL in FormService for proper formatting
+      if (this.formService.generateCfwJIL) {
+        jil += this.formService.generateCfwJIL(ctrl as FormGroup);
+        jil += '\n\n';
+      }
+    });
+
+    return jil.trim();
+  }
+
+  // Add this method to trigger the download
+  downloadJILFile() {
+    const content = this.generateAllJIL();
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'jobs.txt';
+    a.click();
+    window.URL.revokeObjectURL(url);
+  }
+
   addFileWatcherJob() {
     this.fileWatcherJobs.push(this.formService.createFileWatcherForm());
   }
