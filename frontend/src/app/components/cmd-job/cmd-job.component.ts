@@ -36,10 +36,10 @@ export class CmdJobComponent implements OnInit {
   ];
 
   environments = [
-    { key: 'envUAT', label: 'UAT', owner: 'ownerUAT' },
-    { key: 'envDEV', label: 'DEV', owner: 'ownerDEV' },
-    { key: 'envPROD', label: 'PROD', owner: 'ownerPROD' },
-    { key: 'envCOB', label: 'COB', owner: 'ownerCOB' }
+    { key: 'envUAT', label: 'UAT', owner: 'ownerUAT', machine: 'machineUAT', command: 'commandUAT' },
+    { key: 'envDEV', label: 'DEV', owner: 'ownerDEV', machine: 'machineDEV', command: 'commandDEV' },
+    { key: 'envPROD', label: 'PROD', owner: 'ownerPROD', machine: 'machinePROD', command: 'commandPROD' },
+    { key: 'envCOB', label: 'COB', owner: 'ownerCOB', machine: 'machineCOB', command: 'commandCOB' }
   ];
 
   effortTypeOptions = [
@@ -153,6 +153,12 @@ export class CmdJobComponent implements OnInit {
       if (!this.cmdJobForm.contains(env.owner)) {
         this.cmdJobForm.addControl(env.owner, new FormControl(''));
       }
+      if (!this.cmdJobForm.contains(env.machine)) {
+        this.cmdJobForm.addControl(env.machine, new FormControl(''));
+      }
+      if (!this.cmdJobForm.contains(env.command)) {
+        this.cmdJobForm.addControl(env.command, new FormControl(''));
+      }
     });
 
     if (!this.cmdJobForm.contains('conditions')) {
@@ -207,6 +213,9 @@ export class CmdJobComponent implements OnInit {
     this.environments.forEach(env => {
       this.cmdJobForm.get(env.key)?.valueChanges.subscribe(checked => {
         const ownerControl = this.cmdJobForm.get(env.owner);
+        const machineControl = this.cmdJobForm.get(env.machine);
+        const commandControl = this.cmdJobForm.get(env.command);
+
         if (ownerControl) {
           if (checked) {
             ownerControl.setValidators([Validators.required]);
@@ -215,6 +224,26 @@ export class CmdJobComponent implements OnInit {
             ownerControl.setValue('');
           }
           ownerControl.updateValueAndValidity();
+        }
+
+        if (machineControl) {
+          if (checked) {
+            machineControl.setValidators([Validators.required]);
+          } else {
+            machineControl.clearValidators();
+            machineControl.setValue('');
+          }
+          machineControl.updateValueAndValidity();
+        }
+
+        if (commandControl) {
+          if (checked) {
+            commandControl.setValidators([Validators.required]);
+          } else {
+            commandControl.clearValidators();
+            commandControl.setValue('');
+          }
+          commandControl.updateValueAndValidity();
         }
       });
     });
@@ -342,6 +371,14 @@ export class CmdJobComponent implements OnInit {
         const ownerControl = this.cmdJobForm.get(env.owner);
         if (!ownerControl?.value || ownerControl.value.trim() === '') {
           this.validationErrors[env.owner] = `Owner is required for ${env.label} environment`;
+        }
+        const machineControl = this.cmdJobForm.get(env.machine);
+        if (!machineControl?.value || machineControl.value.trim() === '') {
+          this.validationErrors[env.machine] = `Machine is required for ${env.label} environment`;
+        }
+        const commandControl = this.cmdJobForm.get(env.command);
+        if (!commandControl?.value || commandControl.value.trim() === '') {
+          this.validationErrors[env.command] = `Command is required for ${env.label} environment`;
         }
       }
     });

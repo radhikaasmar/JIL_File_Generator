@@ -138,6 +138,20 @@
         </div>
       </div>
 
+      <!-- Add box_name field after job-type -->
+      <div class="form-field">
+        <label class="required">Box Name:</label>
+        <input
+          formControlName="box_name"
+          type="text"
+          placeholder="Enter box name"
+          [class.error]="hasFieldError('box_name')"
+          (input)="onFormChange()" />
+        <div class="error-message" *ngIf="hasFieldError('box_name')">
+          {{ getFieldError('box_name') }}
+        </div>
+      </div>
+
       <!-- Environment Section -->
       <div class="form-section env-section">
         <h3>Environment Configuration</h3>
@@ -164,6 +178,26 @@
               (input)="onFormChange()" />
             <div class="error-message" *ngIf="hasFieldError(env.owner)">
               {{ getFieldError(env.owner) }}
+            </div>
+
+            <label class="required">Machine ({{ env.label }}):</label>
+            <input
+              [formControlName]="env.machine"
+              type="text"
+              [class.error]="hasFieldError(env.machine)"
+              (input)="onFormChange()" />
+            <div class="error-message" *ngIf="hasFieldError(env.machine)">
+              {{ getFieldError(env.machine) }}
+            </div>
+
+            <label class="required">Command ({{ env.label }}):</label>
+            <input
+              [formControlName]="env.command"
+              type="text"
+              [class.error]="hasFieldError(env.command)"
+              (input)="onFormChange()" />
+            <div class="error-message" *ngIf="hasFieldError(env.command)">
+              {{ getFieldError(env.command) }}
             </div>
           </div>
         </div>
