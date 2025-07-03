@@ -162,6 +162,20 @@ export class FileWatcherComponent implements OnInit {
         this.fileWatcherForm.addControl(ctrl, new FormControl(defaultValue));
       }
     });
+
+    // Add additional fields below envars
+    const additionalFields = [
+      { name: 'max_run_alarm', defaultValue: '' },
+      { name: 'job_load', defaultValue: '' },
+      { name: 'priority', defaultValue: '' },
+      { name: 'watch_file', defaultValue: '' },
+      { name: 'watch_interval', defaultValue: '' }
+    ];
+    additionalFields.forEach(field => {
+      if (!this.fileWatcherForm.contains(field.name)) {
+        this.fileWatcherForm.addControl(field.name, new FormControl(field.defaultValue));
+      }
+    });
   }
 
   private setupFormValidation() {
