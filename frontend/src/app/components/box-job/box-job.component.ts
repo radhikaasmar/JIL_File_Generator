@@ -242,12 +242,55 @@ export class BoxJobComponent implements OnInit {
       'jobtitle'
     ];
 
-    const values = fields
-      .map(f => this.boxJobForm.get(f)?.value || '')
-      .filter(v => v !== '')
-      .map(v => v.toString().toUpperCase());
+    // Get all values as uppercase strings
+    const values = fields.map(f => this.boxJobForm.get(f)?.value || '').map(v => v.toString().toUpperCase());
 
-    return values.join('_') || 'Job name will appear here';
+    // If purpose is empty, just join and return
+    if (!values[3]) {
+      return values.filter(v => v !== '').join('_') || 'Job name will appear here';
+    }
+
+    // Calculate the job name with current values
+    let jobName = values.filter(v => v !== '').join('_');
+
+    // If jobName is too long, truncate only the purpose field
+    if (jobName.length > 64) {
+      // Find the index of 'purpose' in fields (which is 3)
+      const purposeIdx = 3;
+      // Remove purpose temporarily to get base length
+      const valuesWithoutPurpose = [...values];
+      valuesWithoutPurpose[purposeIdx] = '';
+      const baseName = valuesWithoutPurpose.filter(v => v !== '').join('_');
+      // Number of underscores in the final name
+      const underscores = values.filter(v => v !== '').length - 1;
+      // Max allowed length for purpose
+      const baseLength = baseName.length;
+      const needsUnderscore = baseName.length > 0 && values[purposeIdx].length > 0;
+      const maxPurposeLength = 64 - baseLength - (needsUnderscore ? 1 : 0);
+      // Truncate purpose
+      const truncatedPurpose = values[purposeIdx].slice(0, Math.max(0, maxPurposeLength));
+      values[purposeIdx] = truncatedPurpose;
+      jobName = values.filter(v => v !== '').join('_');
+    }
+
+    return jobName || 'Job name will appear here';
+  }
+
+  get isJobNameTruncated(): boolean {
+    const fields = [
+      'csi',
+      'efforttype',
+      'prodlob',
+      'purpose',
+      'loadfreq',
+      'loadlayer',
+      'funofjob',
+      'jobtitle'
+    ];
+    const values = fields.map(f => this.boxJobForm.get(f)?.value || '').map(v => v.toString().toUpperCase());
+    if (!values[3]) return false; // if purpose is empty, never truncated
+    const originalJobName = values.filter(v => v !== '').join('_');
+    return originalJobName.length > 64;
   }
 
   toBool(val: any): boolean {

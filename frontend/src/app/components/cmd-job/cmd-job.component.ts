@@ -117,20 +117,13 @@ export class CmdJobComponent implements OnInit {
   constructor(private formService: FormService) {}
 
   ngOnInit() {
-    this.updateAutoFields();
-    this.cmdJobForm.valueChanges.subscribe(() => this.updateAutoFields());
+    // this.updateAutoFields();
+    // this.cmdJobForm.valueChanges.subscribe(() => this.updateAutoFields());
     this.initializeFormControls();
     this.setupFormValidation();
     this.setupFormSubscriptions();
   }
 
-  updateAutoFields() {
-    // insert_job: same as boxJobNaming, but last value after _ is BOX
-    const parts = this.boxJobNaming.split('_');
-    this.insertJob = parts.slice(0, -1).concat('BOX').join('_');
-    this.boxName = this.insertJob;
-    this.condition = `s(${this.insertJob})`;
-  }
 
   toggleCollapse() {
     this.collapsed = !this.collapsed;
