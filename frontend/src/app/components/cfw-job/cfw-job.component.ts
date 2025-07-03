@@ -32,10 +32,10 @@ export class CfwJobComponent implements OnInit {
 
   // Environment options
   environments = [
-    { key: 'envUAT', label: 'UAT', owner: 'ownerUAT' },
-    { key: 'envDEV', label: 'DEV', owner: 'ownerDEV' },
-    { key: 'envPROD', label: 'PROD', owner: 'ownerPROD' },
-    { key: 'envCOB', label: 'COB', owner: 'ownerCOB' }
+    { key: 'envUAT', label: 'UAT', owner: 'ownerUAT', machine: 'machineUAT', command: 'commandUAT' },
+    { key: 'envDEV', label: 'DEV', owner: 'ownerDEV', machine: 'machineDEV', command: 'commandDEV' },
+    { key: 'envPROD', label: 'PROD', owner: 'ownerPROD', machine: 'machinePROD', command: 'commandPROD' },
+    { key: 'envCOB', label: 'COB', owner: 'ownerCOB', machine: 'machineCOB', command: 'commandCOB' }
   ];
 
   // Dropdown options
@@ -137,6 +137,12 @@ export class CfwJobComponent implements OnInit {
       if (!this.cfwJobForm.contains(env.owner)) {
         this.cfwJobForm.addControl(env.owner, new FormControl(''));
       }
+      if (!this.cfwJobForm.contains(env.machine)) {
+        this.cfwJobForm.addControl(env.machine, new FormControl(''));
+      }
+      if (!this.cfwJobForm.contains(env.command)) {
+        this.cfwJobForm.addControl(env.command, new FormControl(''));
+      }
     });
 
     if (!this.cfwJobForm.contains('conditions')) {
@@ -184,6 +190,9 @@ export class CfwJobComponent implements OnInit {
     this.environments.forEach(env => {
       this.cfwJobForm.get(env.key)?.valueChanges.subscribe(checked => {
         const ownerControl = this.cfwJobForm.get(env.owner);
+        const machineControl = this.cfwJobForm.get(env.machine);
+        const commandControl = this.cfwJobForm.get(env.command);
+
         if (ownerControl) {
           if (checked) {
             ownerControl.setValidators([Validators.required]);
@@ -371,6 +380,14 @@ export class CfwJobComponent implements OnInit {
         const ownerControl = this.cfwJobForm.get(env.owner);
         if (!ownerControl?.value || ownerControl.value.trim() === '') {
           this.validationErrors[env.owner] = `Owner is required for ${env.label} environment`;
+        }
+        const machineControl = this.cfwJobForm.get(env.machine);
+        if (!machineControl?.value || machineControl.value.trim() === '') {
+          this.validationErrors[env.machine] = `Machine is required for ${env.label} environment`;
+        }
+        const commandControl = this.cfwJobForm.get(env.command);
+        if (!commandControl?.value || commandControl.value.trim() === '') {
+          this.validationErrors[env.command] = `Command is required for ${env.label} environment`;
         }
       }
     });

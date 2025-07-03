@@ -32,10 +32,10 @@ export class FileWatcherComponent implements OnInit {
 
   // Environment options
   environments = [
-    { key: 'envUAT', label: 'UAT', owner: 'ownerUAT' },
-    { key: 'envDEV', label: 'DEV', owner: 'ownerDEV' },
-    { key: 'envPROD', label: 'PROD', owner: 'ownerPROD' },
-    { key: 'envCOB', label: 'COB', owner: 'ownerCOB' }
+    { key: 'envUAT', label: 'UAT', owner: 'ownerUAT', machine: 'machineUAT', command: 'commandUAT' },
+    { key: 'envDEV', label: 'DEV', owner: 'ownerDEV', machine: 'machineDEV', command: 'commandDEV' },
+    { key: 'envPROD', label: 'PROD', owner: 'ownerPROD', machine: 'machinePROD', command: 'commandPROD' },
+    { key: 'envCOB', label: 'COB', owner: 'ownerCOB', machine: 'machineCOB', command: 'commandCOB' }
   ];
 
   // Dropdown options
@@ -128,6 +128,12 @@ export class FileWatcherComponent implements OnInit {
       if (!this.fileWatcherForm.contains(env.owner)) {
         this.fileWatcherForm.addControl(env.owner, new FormControl(''));
       }
+      if (!this.fileWatcherForm.contains(env.machine)) {
+        this.fileWatcherForm.addControl(env.machine, new FormControl(''));
+      }
+      if (!this.fileWatcherForm.contains(env.command)) {
+        this.fileWatcherForm.addControl(env.command, new FormControl(''));
+      }
     });
 
     // Initialize conditions array
@@ -179,6 +185,9 @@ export class FileWatcherComponent implements OnInit {
     this.environments.forEach(env => {
       this.fileWatcherForm.get(env.key)?.valueChanges.subscribe(checked => {
         const ownerControl = this.fileWatcherForm.get(env.owner);
+        const machineControl = this.fileWatcherForm.get(env.machine);
+        const commandControl = this.fileWatcherForm.get(env.command);
+
         if (ownerControl) {
           if (checked) {
             ownerControl.setValidators([Validators.required]);
@@ -367,6 +376,14 @@ export class FileWatcherComponent implements OnInit {
         const ownerControl = this.fileWatcherForm.get(env.owner);
         if (!ownerControl?.value || ownerControl.value.trim() === '') {
           this.validationErrors[env.owner] = `Owner is required for ${env.label} environment`;
+        }
+        const machineControl = this.fileWatcherForm.get(env.machine);
+        if (!machineControl?.value || machineControl.value.trim() === '') {
+          this.validationErrors[env.machine] = `Machine is required for ${env.label} environment`;
+        }
+        const commandControl = this.fileWatcherForm.get(env.command);
+        if (!commandControl?.value || commandControl.value.trim() === '') {
+          this.validationErrors[env.command] = `Command is required for ${env.label} environment`;
         }
       }
     });

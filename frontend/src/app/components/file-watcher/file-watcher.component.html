@@ -170,6 +170,25 @@
             <div class="error-message" *ngIf="hasFieldError(env.owner)">
               {{ getFieldError(env.owner) }}
             </div>
+            <label class="required">Machine ({{ env.label }}):</label>
+            <input
+              [formControlName]="env.machine"
+              type="text"
+              [class.error]="hasFieldError(env.machine)"
+              (input)="onFormChange()" />
+            <div class="error-message" *ngIf="hasFieldError(env.machine)">
+              {{ getFieldError(env.machine) }}
+            </div>
+
+            <label class="required">Command ({{ env.label }}):</label>
+            <input
+              [formControlName]="env.command"
+              type="text"
+              [class.error]="hasFieldError(env.command)"
+              (input)="onFormChange()" />
+            <div class="error-message" *ngIf="hasFieldError(env.command)">
+              {{ getFieldError(env.command) }}
+            </div>
           </div>
         </div>
       </div>
