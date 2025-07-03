@@ -8,85 +8,303 @@
   </div>
   <div *ngIf="!collapsed">
     <div class="form-fields" [formGroup]="cmdJobForm">
-      <div class="form-field">
-        <label>Insert Job:</label>
-        <input [value]="insertJob" readonly />
-      </div>
-      <div class="form-field">
-        <label>Job Type:</label>
-        <input value="CMD" readonly />
-      </div>
-      <div class="form-field">
-        <label>Description:</label>
-        <input formControlName="description" type="text" />
-      </div>
-      <div class="form-field">
-        <label>Machine:</label>
-        <input formControlName="machine" type="text" />
-      </div>
-      <div class="form-field">
-        <label>Condition:</label>
-        <input [value]="condition" readonly />
-      </div>
-      <div class="form-field">
-        <label>Owner:</label>
-        <input formControlName="owner" type="text" />
-      </div>
-      <div class="form-field">
-        <label>Box Name:</label>
-        <input [value]="boxName" readonly />
-      </div>
-      <div class="form-field">
-        <label>Alarm if Fail:</label>
-        <div class="radio-group">
-          <label class="radio-inline"><input type="radio" formControlName="alarmFail" value="y"> Yes</label>
-          <label class="radio-inline"><input type="radio" formControlName="alarmFail" value="n"> No</label>
+
+
+      <!-- --- Begin: Fields from box-job.component.html --- -->
+
+      <!-- Insert Job Section -->
+      <div class="insert-job-section">
+        <h3>Insert Job Configuration</h3>
+        <div class="integrated-job-display">
+          {{ integratedJobValue }}
+        </div>
+        <div class="insert-job-fields">
+          <div class="form-field">
+            <label class="required">CSI:</label>
+            <input
+              formControlName="csi"
+              type="text"
+              maxlength="6"
+              pattern="^\d{6}$"
+              placeholder="6 digits"
+              [class.error]="hasFieldError('csi')"
+              (input)="onFormChange()" />
+            <div class="error-message" *ngIf="hasFieldError('csi')">
+              {{ getFieldError('csi') }}
+            </div>
+          </div>
+          <div class="form-field">
+            <label class="required">Effort Type:</label>
+            <select
+              formControlName="efforttype"
+              [class.error]="hasFieldError('efforttype')"
+              (change)="onFormChange()">
+              <option value="">Select...</option>
+              <option *ngFor="let option of effortTypeOptions" [value]="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+            <div class="error-message" *ngIf="hasFieldError('efforttype')">
+              {{ getFieldError('efforttype') }}
+            </div>
+          </div>
+          <div class="form-field">
+            <label class="required">Prod/LOB Name:</label>
+            <select
+              formControlName="prodlob"
+              [class.error]="hasFieldError('prodlob')"
+              (change)="onFormChange()">
+              <option value="">Select...</option>
+              <option *ngFor="let option of prodLobOptions" [value]="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+            <div class="error-message" *ngIf="hasFieldError('prodlob')">
+              {{ getFieldError('prodlob') }}
+            </div>
+          </div>
+          <div class="form-field">
+            <label class="required">Purpose:</label>
+            <input
+              formControlName="purpose"
+              type="text"
+              placeholder="ebsim, ppnr, acq, ..."
+              [class.error]="hasFieldError('purpose')"
+              (input)="onFormChange()" />
+            <div class="error-message" *ngIf="hasFieldError('purpose')">
+              {{ getFieldError('purpose') }}
+            </div>
+          </div>
+          <div class="form-field">
+            <label class="required">Load Frequency:</label>
+            <select
+              formControlName="loadfreq"
+              [class.error]="hasFieldError('loadfreq')"
+              (change)="onFormChange()">
+              <option value="">Select...</option>
+              <option *ngFor="let option of loadFreqOptions" [value]="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+            <div class="error-message" *ngIf="hasFieldError('loadfreq')">
+              {{ getFieldError('loadfreq') }}
+            </div>
+          </div>
+          <div class="form-field">
+            <label class="required">Load Layer:</label>
+            <select
+              formControlName="loadlayer"
+              [class.error]="hasFieldError('loadlayer')"
+              (change)="onFormChange()">
+              <option value="">Select...</option>
+              <option *ngFor="let option of loadLayerOptions" [value]="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+            <div class="error-message" *ngIf="hasFieldError('loadlayer')">
+              {{ getFieldError('loadlayer') }}
+            </div>
+          </div>
+          <div class="form-field">
+            <label class="required">Function of Job:</label>
+            <select
+              formControlName="funofjob"
+              [class.error]="hasFieldError('funofjob')"
+              (change)="onFormChange()">
+              <option value="">Select...</option>
+              <option *ngFor="let option of functionOfJobOptions" [value]="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+            <div class="error-message" *ngIf="hasFieldError('funofjob')">
+              {{ getFieldError('funofjob') }}
+            </div>
+          </div>
+          <div class="form-field">
+            <label class="required">Job Type:</label>
+            <select
+              formControlName="jobtitle"
+              [class.error]="hasFieldError('jobtitle')"
+              (change)="onFormChange()">
+              <option value="">Select...</option>
+              <option *ngFor="let option of jobTypeOptions" [value]="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+            <div class="error-message" *ngIf="hasFieldError('jobtitle')">
+              {{ getFieldError('jobtitle') }}
+            </div>
+          </div>
         </div>
       </div>
-      <div class="form-field">
-        <label>Alarm if Terminated:</label>
-        <div class="radio-group">
-          <label class="radio-inline"><input type="radio" formControlName="alarmTerm" value="y"> Yes</label>
-          <label class="radio-inline"><input type="radio" formControlName="alarmTerm" value="n"> No</label>
+
+      <!-- Environment Section -->
+      <div class="form-section env-section">
+        <h3>Environment Configuration</h3>
+        <div class="form-field">
+          <label>Environment(s):</label>
+          <div class="checkbox-group">
+            <div class="checkbox-item" *ngFor="let env of environments">
+              <input
+                type="checkbox"
+                [id]="env.key"
+                [formControlName]="env.key"
+                (change)="onFormChange()" />
+              <label [for]="env.key">{{ env.label }}</label>
+            </div>
+          </div>
+        </div>
+        <div class="form-field" *ngFor="let env of environments">
+          <div *ngIf="isEnvironmentSelected(env.key)">
+            <label class="required">Owner ({{ env.label }}):</label>
+            <input
+              [formControlName]="env.owner"
+              type="text"
+              [class.error]="hasFieldError(env.owner)"
+              (input)="onFormChange()" />
+            <div class="error-message" *ngIf="hasFieldError(env.owner)">
+              {{ getFieldError(env.owner) }}
+            </div>
+          </div>
         </div>
       </div>
-      <div class="form-field">
-        <label>Timezone:</label>
-        <select formControlName="timezone">
-          <option value="us central">US CENTRAL</option>
-          <option value="us eastern">US EASTERN</option>
-        </select>
-      </div>
-      <div class="form-field">
-        <label>Profile:</label>
-        <input formControlName="profile" type="text" />
-      </div>
-      <div class="form-field">
-        <label>Send Notification:</label>
-        <div class="radio-group">
-          <label class="radio-inline"><input type="radio" formControlName="sendNotif" value="y"> Yes</label>
-          <label class="radio-inline"><input type="radio" formControlName="sendNotif" value="n"> No</label>
+
+      <!-- Job Configuration Section -->
+      <div class="form-section">
+        <h3>Job Configuration</h3>
+        <div class="job-config-grid">
+          <div class="form-field">
+            <label>Permission:</label>
+            <input
+              formControlName="permission"
+              type="text"
+              (input)="onFormChange()" />
+          </div>
+          <div class="form-field">
+            <label>Date Conditions:</label>
+            <select formControlName="date_conditions" (change)="onFormChange()">
+              <option [value]="1">Yes (1)</option>
+              <option [value]="0">No (0)</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Start Time:</label>
+            <input
+              formControlName="start_time"
+              type="time"
+              (change)="onFormChange()" />
+          </div>
+          <div class="form-field">
+            <label>Timezone:</label>
+            <select formControlName="timezone" (change)="onFormChange()">
+              <option *ngFor="let option of timezoneOptions" [value]="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Alarm if Fail:</label>
+            <select formControlName="alarm_if_fail" (change)="onFormChange()">
+              <option [value]="1">Yes (1)</option>
+              <option [value]="0">No (0)</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Alarm if Terminated:</label>
+            <select formControlName="alarm_if_terminated" (change)="onFormChange()">
+              <option [value]="1">Yes (1)</option>
+              <option [value]="0">No (0)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-field">
+          <label>Days of the week:</label>
+          <div class="checkbox-group">
+            <div class="checkbox-item" *ngFor="let day of daysOfWeek">
+              <input
+                type="checkbox"
+                [id]="day.value"
+                [value]="day.value"
+                [checked]="isDaySelected(day.value)"
+                (change)="onDayOfWeekChange($event)" />
+              <label [for]="day.value">{{ day.label }}</label>
+            </div>
+          </div>
+        </div>
+        <div class="form-field">
+          <label>Description:</label>
+          <input
+            formControlName="description"
+            type="text"
+            placeholder="Brief description of the job"
+            (input)="onFormChange()" />
+        </div>
+        <div class="form-field">
+          <label>Status:</label>
+          <input
+            formControlName="status"
+            type="text"
+            placeholder="Job status"
+            (input)="onFormChange()" />
         </div>
       </div>
-      <div class="form-field">
-        <label>Std Out File:</label>
-        <input formControlName="stdOutFile" type="text" />
+
+      <!-- Conditions Section -->
+      <div class="form-section">
+        <h3>Condition (Dependencies)</h3>
+        <button
+          type="button"
+          class="add-condition-btn"
+          (click)="addCondition()">
+          + Add Condition
+        </button>
+        <div formArrayName="conditions" class="conditions-container">
+          <div
+            *ngFor="let cond of conditions.controls; let i = index"
+            [formGroupName]="i"
+            class="condition-item">
+            <div class="form-field">
+              <label>Type</label>
+              <select formControlName="type" (change)="onFormChange()">
+                <option *ngFor="let option of conditionTypeOptions" [value]="option.value">
+                  {{ option.label }}
+                </option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label>Job</label>
+              <input
+                type="text"
+                formControlName="job"
+                placeholder="e.g., jobA"
+                (input)="onFormChange()" />
+            </div>
+            <div class="form-field">
+              <label>Logic</label>
+              <select formControlName="logic" (change)="addConditionIfNeeded(i)">
+                <option *ngFor="let option of logicOptions" [value]="option.value">
+                  {{ option.label }}
+                </option>
+              </select>
+            </div>
+            <button
+              type="button"
+              class="remove-condition-btn"
+              (click)="removeCondition(i)"
+              [disabled]="conditions.length === 1">
+              Remove
+            </button>
+          </div>
+        </div>
+        <div class="final-condition">
+          <strong>Final condition:</strong> {{ finalConditionString }}
+        </div>
       </div>
-      <div class="form-field">
-        <label>Std Err File:</label>
-        <input formControlName="stdErrFile" type="text" />
-      </div>
-      <div class="form-field">
-        <label>Command:</label>
-        <input formControlName="command" type="text" />
-      </div>
-      <div class="form-field">
-        <label>Status:</label>
-        <input formControlName="status" type="text" />
-      </div>
+      <!-- --- End: Fields from box-job.component.html --- -->
     </div>
     <div class="form-footer">
       <button type="button" (click)="clearForm()" class="clear-btn">Clear Form</button>
+      <button type="button" class="btn submit-btn" (click)="onSubmit()">Generate Job Definition</button>
       <button (click)="onDelete()" class="close-btn">X</button>
     </div>
   </div>
