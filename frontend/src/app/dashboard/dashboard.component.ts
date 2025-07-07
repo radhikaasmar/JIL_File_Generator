@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormArray, FormGroup } from '@angular/forms';
+import { FormArray, FormGroup,Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { BoxJobComponent } from '../components/box-job/box-job.component';
 import { FileWatcherComponent } from '../components/file-watcher/file-watcher.component';
@@ -8,6 +8,7 @@ import { CmdJobComponent } from '../components/cmd-job/cmd-job.component';
 import { CfwJobComponent } from '../components/cfw-job/cfw-job.component';
 import { FormService } from '../services/form.service';
 import { AbstractControl } from '@angular/forms';
+// import { FormGroup, FormControl, ReactiveFormsModule, FormArray, Validators } from '@angular/forms';
 
 @Component({
   selector: 'app-dashboard',
@@ -37,13 +38,15 @@ export class DashboardComponent implements OnInit {
       this.addInitialBoxJob(); // Start with one box job on first visit
     }
 
-    if(this.boxJobs.length > 0) {
+    if(this.allJobs.controls
+  .filter(job => (job as FormGroup).get('type')?.value === 'box').length > 0) {
       this.subscribeToBoxJobChanges(0);
     }
   }
 
   subscribeToBoxJobChanges(index: number) {
-    const boxJobForm = this.boxJobs.at(index);
+    const boxJobForm = this.allJobs.controls
+  .filter(job => (job as FormGroup).get('type')?.value === 'box').at(index);
     if (boxJobForm) {
       this.updateNamingConventions(boxJobForm as FormGroup);
       boxJobForm.valueChanges.subscribe(() => {
@@ -52,25 +55,19 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  get boxJobs(): FormArray {
-    return this.formService.boxJobs;
-  }
-  get fileWatcherJobs(): FormArray {
-    return this.formService.fileWatchers;
-  }
-  get cmdJobs(): FormArray {
-    return this.formService.cmdJobs;
-  }
-  get cfwJobs(): FormArray {
-    return this.formService.cfwJobs;
-  }
+get allJobs(): FormArray {
+  return this.formService.allJobs;
+}
 
-  addInitialBoxJob() {
-    if (this.boxJobs.length === 0) {
-      const boxJobForm = this.formService.createBoxJobForm();
-      this.boxJobs.push(boxJobForm);
-    }
+addInitialBoxJob() {
+  if (this.allJobs.length === 0) {
+    const jobGroup = this.formService.fb.group({
+      type: ['box', Validators.required],
+      form: this.formService.createBoxJobForm()
+    });
+    this.allJobs.push(jobGroup);
   }
+}
 
   updateNamingConventions(boxJobForm: FormGroup) {
     const v = boxJobForm.getRawValue();
@@ -88,49 +85,44 @@ export class DashboardComponent implements OnInit {
 
   generateJIL() {
     // This will need to be updated to handle all job types and multiple instances
-    if (this.boxJobs.length > 0) {
-      const firstBoxJob = this.boxJobs.at(0) as FormGroup;
+    if (this.allJobs.controls
+  .filter(job => (job as FormGroup).get('type')?.value === 'box').length > 0) {
+      const firstBoxJob = this.allJobs.controls
+  .filter(job => (job as FormGroup).get('type')?.value === 'box').at(0) as FormGroup;
       this.generatedJIL = this.formService.generateJIL(firstBoxJob);
       this.showJIL = true;
     }
   }
 
   // Add this method to generate combined JIL for all jobs
-  generateAllJIL(): string {
-    let jil = '';
+generateAllJIL(): string {
+  let jil = '';
 
-    // Box Jobs
-    this.boxJobs.controls.forEach((ctrl, idx) => {
-      jil += this.formService.generateJIL(ctrl as FormGroup);
-      jil += '\n\n';
-    });
+  this.allJobs.controls.forEach(jobCtrl => {
+    const job = jobCtrl as FormGroup;
+    const type = job.get('type')?.value;
+    const form = job.get('form') as FormGroup;
 
-    // File Watcher Jobs
-    this.fileWatcherJobs.controls.forEach((ctrl, idx) => {
-      jil += this.formService.generateJIL(ctrl as FormGroup);
-      jil += '\n\n';
-    });
+    switch (type) {
+      case 'box':
+        jil += this.formService.generateJIL(form);
+        break;
+      case 'fw':
+        jil += this.formService.generateJIL(form);
+        break;
+      case 'cmd':
+        jil += this.formService.generateCmdJIL(form);
+        break;
+      case 'cfw':
+        jil += this.formService.generateCfwJIL(form);
+        break;
+    }
 
-    // CMD Jobs
-    this.cmdJobs.controls.forEach((ctrl, idx) => {
-      // You may want to implement generateCmdJIL in FormService for proper formatting
-      if (this.formService.generateCmdJIL) {
-        jil += this.formService.generateCmdJIL(ctrl as FormGroup);
-        jil += '\n\n';
-      }
-    });
+    jil += '\n\n';
+  });
 
-    // CFW Jobs
-    this.cfwJobs.controls.forEach((ctrl, idx) => {
-      // You may want to implement generateCfwJIL in FormService for proper formatting
-      if (this.formService.generateCfwJIL) {
-        jil += this.formService.generateCfwJIL(ctrl as FormGroup);
-        jil += '\n\n';
-      }
-    });
-
-    return jil.trim();
-  }
+  return jil.trim();
+}
 
   // Add this method to trigger the download
   downloadJILFile() {
@@ -144,35 +136,36 @@ export class DashboardComponent implements OnInit {
     window.URL.revokeObjectURL(url);
   }
 
-  addFileWatcherJob() {
-    this.fileWatcherJobs.push(this.formService.createFileWatcherForm());
-  }
+addFileWatcherJob() {
+  this.allJobs.push(this.formService.fb.group({
+    type: ['fw'],
+    form: this.formService.createFileWatcherForm()
+  }));
+}
 
-  addCmdJob() {
-    this.cmdJobs.push(this.formService.createCmdJobForm());
-  }
+addCmdJob() {
+  this.allJobs.push(this.formService.fb.group({
+    type: ['cmd'],
+    form: this.formService.createCmdJobForm()
+  }));
+}
 
-  addCfwJob() {
-    this.cfwJobs.push(this.formService.createCfwJobForm());
-  }
+addCfwJob() {
+  this.allJobs.push(this.formService.fb.group({
+    type: ['cfw'],
+    form: this.formService.createCfwJobForm()
+  }));
+}
 
-  onDeleteFileWatcherJob(index: number) {
-    this.fileWatcherJobs.removeAt(index);
-  }
-
-  onDeleteCmdJob(index: number) {
-    this.cmdJobs.removeAt(index);
-  }
-
-  onDeleteCfwJob(index: number) {
-    this.cfwJobs.removeAt(index);
-  }
+removeJob(index: number) {
+  this.allJobs.removeAt(index);
+}
 
   isFormInvalid(formArray: FormArray): boolean {
     return formArray.controls.some(control => control.invalid);
   }
 
-  toFormGroup(control: AbstractControl): FormGroup {
+  toFormGroup(control: AbstractControl | null): FormGroup {
     return control as FormGroup;
   }
 }

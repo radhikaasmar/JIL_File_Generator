@@ -1,42 +1,51 @@
 <div class="dashboard-container">
   <form (ngSubmit)="generateJIL()">
-    <ng-container *ngFor="let boxJob of boxJobs.controls; let i = index">
-      <app-box-job
-        [boxJobForm]="toFormGroup(boxJob)"
-        [namingConvention]="boxJobNaming"
-        (formChange)="subscribeToBoxJobChanges(i)">
-      </app-box-job>
-    </ng-container>
+    <ng-container *ngFor="let job of allJobs.controls; let i = index">
+      <ng-container [ngSwitch]="job.get('type')?.value">
+        
+        <!-- BOX Job -->
+        <app-box-job
+          *ngSwitchCase="'box'"
+          [boxJobForm]="toFormGroup(job.get('form'))"
+          [namingConvention]="boxJobNaming"
+          (formChange)="subscribeToBoxJobChanges(i)">
+        </app-box-job>
 
-    <ng-container *ngFor="let fw of fileWatcherJobs.controls; let i = index">
-      <app-file-watcher
-        [fileWatcherForm]="toFormGroup(fw)"
-        [namingConvention]="fileWatcherNaming"
-        (delete)="onDeleteFileWatcherJob(i)">
-      </app-file-watcher>
-    </ng-container>
+        <!-- FILE WATCHER Job -->
+        <app-file-watcher
+          *ngSwitchCase="'fw'"
+          [fileWatcherForm]="toFormGroup(job.get('form'))"
+          [namingConvention]="fileWatcherNaming"
+          (delete)="removeJob(i)">
+        </app-file-watcher>
 
-    <ng-container *ngFor="let cmd of cmdJobs.controls; let i = index">
-      <app-cmd-job
-        [cmdJobForm]="toFormGroup(cmd)"
-        [boxJobNaming]="boxJobNaming"
-        (delete)="onDeleteCmdJob(i)">
-      </app-cmd-job>
-    </ng-container>
+        <!-- CMD Job -->
+        <app-cmd-job
+          *ngSwitchCase="'cmd'"
+          [cmdJobForm]="toFormGroup(job.get('form'))"
+          [boxJobNaming]="boxJobNaming"
+          (delete)="removeJob(i)">
+        </app-cmd-job>
 
-    <ng-container *ngFor="let cfw of cfwJobs.controls; let i = index">
-      <app-cfw-job
-        [cfwJobForm]="toFormGroup(cfw)"
-        [boxJobNaming]="boxJobNaming"
-        (delete)="onDeleteCfwJob(i)">
-      </app-cfw-job>
+        <!-- CFW Job -->
+        <app-cfw-job
+          *ngSwitchCase="'cfw'"
+          [cfwJobForm]="toFormGroup(job.get('form'))"
+          [boxJobNaming]="boxJobNaming"
+          (delete)="removeJob(i)">
+        </app-cfw-job>
+
+      </ng-container>
     </ng-container>
 
     <div class="form-actions">
       <button type="button" (click)="addFileWatcherJob()">Add File Watcher Job</button>
       <button type="button" (click)="addCmdJob()">Add CMD Job</button>
       <button type="button" (click)="addCfwJob()">Add CFW Job</button>
-      <button type="submit" [disabled]="isFormInvalid(boxJobs) || isFormInvalid(fileWatcherJobs) || isFormInvalid(cmdJobs) || isFormInvalid(cfwJobs)">Generate txt JIL</button>
+      <button type="submit" 
+              [disabled]="allJobs.invalid || isFormInvalid(allJobs)">
+        Generate txt JIL
+      </button>
     </div>
   </form>
 

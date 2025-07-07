@@ -9,36 +9,21 @@ export class FormService {
   mainForm: FormGroup;
   private storageKey = 'jilFormData';
 
-  constructor(private fb: FormBuilder) {
+  constructor(public fb: FormBuilder) {
     this.mainForm = this.fb.group({
-      boxJobs: this.fb.array([]),
-      fileWatchers: this.fb.array([]),
-      cmdJobs: this.fb.array([]),
-      cfwJobs: this.fb.array([]) // renamed from ingestionJobs
+      allJobs: this.fb.array([])
     });
 
     this.mainForm.valueChanges.pipe(
-      debounceTime(500), // Wait for 500ms of inactivity before saving
+      debounceTime(500),
       tap(value => {
         this.saveFormsToLocalStorage();
       })
     ).subscribe();
   }
 
-  get boxJobs(): FormArray {
-    return this.mainForm.get('boxJobs') as FormArray;
-  }
-
-  get fileWatchers(): FormArray {
-    return this.mainForm.get('fileWatchers') as FormArray;
-  }
-
-  get cmdJobs(): FormArray {
-    return this.mainForm.get('cmdJobs') as FormArray;
-  }
-
-  get cfwJobs(): FormArray {
-    return this.mainForm.get('cfwJobs') as FormArray;
+  get allJobs(): FormArray {
+    return this.mainForm.get('allJobs') as FormArray;
   }
 
   loadFormsFromLocalStorage() {
@@ -47,10 +32,30 @@ export class FormService {
       const parsedData = JSON.parse(savedData);
       this.clearAllForms();
 
-      parsedData.boxJobs.forEach((jobData: any) => this.boxJobs.push(this.createBoxJobForm(jobData)));
-      parsedData.fileWatchers.forEach((jobData: any) => this.fileWatchers.push(this.createFileWatcherForm(jobData)));
-      parsedData.cmdJobs.forEach((jobData: any) => this.cmdJobs.push(this.createCmdJobForm(jobData)));
-      parsedData.cfwJobs.forEach((jobData: any) => this.cfwJobs.push(this.createCfwJobForm(jobData)));
+      parsedData.allJobs.forEach((jobWrapper: any) => {
+        const jobType = jobWrapper.type;
+        const formData = jobWrapper.form;
+        let formGroup: FormGroup;
+
+        switch (jobType) {
+          case 'box':
+            formGroup = this.createBoxJobForm(formData);
+            break;
+          case 'fw':
+            formGroup = this.createFileWatcherForm(formData);
+            break;
+          case 'cmd':
+            formGroup = this.createCmdJobForm(formData);
+            break;
+          case 'cfw':
+            formGroup = this.createCfwJobForm(formData);
+            break;
+          default:
+            return;
+        }
+
+        this.allJobs.push(this.fb.group({ type: jobType, form: formGroup }));
+      });
     }
   }
 
@@ -67,10 +72,7 @@ export class FormService {
   }
 
   clearAllForms() {
-    this.boxJobs.clear();
-    this.fileWatchers.clear();
-    this.cmdJobs.clear();
-    this.cfwJobs.clear();
+    this.allJobs.clear();
   }
 
   createBoxJobForm(data?: any): FormGroup {
