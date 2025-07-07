@@ -221,69 +221,7 @@
               <option [value]="0">No (0)</option>
             </select>
           </div>
-          <div class="form-field">
-            <label>Start Time:</label>
-            <input
-              formControlName="start_time"
-              type="time"
-              (change)="onFormChange()" />
-          </div>
-          <div class="form-field">
-            <label>Timezone:</label>
-            <select formControlName="timezone" (change)="onFormChange()">
-              <option *ngFor="let option of timezoneOptions" [value]="option.value">
-                {{ option.label }}
-              </option>
-            </select>
-          </div>
-          <div class="form-field">
-            <label>Alarm if Fail:</label>
-            <select formControlName="alarm_if_fail" (change)="onFormChange()">
-              <option [value]="1">Yes (1)</option>
-              <option [value]="0">No (0)</option>
-            </select>
-          </div>
-          <div class="form-field">
-            <label>Alarm if Terminated:</label>
-            <select formControlName="alarm_if_terminated" (change)="onFormChange()">
-              <option [value]="1">Yes (1)</option>
-              <option [value]="0">No (0)</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-field">
-          <label>Days of the week:</label>
-          <div class="checkbox-group">
-            <div class="checkbox-item" *ngFor="let day of daysOfWeek">
-              <input
-                type="checkbox"
-                [id]="day.value"
-                [value]="day.value"
-                [checked]="isDaySelected(day.value)"
-                (change)="onDayOfWeekChange($event)" />
-              <label [for]="day.value">{{ day.label }}</label>
-            </div>
-          </div>
-        </div>
-        <div class="form-field">
-          <label>Description:</label>
-          <input
-            formControlName="description"
-            type="text"
-            placeholder="Brief description of the job"
-            (input)="onFormChange()" />
-        </div>
-        <div class="form-field">
-          <label>Status:</label>
-          <input
-            formControlName="status"
-            type="text"
-            placeholder="Job status"
-            (input)="onFormChange()" />
-        </div>
-      </div>
-
-      <!-- Conditions Section -->
+          <!-- Conditions Section -->
       <div class="form-section">
         <h3>Condition (Dependencies)</h3>
         <button
@@ -334,6 +272,74 @@
           <strong>Final condition:</strong> {{ finalConditionString }}
         </div>
       </div>
+          <div class="form-field">
+          <label>Description:</label>
+          <input
+            formControlName="description"
+            type="text"
+            placeholder="Brief description of the job"
+            (input)="onFormChange()" />
+          </div>
+
+          <!-- Additional CMD Job Fields -->
+          <div class="form-field">
+            <label>Term Run Time:</label>
+            <input
+              formControlName="term_run_time"
+              type="number"
+              placeholder="Enter term run time (seconds)"
+              (input)="onFormChange()" />
+          </div>
+          <div class="form-field">
+            <label>Std Out File:</label>
+            <input
+              formControlName="std_out_file"
+              type="text"
+              placeholder="Enter stdout file path"
+              (input)="onFormChange()" />
+          </div>
+          <div class="form-field">
+            <label>Std Err File:</label>
+            <input
+              formControlName="std_err_file"
+              type="text"
+              placeholder="Enter stderr file path"
+              (input)="onFormChange()" />
+          </div>
+          <div class="form-field">
+            <label>Alarm if Fail:</label>
+            <select formControlName="alarm_if_fail" (change)="onFormChange()">
+              <option [value]="1">Yes (1)</option>
+              <option [value]="0">No (0)</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Profile:</label>
+            <input
+              formControlName="profile"
+              type="text"
+              placeholder="Enter profile"
+              (input)="onFormChange()" />
+          </div>
+          <div class="form-field">
+            <label>Alarm if Terminated:</label>
+            <select formControlName="alarm_if_terminated" (change)="onFormChange()">
+              <option [value]="1">Yes (1)</option>
+              <option [value]="0">No (0)</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Envars:</label>
+            <input
+              formControlName="envars"
+              type="text"
+              placeholder="Enter environment variables"
+              (input)="onFormChange()" />
+          </div>
+        </div>
+      </div>
+
+
       <!-- --- End: Fields from box-job.component.html --- -->
     </div>
     <div class="form-footer">

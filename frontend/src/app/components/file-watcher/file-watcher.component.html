@@ -143,6 +143,19 @@
         </div>
       </div>
 
+      <!-- Add box_name field after job-type -->
+      <div class="form-field">
+        <label class="required">Box Name:</label>
+        <input
+          formControlName="box_name"
+          type="text"
+          placeholder="Enter box name"
+          [class.error]="hasFieldError('box_name')"
+          (input)="onFormChange()" />
+        <div class="error-message" *ngIf="hasFieldError('box_name')">
+          {{ getFieldError('box_name') }}
+        </div>
+      </div>
       <!-- Environment Section -->
       <div class="form-section env-section">
         <h3>Environment Configuration</h3>
@@ -211,69 +224,7 @@
               <option [value]="0">No (0)</option>
             </select>
           </div>
-          <div class="form-field">
-            <label>Start Time:</label>
-            <input
-              formControlName="start_time"
-              type="time"
-              (change)="onFormChange()" />
-          </div>
-          <div class="form-field">
-            <label>Timezone:</label>
-            <select formControlName="timezone" (change)="onFormChange()">
-              <option *ngFor="let option of timezoneOptions" [value]="option.value">
-                {{ option.label }}
-              </option>
-            </select>
-          </div>
-          <div class="form-field">
-            <label>Alarm if Fail:</label>
-            <select formControlName="alarm_if_fail" (change)="onFormChange()">
-              <option [value]="1">Yes (1)</option>
-              <option [value]="0">No (0)</option>
-            </select>
-          </div>
-          <div class="form-field">
-            <label>Alarm if Terminated:</label>
-            <select formControlName="alarm_if_terminated" (change)="onFormChange()">
-              <option [value]="1">Yes (1)</option>
-              <option [value]="0">No (0)</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-field">
-          <label>Days of the week:</label>
-          <div class="checkbox-group">
-            <div class="checkbox-item" *ngFor="let day of daysOfWeek">
-              <input
-                type="checkbox"
-                [id]="day.value"
-                [value]="day.value"
-                [checked]="isDaySelected(day.value)"
-                (change)="onDayOfWeekChange($event)" />
-              <label [for]="day.value">{{ day.label }}</label>
-            </div>
-          </div>
-        </div>
-        <div class="form-field">
-          <label>Description:</label>
-          <input
-            formControlName="description"
-            type="text"
-            placeholder="Brief description of the job"
-            (input)="onFormChange()" />
-        </div>
-        <div class="form-field">
-          <label>Status:</label>
-          <input
-            formControlName="status"
-            type="text"
-            placeholder="Job status"
-            (input)="onFormChange()" />
-        </div>
-      </div>
-
-      <!-- Conditions Section -->
+          <!-- Conditions Section -->
       <div class="form-section">
         <h3>Condition (Dependencies)</h3>
         <button
@@ -322,6 +273,88 @@
         </div>
         <div class="final-condition">
           <strong>Final condition:</strong> {{ finalConditionString }}
+        </div>
+      </div>
+          <div class="form-field">
+          <label>Description:</label>
+          <input
+            formControlName="description"
+            type="text"
+            placeholder="Brief description of the job"
+            (input)="onFormChange()" />
+          </div>
+
+          <!-- Additional CMD Job Fields -->
+          <div class="form-field">
+            <label>Term Run Time:</label>
+            <input
+              formControlName="term_run_time"
+              type="number"
+              placeholder="Enter term run time (seconds)"
+              (input)="onFormChange()" />
+          </div>
+          <div class="form-field">
+            <label>Max Run Alarm (mins):</label>
+            <input
+              formControlName="max_run_alarm"
+              type="number"
+              placeholder="Enter max run alarm (minutes)"
+              (input)="onFormChange()" />
+          </div>
+          <div class="form-field">
+            <label>Alarm if Fail:</label>
+            <select formControlName="alarm_if_fail" (change)="onFormChange()">
+              <option [value]="1">Yes (1)</option>
+              <option [value]="0">No (0)</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Profile:</label>
+            <input
+              formControlName="profile"
+              type="text"
+              placeholder="Enter profile"
+              (input)="onFormChange()" />
+          </div>
+          <div class="form-field">
+            <label>Job Load:</label>
+            <input
+              formControlName="job_load"
+              type="number"
+              placeholder="Enter job load"
+              (input)="onFormChange()" />
+          </div>
+          <div class="form-field">
+            <label>Priority:</label>
+            <input
+              formControlName="priority"
+              type="number"
+              placeholder="Enter priority"
+              (input)="onFormChange()" />
+          </div>
+          <div class="form-field">
+            <label>Alarm if Terminated:</label>
+            <select formControlName="alarm_if_terminated" (change)="onFormChange()">
+              <option [value]="1">Yes (1)</option>
+              <option [value]="0">No (0)</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Watch File:</label>
+            <input
+              formControlName="watch_file"
+              type="text"
+              placeholder="Enter file to watch"
+              (input)="onFormChange()" />
+          </div>
+          <div class="form-field">
+            <label>Watch Interval:</label>
+            <input
+              formControlName="watch_interval"
+              type="number"
+              placeholder="Enter watch interval"
+              (input)="onFormChange()" />
+          </div>
         </div>
       </div>
 

@@ -201,40 +201,6 @@
           </div>
 
           <div class="form-field">
-            <label>Start Time:</label>
-            <input
-              formControlName="start_time"
-              type="time"
-              (change)="onFormChange()" />
-          </div>
-
-          <div class="form-field">
-            <label>Timezone:</label>
-            <select formControlName="timezone" (change)="onFormChange()">
-              <option *ngFor="let option of timezoneOptions" [value]="option.value">
-                {{ option.label }}
-              </option>
-            </select>
-          </div>
-
-          <div class="form-field">
-            <label>Alarm if Fail:</label>
-            <select formControlName="alarm_if_fail" (change)="onFormChange()">
-              <option [value]="1">Yes (1)</option>
-              <option [value]="0">No (0)</option>
-            </select>
-          </div>
-
-          <div class="form-field">
-            <label>Alarm if Terminated:</label>
-            <select formControlName="alarm_if_terminated" (change)="onFormChange()">
-              <option [value]="1">Yes (1)</option>
-              <option [value]="0">No (0)</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="form-field">
           <label>Days of the week:</label>
           <div class="checkbox-group">
             <div class="checkbox-item" *ngFor="let day of daysOfWeek">
@@ -249,26 +215,15 @@
           </div>
         </div>
 
-        <div class="form-field">
-          <label>Description:</label>
-          <input
-            formControlName="description"
-            type="text"
-            placeholder="Brief description of the job"
-            (input)="onFormChange()" />
-        </div>
+          <div class="form-field">
+            <label>Start Time:</label>
+            <input
+              formControlName="start_time"
+              type="time"
+              (change)="onFormChange()" />
+          </div>
 
-        <div class="form-field">
-          <label>Status:</label>
-          <input
-            formControlName="status"
-            type="text"
-            placeholder="Job status"
-            (input)="onFormChange()" />
-        </div>
-      </div>
-
-      <!-- Conditions Section -->
+          <!-- Conditions Section -->
       <div class="form-section">
         <h3>Condition (Dependencies)</h3>
 
@@ -326,6 +281,44 @@
           <strong>Final condition:</strong> {{ finalConditionString }}
         </div>
       </div>
+
+             <div class="form-field">
+          <label>Description:</label>
+          <input
+            formControlName="description"
+            type="text"
+            placeholder="Brief description of the job"
+            (input)="onFormChange()" />
+        </div>
+
+          <div class="form-field">
+            <label>Alarm if Fail:</label>
+            <select formControlName="alarm_if_fail" (change)="onFormChange()">
+              <option [value]="1">Yes (1)</option>
+              <option [value]="0">No (0)</option>
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label>Alarm if Terminated:</label>
+            <select formControlName="alarm_if_terminated" (change)="onFormChange()">
+              <option [value]="1">Yes (1)</option>
+              <option [value]="0">No (0)</option>
+            </select>
+          </div>
+
+                    <div class="form-field">
+            <label>Timezone:</label>
+            <select formControlName="timezone" (change)="onFormChange()">
+              <option *ngFor="let option of timezoneOptions" [value]="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+
 
       <!-- Form Footer -->
       <div class="form-footer">
