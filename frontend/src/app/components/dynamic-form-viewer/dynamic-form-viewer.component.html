@@ -1,0 +1,37 @@
+<form *ngIf="form" [formGroup]="form">
+  <ng-container *ngFor="let section of sections">
+    <h3>{{ section.section }}</h3>
+    <ng-container *ngFor="let q of section.questions">
+      <div [ngSwitch]="q.type">
+        <div *ngSwitchCase="'text'">
+          <label>{{ q.label }}</label>
+          <input [formControlName]="q.key" [placeholder]="q.placeholder" />
+        </div>
+        <div *ngSwitchCase="'dropdown'">
+          <label>{{ q.label }}</label>
+          <select [formControlName]="q.key">
+            <option *ngFor="let opt of q.options" [value]="opt.value">{{ opt.label }}</option>
+          </select>
+        </div>
+        <div *ngSwitchCase="'checkbox-group'">
+          <label>{{ q.label }}</label>
+          <div *ngFor="let opt of q.options">
+            <input type="checkbox" [formControlName]="opt.key" /> {{ opt.label }}
+          </div>
+        </div>
+        <!-- Environments Group -->
+        <div *ngSwitchCase="'environments-group'">
+          <div *ngFor="let env of q.environments">
+            <ng-container *ngIf="form.get(env.key)?.value">
+              <div *ngFor="let field of env.fields">
+                <label>{{ field.label }}</label>
+                <input [formControlName]="env.key + '_' + field.key" [placeholder]="field.label" />
+              </div>
+            </ng-container>
+          </div>
+        </div>
+        <!-- Add more cases for 'group', 'array', 'time', etc. as needed -->
+      </div>
+    </ng-container>
+  </ng-container>
+</form>

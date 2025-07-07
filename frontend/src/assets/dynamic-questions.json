@@ -1,0 +1,269 @@
+[
+  {
+    "section": "Insert Job Configuration",
+    "questions": [
+      {
+        "key": "csi",
+        "label": "CSI",
+        "type": "text",
+        "validators": [
+          { "type": "required" },
+          { "type": "pattern", "value": "^\\d{6}$" },
+          { "type": "maxLength", "value": 6 }
+        ],
+        "placeholder": "6 digits",
+        "defaultValue": "169912"
+      },
+      {
+        "key": "efforttype",
+        "label": "Effort Type",
+        "type": "dropdown",
+        "options": [
+          { "value": "REG", "label": "REG" },
+          { "value": "BAU", "label": "BAU" }
+        ],
+        "validators": [{ "type": "required" }]
+      },
+      {
+        "key": "prodlob",
+        "label": "Prod/LOB Name",
+        "type": "dropdown",
+        "options": [
+          { "value": "prod1", "label": "Prod 1" },
+          { "value": "prod2", "label": "Prod 2" }
+        ],
+        "validators": [{ "type": "required" }]
+      },
+      {
+        "key": "purpose",
+        "label": "Purpose",
+        "type": "text",
+        "placeholder": "ebsim, ppnr, acq, ...",
+        "validators": [{ "type": "required" }]
+      },
+      {
+        "key": "loadfreq",
+        "label": "Load Frequency",
+        "type": "dropdown",
+        "options": [
+          { "value": "D", "label": "Daily (D)" },
+          { "value": "W", "label": "Weekly (W)" },
+            { "value": "M", "label": "Monthly (M)" },
+            { "value": "C", "label": "Custom (C)" }
+        ],
+        "validators": [{ "type": "required" }]
+      },
+      {
+        "key": "loadlayer",
+        "label": "Load Layer",
+        "type": "dropdown",
+        "options": [
+          { "value": "STG", "label": "STG" },
+          { "value": "STD", "label": "STD" },
+            
+            { "value": "EXT", "label": "EXT" }
+        ],
+        "validators": [{ "type": "required" }]
+      },
+      {
+        "key": "funofjob",
+        "label": "Function of Job",
+        "type": "dropdown",
+        "options": [
+          { "value": "etl", "label": "ETL" },
+          { "value": "report", "label": "Report" },
+            { "value": "master", "label": "MASTER" },
+            { "value": "dq", "label": "DQ" }
+        ],
+        "validators": [{ "type": "required" }]
+      },
+      {
+        "key": "jobtitle",
+        "label": "Job Type",
+        "type": "dropdown",
+        "options": [
+          { "value": "fw", "label": "FW" },
+          { "value": "box", "label": "BOX" },
+            { "value": "cmd", "label": "CMD" },
+            { "value": "cfw", "label": "CFW" }
+        ],
+        "validators": [{ "type": "required" }]
+      }
+    ]
+  },
+  {
+    "section": "Environment Configuration",
+    "questions": [
+      {
+        "key": "environments",
+        "label": "Environment(s)",
+        "type": "checkbox-group",
+        "options": [
+          { "key": "dev", "label": "DEV" },
+          { "key": "prob", "label": "PROB" },
+          { "key": "cob", "label": "COB" },
+          { "key": "uat", "label": "UAT" }
+        ],
+        "validators": [{}]
+      },
+      {
+    "key": "environments_details",
+    "label": "Environment Details",
+    "type": "environments-group",
+    "environments": [
+        {
+        "key": "dev",
+        "label": "DEV",
+        "fields": [
+            { "key": "owner", "label": "Owner (DEV)", "type": "text" },
+            { "key": "machine", "label": "Machine (DEV)", "type": "text" },
+            { "key": "version", "label": "Version (DEV)", "type": "text" }
+        ]
+        },
+        {
+        "key": "prob",
+        "label": "PROB",
+        "fields": [
+            { "key": "owner", "label": "Owner (PROB)", "type": "text" },
+            { "key": "machine", "label": "Machine (PROB)", "type": "text" }
+        ]
+        },
+        {
+        "key": "cob",
+        "label": "COB",
+        "fields": [
+            { "key": "owner", "label": "Owner (COB)", "type": "text" },
+            { "key": "machine", "label": "Machine (COB)", "type": "text" },
+            { "key": "version", "label": "Version (COB)", "type": "text" }
+        ]
+        },
+        {
+        "key": "uat",
+        "label": "UAT",
+        "fields": [
+            { "key": "owner", "label": "Owner (UAT)", "type": "text" },
+            { "key": "machine", "label": "Machine (UAT)", "type": "text" },
+            { "key": "version", "label": "Version (UAT)", "type": "text" }
+        ]
+        }
+    ]
+    }
+        
+        ]
+  },
+  {
+    "section": "Job Configuration",
+    "questions": [
+      {
+        "key": "permission",
+        "label": "Permission",
+        "type": "text"
+      },
+      {
+        "key": "date_conditions",
+        "label": "Date Conditions",
+        "type": "dropdown",
+        "options": [
+          { "value": 1, "label": "Yes (1)" },
+          { "value": 0, "label": "No (0)" }
+        ]
+      },
+      {
+        "key": "days_of_week",
+        "label": "Days of the week",
+        "type": "checkbox-group",
+        "options": [
+          { "value": "mon", "label": "Monday" },
+          { "value": "tue", "label": "Tuesday" },
+          { "value": "wed", "label": "Wednesday" },
+          { "value": "thu", "label": "Thursday" },
+          { "value": "fri", "label": "Friday" },
+          { "value": "sat", "label": "Saturday" },
+          { "value": "sun", "label": "Sunday" }
+        ]
+      },
+      {
+        "key": "start_time",
+        "label": "Start Time",
+        "type": "time"
+      }
+    ]
+  },
+  {
+    "section": "Condition (Dependencies)",
+    "questions": [
+      {
+        "key": "conditions",
+        "label": "Conditions",
+        "type": "array",
+        "item": {
+          "type": "group",
+          "fields": [
+            {
+              "key": "type",
+              "label": "Type",
+              "type": "dropdown",
+              "options": [
+                { "value": "success", "label": "Success" },
+                { "value": "failure", "label": "Failure" }
+              ]
+            },
+            {
+              "key": "job",
+              "label": "Job",
+              "type": "text",
+              "placeholder": "e.g., jobA"
+            },
+            {
+              "key": "logic",
+              "label": "Logic",
+              "type": "dropdown",
+              "options": [
+                { "value": "and", "label": "AND" },
+                { "value": "or", "label": "OR" }
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "section": "Other",
+    "questions": [
+      {
+        "key": "description",
+        "label": "Description",
+        "type": "text",
+        "placeholder": "Brief description of the job"
+      },
+      {
+        "key": "alarm_if_fail",
+        "label": "Alarm if Fail",
+        "type": "dropdown",
+        "options": [
+          { "value": 1, "label": "Yes (1)" },
+          { "value": 0, "label": "No (0)" }
+        ]
+      },
+      {
+        "key": "alarm_if_terminated",
+        "label": "Alarm if Terminated",
+        "type": "dropdown",
+        "options": [
+          { "value": 1, "label": "Yes (1)" },
+          { "value": 0, "label": "No (0)" }
+        ]
+      },
+      {
+        "key": "timezone",
+        "label": "Timezone",
+        "type": "dropdown",
+        "options": [
+          { "value": "US CENTRAL", "label": "US CENTRAL" },
+          { "value": "US EASTERN", "label": "US EASTERN" }
+        ]
+      }
+    ]
+  }
+]

@@ -8,6 +8,7 @@ import { CmdJobComponent } from '../components/cmd-job/cmd-job.component';
 import { CfwJobComponent } from '../components/cfw-job/cfw-job.component';
 import { FormService } from '../services/form.service';
 import { AbstractControl } from '@angular/forms';
+import { Router } from '@angular/router';
 // import { FormGroup, FormControl, ReactiveFormsModule, FormArray, Validators } from '@angular/forms';
 
 @Component({
@@ -23,7 +24,8 @@ export class DashboardComponent implements OnInit {
   boxJobNaming: string = '';
   fileWatcherNaming: string = '';
 
-  constructor(public formService: FormService) {}
+  constructor(public formService: FormService,private router: Router) {}
+// constructor(public formService: FormService) {}
 
   ngOnInit() {
     if (this.formService.hasStoredData()) {
@@ -168,4 +170,8 @@ removeJob(index: number) {
   toFormGroup(control: AbstractControl | null): FormGroup {
     return control as FormGroup;
   }
+
+  navigateToDynamicForm() {
+  this.router.navigate(['/dynamic-form']);
+}
 }
