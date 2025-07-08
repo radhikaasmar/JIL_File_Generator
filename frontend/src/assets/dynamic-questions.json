@@ -124,8 +124,8 @@
         "key": "prob",
         "label": "PROB",
         "fields": [
-            { "key": "owner", "label": "Owner (PROB)", "type": "text" },
-            { "key": "machine", "label": "Machine (PROB)", "type": "text" }
+            { "key": "owner", "label": "Owner (PROD)", "type": "text" },
+            { "key": "machine", "label": "Machine (PROD)", "type": "text" }
         ]
         },
         {
@@ -195,7 +195,7 @@
       {
         "key": "conditions",
         "label": "Conditions",
-        "type": "array",
+        "type": "conditions-array",
         "item": {
           "type": "group",
           "fields": [
@@ -205,7 +205,11 @@
               "type": "dropdown",
               "options": [
                 { "value": "success", "label": "Success" },
-                { "value": "failure", "label": "Failure" }
+                { "value": "failure", "label": "Failure" },
+                { "value": "terminated", "label": "Terminated" },
+                { "value": "done", "label": "Done" },
+                { "value": "notrunning", "label": "Not Running" },
+                { "value": "started", "label": "Started" }
               ]
             },
             {

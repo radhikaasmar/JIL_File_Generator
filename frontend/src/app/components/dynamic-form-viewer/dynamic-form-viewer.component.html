@@ -30,6 +30,29 @@
             </ng-container>
           </div>
         </div>
+        <!-- Conditions Array -->
+        <div *ngSwitchCase="'conditions-array'">
+          <label>{{ q.label }}</label>
+          <div formArrayName="{{q.key}}">
+            <div *ngFor="let group of getConditionsArray(q.key).controls; let i = index" [formGroupName]="i" class="condition-group">
+              <div *ngFor="let field of q.item.fields">
+                <label>{{ field.label }}</label>
+                <ng-container [ngSwitch]="field.type">
+                  <input *ngSwitchCase="'text'" [formControlName]="field.key" [placeholder]="field.placeholder" />
+                  <select *ngSwitchCase="'dropdown'" [formControlName]="field.key" (change)="field.key === 'logic' ? onLogicChange(q, i) : null">
+                    <option *ngIf="field.key === 'logic'" value="NONE">(none)</option>
+                    <option *ngFor="let opt of getTypeOptions(field, q)" [value]="opt.value">{{ opt.label }}</option>
+                  </select>
+                </ng-container>
+              </div>
+              <!-- <button type="button" (click)="removeCondition(q.key, i)" [disabled]="getConditionsArray(q.key).length === 1">Remove</button> -->
+            </div>
+            <!-- <button type="button" (click)="addCondition(q)">Add Condition</button> -->
+          </div>
+          <div class="condition-string">
+            <strong>Condition String:</strong> {{ getFinalConditionString(q) }}
+          </div>
+        </div>
         <!-- Add more cases for 'group', 'array', 'time', etc. as needed -->
       </div>
     </ng-container>
