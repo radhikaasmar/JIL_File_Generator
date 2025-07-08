@@ -292,18 +292,6 @@ export class FileWatcherComponent implements OnInit {
     });
   }
 
-  addCondition(): void {
-    this.conditions.push(this.createCondition());
-    this.onFormChange();
-  }
-
-  removeCondition(index: number): void {
-    if (this.conditions.length > 1) {
-      this.conditions.removeAt(index);
-      this.onFormChange();
-    }
-  }
-
   addConditionIfNeeded(index: number): void {
     const current = this.conditions.at(index);
     const logic = current.get('logic')?.value;

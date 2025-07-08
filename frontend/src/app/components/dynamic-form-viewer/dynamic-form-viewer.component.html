@@ -1,60 +1,72 @@
-<form *ngIf="form" [formGroup]="form">
-  <ng-container *ngFor="let section of sections">
-    <h3>{{ section.section }}</h3>
-    <ng-container *ngFor="let q of section.questions">
-      <div [ngSwitch]="q.type">
-        <div *ngSwitchCase="'text'">
-          <label>{{ q.label }}</label>
-          <input [formControlName]="q.key" [placeholder]="q.placeholder" />
-        </div>
-        <div *ngSwitchCase="'dropdown'">
-          <label>{{ q.label }}</label>
-          <select [formControlName]="q.key">
-            <option *ngFor="let opt of q.options" [value]="opt.value">{{ opt.label }}</option>
-          </select>
-        </div>
-        <div *ngSwitchCase="'checkbox-group'">
-          <label>{{ q.label }}</label>
-          <div *ngFor="let opt of q.options">
-            <input type="checkbox" [formControlName]="opt.key" /> {{ opt.label }}
-          </div>
-        </div>
-        <!-- Environments Group -->
-        <div *ngSwitchCase="'environments-group'">
-          <div *ngFor="let env of q.environments">
-            <ng-container *ngIf="form.get(env.key)?.value">
-              <div *ngFor="let field of env.fields">
-                <label>{{ field.label }}</label>
-                <input [formControlName]="env.key + '_' + field.key" [placeholder]="field.label" />
+<div class="form-box">
+  <div class="collapsible-header">
+    <h2>Dynamic Form Viewer</h2>
+  </div>
+  <div>
+    <form *ngIf="form" [formGroup]="form">
+      <div class="form-fields">
+        <ng-container *ngFor="let section of sections">
+          <div class="form-section">
+            <h3>{{ section.section }}</h3>
+            <ng-container *ngFor="let q of section.questions">
+              <div class="form-field" [ngSwitch]="q.type">
+                <div *ngSwitchCase="'text'">
+                  <label>{{ q.label }}</label>
+                  <input [formControlName]="q.key" [placeholder]="q.placeholder" />
+                </div>
+                <div *ngSwitchCase="'dropdown'">
+                  <label>{{ q.label }}</label>
+                  <select [formControlName]="q.key">
+                    <option *ngFor="let opt of q.options" [value]="opt.value">{{ opt.label }}</option>
+                  </select>
+                </div>
+                <div *ngSwitchCase="'checkbox-group'">
+                  <label>{{ q.label }}</label>
+                  <div class="checkbox-group">
+                    <div class="checkbox-item" *ngFor="let opt of q.options">
+                      <input type="checkbox" [formControlName]="opt.key" /> {{ opt.label }}
+                    </div>
+                  </div>
+                </div>
+                <!-- Environments Group -->
+                <div *ngSwitchCase="'environments-group'">
+                  <div *ngFor="let env of q.environments">
+                    <ng-container *ngIf="form.get(env.key)?.value">
+                      <div *ngFor="let field of env.fields" class="form-field">
+                        <label>{{ field.label }}</label>
+                        <input [formControlName]="env.key + '_' + field.key" [placeholder]="field.label" />
+                      </div>
+                    </ng-container>
+                  </div>
+                </div>
+                <!-- Conditions Array -->
+                <div *ngSwitchCase="'conditions-array'">
+                  <label>{{ q.label }}</label>
+                  <div formArrayName="{{q.key}}" class="conditions-container">
+                    <div *ngFor="let group of getConditionsArray(q.key).controls; let i = index" [formGroupName]="i" class="condition-item">
+                      <div *ngFor="let field of q.item.fields" class="form-field">
+                        <label>{{ field.label }}</label>
+                        <ng-container [ngSwitch]="field.type">
+                          <input *ngSwitchCase="'text'" [formControlName]="field.key" [placeholder]="field.placeholder" />
+                          <select *ngSwitchCase="'dropdown'" [formControlName]="field.key" (change)="field.key === 'logic' ? onLogicChange(q, i) : null">
+                            <option *ngIf="field.key === 'logic'" value="NONE">(none)</option>
+                            <option *ngFor="let opt of getTypeOptions(field, q)" [value]="opt.value">{{ opt.label }}</option>
+                          </select>
+                        </ng-container>
+                      </div>
+                      <!-- Remove/Add buttons intentionally omitted -->
+                    </div>
+                  </div>
+                  <div class="final-condition">
+                    <strong>Condition String:</strong> {{ getFinalConditionString(q) }}
+                  </div>
+                </div>
+                <!-- ...add more cases as needed... -->
               </div>
             </ng-container>
           </div>
-        </div>
-        <!-- Conditions Array -->
-        <div *ngSwitchCase="'conditions-array'">
-          <label>{{ q.label }}</label>
-          <div formArrayName="{{q.key}}">
-            <div *ngFor="let group of getConditionsArray(q.key).controls; let i = index" [formGroupName]="i" class="condition-group">
-              <div *ngFor="let field of q.item.fields">
-                <label>{{ field.label }}</label>
-                <ng-container [ngSwitch]="field.type">
-                  <input *ngSwitchCase="'text'" [formControlName]="field.key" [placeholder]="field.placeholder" />
-                  <select *ngSwitchCase="'dropdown'" [formControlName]="field.key" (change)="field.key === 'logic' ? onLogicChange(q, i) : null">
-                    <option *ngIf="field.key === 'logic'" value="NONE">(none)</option>
-                    <option *ngFor="let opt of getTypeOptions(field, q)" [value]="opt.value">{{ opt.label }}</option>
-                  </select>
-                </ng-container>
-              </div>
-              <!-- <button type="button" (click)="removeCondition(q.key, i)" [disabled]="getConditionsArray(q.key).length === 1">Remove</button> -->
-            </div>
-            <!-- <button type="button" (click)="addCondition(q)">Add Condition</button> -->
-          </div>
-          <div class="condition-string">
-            <strong>Condition String:</strong> {{ getFinalConditionString(q) }}
-          </div>
-        </div>
-        <!-- Add more cases for 'group', 'array', 'time', etc. as needed -->
+        </ng-container>
       </div>
-    </ng-container>
-  </ng-container>
-</form>
+    </form>
+  </div>
+</div>

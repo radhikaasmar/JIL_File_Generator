@@ -227,12 +227,6 @@
           <!-- Conditions Section -->
       <div class="form-section">
         <h3>Condition (Dependencies)</h3>
-        <button
-          type="button"
-          class="add-condition-btn"
-          (click)="addCondition()">
-          + Add Condition
-        </button>
         <div formArrayName="conditions" class="conditions-container">
           <div
             *ngFor="let cond of conditions.controls; let i = index"
@@ -262,13 +256,6 @@
                 </option>
               </select>
             </div>
-            <button
-              type="button"
-              class="remove-condition-btn"
-              (click)="removeCondition(i)"
-              [disabled]="conditions.length === 1">
-              Remove
-            </button>
           </div>
         </div>
         <div class="final-condition">

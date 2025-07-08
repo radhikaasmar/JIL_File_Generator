@@ -10,8 +10,12 @@ export class DynamicFormBuilderService {
     sections.forEach(section => {
       section.questions.forEach((q: any) => {
         if (q.type === 'conditions-array') {
-          // Create a FormArray for conditions, initially empty
-          group[q.key] = this.fb.array([]);
+          // Create a FormArray for conditions, ensure at least one group
+          const arr = this.fb.array<FormGroup>([]);
+          if (q.item && q.item.fields) {
+            arr.push(this.buildConditionGroup(q.item.fields));
+          }
+          group[q.key] = arr;
         } else if (q.type === 'array') {
           group[q.key] = this.fb.array([]);
         } else if (q.type === 'group') {

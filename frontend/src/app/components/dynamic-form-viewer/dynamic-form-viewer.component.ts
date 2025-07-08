@@ -7,6 +7,7 @@ import { DynamicFormBuilderService } from '../../services/dynamic-form-builder.s
   selector: 'app-dynamic-form-viewer',
   templateUrl: './dynamic-form-viewer.component.html',
   standalone: true,
+  styleUrls: ['../../styles.css'],
   imports: [CommonModule, ReactiveFormsModule]
 })
 export class DynamicFormViewerComponent {
@@ -53,7 +54,7 @@ export class DynamicFormViewerComponent {
       // Add extra options for type
       const base = field.options || [];
       const extra: any[] = [
-        
+
       ];
       // Avoid duplicates if already present
       const all = [...base];
