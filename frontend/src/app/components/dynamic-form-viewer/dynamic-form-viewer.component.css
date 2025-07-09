@@ -16,20 +16,24 @@
   background: var(--surface);
   border-radius: 16px;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
-  padding: 2rem;
-  margin: 1.5rem auto;
+  padding: 1.5rem;
+  margin: 1rem auto;
   max-width: 1200px;
   transition: all 0.3s ease;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .collapsible-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem;
+  padding: 0.75rem;
   background: var(--surface-hover);
   border-radius: 12px;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 
 .collapsible-header h2 {
@@ -37,15 +41,19 @@
   font-weight: 600;
   color: var(--text);
   margin: 0;
+  flex: 1;
+  min-width: 200px;
 }
 
 .form-section {
   background: var(--surface);
   border-radius: 12px;
-  padding: 1.5rem;
-  margin-bottom: 2rem;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
   border: 1px solid var(--border);
   transition: all 0.2s ease;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .form-section:hover {
@@ -55,19 +63,79 @@
 .form-section h3 {
   font-size: 1.25rem;
   color: var(--primary);
-  margin-bottom: 1.5rem;
-  padding-bottom: 0.75rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
   border-bottom: 2px solid var(--border);
 }
 
+/* Form fields container with flex layout */
+.form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Default form field container within each section */
+.form-section .form-fields,
+.form-section > div:not(.integrated-job-display):not(.insert-job-fields) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+/* Individual form field styling */
 .form-field {
-  margin-bottom: 1.5rem;
+  flex: 1;
+  min-width: 200px;
+  margin-bottom: 0;
+}
+
+/* Special sizing for specific field types */
+.form-field[class*="text"] {
+  min-width: 250px;
+}
+
+.form-field[class*="dropdown"] {
+  min-width: 180px;
+}
+
+.form-field[class*="time"] {
+  min-width: 150px;
+}
+
+/* Responsive flex behavior */
+.form-section > div > .form-field {
+  flex: 1 1 auto;
+  min-width: 200px;
+  max-width: 100%;
+}
+
+/* For sections with many fields, create more compact layout */
+.form-section > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+/* Insert job fields special styling */
+.insert-job-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.insert-job-fields .form-field {
+  flex: 1;
+  min-width: 180px;
 }
 
 .form-field label {
   display: block;
   font-weight: 500;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.4rem;
   color: var(--text);
 }
 
@@ -77,61 +145,112 @@
   margin-left: 0.25rem;
 }
 
-input, select {
+input, select, textarea {
   width: 100%;
-  padding: 0.75rem 1rem;
+  padding: 0.6rem 0.8rem;
   border: 1.5px solid var(--border);
   border-radius: 8px;
   font-size: 0.95rem;
   transition: all 0.2s ease;
   background: var(--surface);
   color: var(--text);
+  box-sizing: border-box;
 }
 
-input:hover, select:hover {
+/* Enhanced final condition display */
+.final-condition {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border: 2px solid var(--success);
+  border-radius: 10px;
+  padding: 0.75rem;
+  margin-top: 1rem;
+  font-family: 'Roboto Mono', monospace;
+  color: var(--success);
+  word-break: break-word;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.1);
+}
+
+/* Enhanced input styling with better focus states */
+input, select, textarea {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  background: var(--surface);
+  color: var(--text);
+  box-sizing: border-box;
+}
+
+input:hover, select:hover, textarea:hover {
   border-color: var(--primary-light);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.05);
 }
 
-input:focus, select:focus {
+input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  background: #fefefe;
+}
+
+/* Enhanced warning styling */
+.warning {
+  color: var(--error);
+  font-size: 0.85rem;
+  margin-top: 0.4rem;
+  padding: 0.5rem;
+  border-radius: 6px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.warning::before {
+  content: "⚠️";
+  font-size: 1rem;
 }
 
 .integrated-job-display {
   background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
   border: 2px solid var(--primary-light);
   border-radius: 10px;
-  padding: 1rem;
-  margin-bottom: 2rem;
+  padding: 0.75rem;
+  margin-bottom: 1.5rem;
   font-family: 'Roboto Mono', monospace;
   font-size: 1.1rem;
   color: var(--primary);
   text-align: center;
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+  word-break: break-word;
 }
 
 .warning {
   color: var(--error);
   font-size: 0.9rem;
-  margin-top: 0.5rem;
-  padding: 0.5rem;
+  margin-top: 0.4rem;
+  padding: 0.4rem;
   border-radius: 6px;
   background: rgba(239, 68, 68, 0.1);
 }
 
 .checkbox-group {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 1rem;
-  margin-top: 0.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.4rem;
 }
 
 .checkbox-item {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem;
+  gap: 0.4rem;
+  padding: 0.4rem;
   border-radius: 6px;
   transition: background 0.2s ease;
 }
@@ -146,49 +265,336 @@ input:focus, select:focus {
   border-radius: 4px;
   border: 2px solid var(--primary-light);
   cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* Enhanced conditions container */
+.conditions-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
 }
 
 .condition-item {
   background: var(--surface-hover);
   border-radius: 10px;
-  padding: 1.5rem;
-  margin-bottom: 1rem;
-  display: grid;
-  gap: 1rem;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-}
-
-.final-condition {
-  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
-  border: 2px solid var(--success);
-  border-radius: 10px;
   padding: 1rem;
-  margin-top: 1.5rem;
-  font-family: 'Roboto Mono', monospace;
-  color: var(--success);
+  margin-bottom: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-end;
+  border: 1px solid var(--border);
+  transition: all 0.2s ease;
 }
 
+.condition-item:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.condition-item .form-field {
+  flex: 1;
+  min-width: 150px;
+  margin-bottom: 0;
+}
+
+/* Enhanced time group styling */
 .time-group-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 1rem;
-  align-items: end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-end;
   background: var(--surface-hover);
-  padding: 1rem;
+  padding: 0.75rem;
   border-radius: 8px;
+  border: 1px solid var(--border);
+  margin-top: 0.5rem;
+}
+
+.time-group-container .time-field {
+  flex: 1;
+  min-width: 140px;
+}
+
+/* Enhanced checkbox group */
+.checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: var(--surface-hover);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  background: var(--surface);
+  border: 1px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.checkbox-item:hover {
+  background: var(--primary-light);
+  color: white;
+  border-color: var(--primary);
+  transform: translateY(-1px);
+}
+
+.checkbox-item input[type="checkbox"] {
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 4px;
+  border: 2px solid var(--primary-light);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.checkbox-item input[type="checkbox"]:checked {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+/* Enhanced environments group */
+.environments-group .form-field {
+  flex: 1;
+  min-width: 200px;
+  margin-bottom: 0.75rem;
+}
+
+.environments-group > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background: var(--surface-hover);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+/* Button styles */
+.btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: var(--primary-light);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.btn-secondary:hover {
+  background: var(--surface-hover);
+}
+
+/* Responsive breakpoints */
+@media (max-width: 1024px) {
+  .form-box {
+    max-width: 100%;
+    margin: 1rem;
+  }
+
+  .condition-item {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
+
+  .time-group-container {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
 }
 
 @media (max-width: 768px) {
   .form-box {
     padding: 1rem;
-    margin: 1rem;
+    margin: 0.5rem;
+    border-radius: 12px;
+  }
+
+  .collapsible-header {
+    padding: 0.75rem;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .collapsible-header h2 {
+    font-size: 1.25rem;
+    min-width: auto;
+  }
+
+  .form-section {
+    padding: 1rem;
+  }
+
+  .form-section h3 {
+    font-size: 1.1rem;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .form-row .form-field {
+    flex: 1;
+    min-width: auto;
+    margin-bottom: 1.5rem;
+  }
+
+  .form-row .form-field.half,
+  .form-row .form-field.third,
+  .form-row .form-field.quarter {
+    flex: 1;
   }
 
   .condition-item {
     grid-template-columns: 1fr;
+    padding: 1rem;
   }
 
   .time-group-container {
     grid-template-columns: 1fr;
   }
+
+  .checkbox-group {
+    grid-template-columns: 1fr;
+  }
+
+  .integrated-job-display {
+    font-size: 1rem;
+    padding: 0.75rem;
+  }
+
+  .final-condition {
+    padding: 0.75rem;
+    font-size: 0.9rem;
+  }
+
+  input, select, textarea {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+}
+
+@media (max-width: 480px) {
+  .form-box {
+    padding: 0.75rem;
+    margin: 0.25rem;
+  }
+
+  .collapsible-header {
+    padding: 0.5rem;
+  }
+
+  .form-section {
+    padding: 0.75rem;
+  }
+
+  .btn {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.9rem;
+  }
+
+  .checkbox-item {
+    padding: 0.4rem;
+  }
+
+  .checkbox-item input[type="checkbox"] {
+    width: 1.1rem;
+    height: 1.1rem;
+  }
+}
+
+/* Utility classes for common layouts */
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.mb-0 {
+  margin-bottom: 0;
+}
+
+.mt-1 {
+  margin-top: 0.5rem;
+}
+
+.mt-2 {
+  margin-top: 1rem;
+}
+
+.hidden {
+  display: none;
+}
+
+/* Animation for smooth transitions */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
 }
