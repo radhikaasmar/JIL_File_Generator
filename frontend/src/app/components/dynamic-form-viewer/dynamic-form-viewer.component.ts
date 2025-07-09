@@ -7,7 +7,7 @@ import { DynamicFormBuilderService, SubformInstance } from '../../services/dynam
   selector: 'app-dynamic-form-viewer',
   templateUrl: './dynamic-form-viewer.component.html',
   standalone: true,
-  styleUrls: ['../../styles.css'],
+  styleUrls: ['./dynamic-form-viewer.component.css'],
   imports: [CommonModule, ReactiveFormsModule]
 })
 export class DynamicFormViewerComponent {
@@ -20,40 +20,40 @@ export class DynamicFormViewerComponent {
 
   isDaySelected(dayValue: string): boolean {
     if (!this.form) return false;
-    
+
     const daysOfWeekControl = this.form.get('days_of_week');
     if (!daysOfWeekControl || !daysOfWeekControl.value) return false;
-    
+
     const selectedDays = daysOfWeekControl.value;
-    
+
     if (Array.isArray(selectedDays)) {
       return selectedDays.includes(dayValue);
     }
-    
+
     if (typeof selectedDays === 'string') {
       return selectedDays.includes(dayValue);
     }
-    
+
     return false;
   }
 
   // Method to handle day of week checkbox changes
   onDayOfWeekChange(event: any) {
     if (!this.form) return;
-    
+
     const checkbox = event.target;
     const dayValue = checkbox.value;
     const isChecked = checkbox.checked;
-    
+
     const daysOfWeekControl = this.form.get('days_of_week');
     if (!daysOfWeekControl) return;
-    
+
     let currentDays = daysOfWeekControl.value || [];
-    
+
     if (typeof currentDays === 'string') {
       currentDays = currentDays.split(',').filter(d => d.trim() !== '');
     }
-    
+
     if (isChecked) {
       if (!currentDays.includes(dayValue)) {
         currentDays.push(dayValue);
@@ -61,7 +61,7 @@ export class DynamicFormViewerComponent {
     } else {
       currentDays = currentDays.filter((day: string) => day !== dayValue);
     }
-    
+
     daysOfWeekControl.setValue(currentDays);
     this.onFormChange();
   }
@@ -139,26 +139,26 @@ export class DynamicFormViewerComponent {
   }
 get integratedJobValue(): string {
   if (!this.form) return '';
-  
+
   // For top subform, show only the base job name (first 6 fields)
   if (this.subformContext?.type === 'top') {
     const fields = ['csi', 'efforttype', 'prodlob', 'purpose', 'loadfreq', 'loadlayer'];
     const values = fields.map(f => this.form.get(f)?.value || '').map(v => v.toString().toUpperCase());
     return values.filter(v => v !== '').join('_') || 'Job name will appear here';
   }
-  
+
   // For other subforms, this will be handled by the parent component
   return '';
 }
 
   get isJobNameTruncated(): boolean {
     if (!this.form) return false;
-    
+
     const fields = ['csi', 'efforttype', 'prodlob', 'purpose', 'loadfreq', 'loadlayer', 'funofjob', 'jobtitle'];
     const values = fields.map(f => this.form.get(f)?.value || '').map(v => v.toString().toUpperCase());
-    
+
     if (!values[3]) return false; // if purpose is empty, never truncated
-    
+
     const originalJobName = values.filter(v => v !== '').join('_');
     return originalJobName.length > 64;
   }

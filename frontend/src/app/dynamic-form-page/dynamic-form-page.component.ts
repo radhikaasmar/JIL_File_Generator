@@ -13,12 +13,13 @@ import { ReactiveFormsModule } from '@angular/forms';
   selector: 'app-dynamic-form-page',
   templateUrl: './dynamic-form-page.component.html',
   standalone: true,
-  imports: [DynamicFormViewerComponent, RouterModule, CommonModule, ReactiveFormsModule]
+  imports: [DynamicFormViewerComponent, RouterModule, CommonModule, ReactiveFormsModule],
+  styleUrls: ['./dynamic-form-page.component.css']
 })
 export class DynamicFormPageComponent implements OnInit {
   subformInstances: SubformInstance[] = [];
   subformConfigs: {[key: string]: ResolvedSubformConfig} = {};
-  
+
   constructor(
     private questionService: DynamicQuestionService,
     private formBuilder: DynamicFormBuilderService,
@@ -32,7 +33,7 @@ export class DynamicFormPageComponent implements OnInit {
 
   private loadSubformConfigs() {
     this.subformConfigService.loadAllSubformConfigs().subscribe(configs => {
-      const resolvePromises = Object.keys(configs).map(key => 
+      const resolvePromises = Object.keys(configs).map(key =>
         this.subformConfigService.resolveSubformConfig(configs[key]).toPromise()
       );
 
@@ -50,7 +51,7 @@ export class DynamicFormPageComponent implements OnInit {
   private initializeDefaultSubforms() {
     // Always add top subform
     this.addSubformInstance('top', 'Common Configuration', false);
-    
+
     // Always add box subform
     this.addSubformInstance('box', 'Box Job #1', false);
   }
@@ -60,7 +61,7 @@ export class DynamicFormPageComponent implements OnInit {
     if (!config) return;
 
     const form = this.formBuilder.buildSubform(config.sections);
-    
+
     // Pre-fill function of job and job type if provided
     if (functionOfJob) {
       const functionOption = this.functionJobMappingService.getFunctionJobOption(functionOfJob);
@@ -88,7 +89,7 @@ export class DynamicFormPageComponent implements OnInit {
     const existingFunctions = this.subformInstances
       .filter(instance => instance.functionOfJob)
       .map(instance => instance.functionOfJob!);
-    
+
     return this.functionJobMappingService.getAvailableFunctions(existingFunctions);
   }
 
@@ -103,7 +104,7 @@ export class DynamicFormPageComponent implements OnInit {
     const displayName = `${functionOption.subformType.toUpperCase()} Job #${instanceCount + 1}`;
 
     this.addSubformInstance(functionOption.subformType, displayName, true, selectedFunction);
-    
+
     // Reset dropdown
     event.target.value = '';
   }
@@ -122,7 +123,7 @@ export class DynamicFormPageComponent implements OnInit {
     if (!topInstance) return;
 
     const baseJobName = this.generateBaseJobName(topInstance.form);
-    
+
     // Update box names for CMD, CFW, FW subforms
     this.subformInstances
       .filter(instance => ['cmd', 'cfw', 'fw'].includes(instance.type))
@@ -141,17 +142,17 @@ export class DynamicFormPageComponent implements OnInit {
   private generateBoxName(baseJobName: string, subformForm: FormGroup): string {
     const funofjob = subformForm.get('funofjob')?.value || '';
     const jobtitle = subformForm.get('jobtitle')?.value || '';
-    
+
     const boxInstance = this.subformInstances.find(s => s.type === 'box');
     if (boxInstance) {
       const boxFunofjob = boxInstance.form.get('funofjob')?.value || '';
       const boxJobtitle = boxInstance.form.get('jobtitle')?.value || '';
-      
+
       if (baseJobName && boxFunofjob && boxJobtitle) {
         return `${baseJobName}_${boxFunofjob.toUpperCase()}_${boxJobtitle.toUpperCase()}`;
       }
     }
-    
+
     return baseJobName;
   }
 trackByInstanceId(index: number, instance: SubformInstance): string {
@@ -162,18 +163,18 @@ getJobNameForInstance(instance: SubformInstance): string {
   if (instance.type === 'top') {
     return this.generateBaseJobName(instance.form);
   }
-  
+
   const topInstance = this.subformInstances.find(s => s.type === 'top');
   if (!topInstance) return '';
-  
+
   const baseJobName = this.generateBaseJobName(topInstance.form);
   const funofjob = instance.form.get('funofjob')?.value || '';
   const jobtitle = instance.form.get('jobtitle')?.value || '';
-  
+
   if (baseJobName && funofjob && jobtitle) {
     return `${baseJobName}_${funofjob.toUpperCase()}_${jobtitle.toUpperCase()}`;
   }
-  
+
   return baseJobName;
 }
 

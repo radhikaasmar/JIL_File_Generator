@@ -1,33 +1,20 @@
 <div class="dynamic-form-container">
   <div class="form-header">
     <h1>Dynamic Job Configuration</h1>
-    
-    <!-- Add Function Job Dropdown -->
-    <div class="add-function-section">
-      <label for="functionSelect">Add Function of Job:</label>
-      <select id="functionSelect" (change)="onAddFunctionJob($event)" class="function-dropdown">
-        <option value="">Select function to add...</option>
-        <option 
-          *ngFor="let option of availableFunctionOptions" 
-          [value]="option.value">
-          {{ option.label }}
-        </option>
-      </select>
-    </div>
   </div>
 
   <!-- Subform Instances -->
   <div class="subforms-container">
-    <div 
-      *ngFor="let instance of subformInstances; trackBy: trackByInstanceId" 
+    <div
+      *ngFor="let instance of subformInstances; trackBy: trackByInstanceId"
       class="subform-wrapper"
       [ngClass]="'subform-' + instance.type">
-      
+
       <!-- Subform Header -->
       <div class="subform-header">
         <h2>{{ instance.displayName }}</h2>
-        <button 
-          *ngIf="instance.removable" 
+        <button
+          *ngIf="instance.removable"
           (click)="removeSubformInstance(instance.id)"
           class="remove-btn"
           type="button">
@@ -44,13 +31,26 @@
       </div>
 
       <!-- Dynamic Form Viewer for this subform -->
-      <app-dynamic-form-viewer 
-        [sections]="instance.sections" 
+      <app-dynamic-form-viewer
+        [sections]="instance.sections"
         [form]="instance.form"
         [subformContext]="instance"
         (formChange)="onSubformChange(instance)">
       </app-dynamic-form-viewer>
     </div>
+  </div>
+
+  <!-- Add Function Job Dropdown moved here -->
+  <div class="add-function-section" style="margin-top:2rem;">
+    <label for="functionSelect">Add Function of Job:</label>
+    <select id="functionSelect" (change)="onAddFunctionJob($event)" class="function-dropdown">
+      <option value="">Select function to add...</option>
+      <option
+        *ngFor="let option of availableFunctionOptions"
+        [value]="option.value">
+        {{ option.label }}
+      </option>
+    </select>
   </div>
 
   <!-- Debug Information (optional, remove in production) -->
