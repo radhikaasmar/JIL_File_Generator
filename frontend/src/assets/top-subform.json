@@ -1,0 +1,47 @@
+{
+  "subformType": "top",
+  "displayName": "Common Configuration",
+  "allowMultiple": false,
+  "sections": [
+    {
+      "title": "Insert Job Configuration",
+      "questionIds": [
+        "q_csi",
+        "q_efforttype", 
+        "q_prodlob",
+        "q_purpose",
+        "q_loadfreq",
+        "q_loadlayer"
+      ]
+    },
+    {
+      "title": "Environment Configuration",
+      "questionIds": [
+        "q_environments",
+        "q_environments_details"
+      ]
+    },
+    {
+      "title": "Job Configuration",
+      "questionIds": [
+        "q_permission",
+        "q_date_conditions",
+        "q_days_of_week"
+      ]
+    },
+    {
+      "title": "Condition (Dependencies)",
+      "questionIds": [
+        "q_conditions"
+      ]
+    },
+    {
+      "title": "Other Settings",
+      "questionIds": [
+        "q_description",
+        "q_alarm_if_fail",
+        "q_alarm_if_terminated"
+      ]
+    }
+  ]
+}

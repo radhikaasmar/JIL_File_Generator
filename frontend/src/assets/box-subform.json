@@ -1,0 +1,26 @@
+{
+  "subformType": "box",
+  "displayName": "Box Job",
+  "allowMultiple": true,
+  "sections": [
+    {
+      "title": "Insert Job Configuration",
+      "questionIds": [
+        "q_funofjob",
+        "q_jobtitle"
+      ]
+    },
+    {
+      "title": "Job Configuration",
+      "questionIds": [
+        "q_days_of_week"
+      ]
+    },
+    {
+      "title": "Time Configuration",
+      "questionIds": [
+        "q_time_section"
+      ]
+    }
+  ]
+}

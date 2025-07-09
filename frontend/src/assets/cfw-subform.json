@@ -1,0 +1,41 @@
+{
+  "subformType": "cfw",
+  "displayName": "CFW Job",
+  "allowMultiple": true,
+  "sections": [
+    {
+      "title": "Insert Job Configuration",
+      "questionIds": [
+        "q_funofjob",
+        "q_jobtitle"
+      ]
+    },
+    {
+      "title": "Box Name",
+      "questionIds": [
+        "q_box_name"
+      ]
+    },
+    {
+      "title": "Environment Configuration",
+      "questionIds": [
+        "q_machine",
+        "q_command"
+      ]
+    },
+    {
+      "title": "Performance Configuration",
+      "questionIds": [
+        "q_job_load",
+        "q_priority"
+      ]
+    },
+    {
+      "title": "File Watching",
+      "questionIds": [
+        "q_watch_file",
+        "q_watch_interval"
+      ]
+    }
+  ]
+}

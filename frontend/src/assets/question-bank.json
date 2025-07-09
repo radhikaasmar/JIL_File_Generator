@@ -369,7 +369,25 @@
     "validators": [
         { "type": "pattern", "value": "^[0-9]+$" }
     ]
+    },
+    {
+    "id": "q_box_name",
+    "key": "box_name",
+    "label": "Box Name",
+    "type": "text",
+    "readonly": true,
+    "validators": [],
+    "placeholder": "Auto-generated from job configuration"
+    },
+    {
+    "id": "q_machine",
+    "key": "machine",
+    "label": "Machine",
+    "type": "text",
+    "placeholder": "Enter machine name",
+    "validators": []
     }
+
 
   ]
 }
