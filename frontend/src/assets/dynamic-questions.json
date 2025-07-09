@@ -181,11 +181,6 @@
           { "value": "sat", "label": "Saturday" },
           { "value": "sun", "label": "Sunday" }
         ]
-      },
-      {
-        "key": "start_time",
-        "label": "Start Time",
-        "type": "time"
       }
     ]
   },
@@ -259,15 +254,28 @@
           { "value": 0, "label": "No (0)" }
         ]
       },
+      
       {
-        "key": "timezone",
-        "label": "Timezone",
-        "type": "dropdown",
-        "options": [
-          { "value": "US CENTRAL", "label": "US CENTRAL" },
-          { "value": "US EASTERN", "label": "US EASTERN" }
-        ]
+      "key": "time_section",
+      "label": "Time Configuration",
+      "type": "time-group",
+      "fields": [
+        {
+          "key": "timezone",
+          "label": "Timezone",
+          "type": "dropdown",
+          "options": [
+            { "value": "US CENTRAL", "label": "US CENTRAL" },
+            { "value": "US EASTERN", "label": "US EASTERN" }
+          ]
+        },
+        {
+          "key": "start_time",
+          "label": "Start Time",
+          "type": "time"
+        }
+      ]
       }
-    ]
+    ]    
   }
 ]

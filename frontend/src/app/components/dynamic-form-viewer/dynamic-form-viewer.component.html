@@ -6,64 +6,157 @@
     <form *ngIf="form" [formGroup]="form">
       <div class="form-fields">
         <ng-container *ngFor="let section of sections">
-          <div class="form-section">
+          <div class="form-section" [ngClass]="{'insert-job-section': isInsertJobSection(section)}">
             <h3>{{ section.section }}</h3>
-            <ng-container *ngFor="let q of section.questions">
-              <div class="form-field" [ngSwitch]="q.type">
-                <div *ngSwitchCase="'text'">
-                  <label>{{ q.label }}</label>
-                  <input [formControlName]="q.key" [placeholder]="q.placeholder" />
-                </div>
-                <div *ngSwitchCase="'dropdown'">
-                  <label>{{ q.label }}</label>
-                  <select [formControlName]="q.key">
-                    <option *ngFor="let opt of q.options" [value]="opt.value">{{ opt.label }}</option>
-                  </select>
-                </div>
-                <div *ngSwitchCase="'checkbox-group'">
-                  <label>{{ q.label }}</label>
-                  <div class="checkbox-group">
-                    <div class="checkbox-item" *ngFor="let opt of q.options">
-                      <input type="checkbox" [formControlName]="opt.key" /> {{ opt.label }}
-                    </div>
+            
+            <!-- Special handling for Insert Job Configuration section -->
+            <div *ngIf="isInsertJobSection(section)" class="integrated-job-display">
+              {{ integratedJobValue }}
+              <div *ngIf="isJobNameTruncated" class="warning">
+                Warning: Job name is limited to 64 characters and has been truncated.
+              </div>
+            </div>
+            
+            <!-- Regular form fields -->
+            <div [ngClass]="{'insert-job-fields': isInsertJobSection(section)}">
+              <ng-container *ngFor="let q of section.questions">
+                <div class="form-field" [ngSwitch]="q.type">
+                  
+                  <!-- Text Input -->
+                  <div *ngSwitchCase="'text'">
+                    <label [ngClass]="{'required': hasRequiredValidator(q)}">{{ q.label }}</label>
+                    <input 
+                      [formControlName]="q.key" 
+                      [placeholder]="q.placeholder"
+                      [maxlength]="q.key === 'csi' ? 6 : null"
+                      [attr.pattern]="q.key === 'csi' ? '^\\d{6}$' : null"
+                      (input)="onFormChange()" />
                   </div>
-                </div>
-                <!-- Environments Group -->
-                <div *ngSwitchCase="'environments-group'">
-                  <div *ngFor="let env of q.environments">
-                    <ng-container *ngIf="form.get(env.key)?.value">
-                      <div *ngFor="let field of env.fields" class="form-field">
-                        <label>{{ field.label }}</label>
-                        <input [formControlName]="env.key + '_' + field.key" [placeholder]="field.label" />
-                      </div>
-                    </ng-container>
+                  
+                  <!-- Dropdown -->
+                  <div *ngSwitchCase="'dropdown'">
+                    <label [ngClass]="{'required': hasRequiredValidator(q)}">{{ q.label }}</label>
+                    <select [formControlName]="q.key" (change)="onFormChange()">
+                      <option value="">Select...</option>
+                      <option *ngFor="let opt of q.options" [value]="opt.value">{{ opt.label }}</option>
+                    </select>
                   </div>
-                </div>
-                <!-- Conditions Array -->
-                <div *ngSwitchCase="'conditions-array'">
-                  <label>{{ q.label }}</label>
-                  <div formArrayName="{{q.key}}" class="conditions-container">
-                    <div *ngFor="let group of getConditionsArray(q.key).controls; let i = index" [formGroupName]="i" class="condition-item">
-                      <div *ngFor="let field of q.item.fields" class="form-field">
+                  
+                  <!-- Time Input -->
+                  <div *ngSwitchCase="'time'">
+                    <label [ngClass]="{'required': hasRequiredValidator(q)}">{{ q.label }}</label>
+                    <input 
+                      type="time"
+                      [formControlName]="q.key" 
+                      (change)="onFormChange()" />
+                  </div>
+                  
+                  <!-- NEW: Time Group for Timezone and Start Time -->
+                  <div *ngSwitchCase="'time-group'">
+                    <label>{{ q.label }}</label>
+                    <div class="time-group-container">
+                      <div *ngFor="let field of q.fields" class="time-field">
                         <label>{{ field.label }}</label>
                         <ng-container [ngSwitch]="field.type">
-                          <input *ngSwitchCase="'text'" [formControlName]="field.key" [placeholder]="field.placeholder" />
-                          <select *ngSwitchCase="'dropdown'" [formControlName]="field.key" (change)="field.key === 'logic' ? onLogicChange(q, i) : null">
-                            <option *ngIf="field.key === 'logic'" value="NONE">(none)</option>
-                            <option *ngFor="let opt of getTypeOptions(field, q)" [value]="opt.value">{{ opt.label }}</option>
+                          <select *ngSwitchCase="'dropdown'" [formControlName]="field.key" (change)="onFormChange()">
+                            <option value="">Select...</option>
+                            <option *ngFor="let opt of field.options" [value]="opt.value">{{ opt.label }}</option>
                           </select>
+                          <input *ngSwitchCase="'time'" 
+                            type="time" 
+                            [formControlName]="field.key" 
+                            (change)="onFormChange()" />
                         </ng-container>
                       </div>
-                      <!-- Remove/Add buttons intentionally omitted -->
                     </div>
                   </div>
-                  <div class="final-condition">
-                    <strong>Condition String:</strong> {{ getFinalConditionString(q) }}
+                  
+                  <!-- Checkbox Group -->
+                  <div *ngSwitchCase="'checkbox-group'">
+                    <label>{{ q.label }}</label>
+                    <div class="checkbox-group">
+                      <div class="checkbox-item" *ngFor="let opt of q.options">
+                        <input 
+                          type="checkbox" 
+                          [formControlName]="opt.key" 
+                          (change)="onFormChange()" /> 
+                        {{ opt.label }}
+                      </div>
+                    </div>
                   </div>
+                  
+                  <!-- Environments Group -->
+                  <div *ngSwitchCase="'environments-group'">
+                    <div *ngFor="let env of q.environments">
+                      <ng-container *ngIf="form.get(env.key)?.value">
+                        <div *ngFor="let field of env.fields" class="form-field">
+                          <label>{{ field.label }}</label>
+                          <input 
+                            [formControlName]="env.key + '_' + field.key" 
+                            [placeholder]="field.label"
+                            (input)="onFormChange()" />
+                        </div>
+                      </ng-container>
+                    </div>
+                  </div>
+                  
+                  <!-- Conditions Array -->
+                  <div *ngSwitchCase="'conditions-array'">
+                    <label>{{ q.label }}</label>
+                    <div formArrayName="{{q.key}}" class="conditions-container">
+                      <div *ngFor="let group of getConditionsArray(q.key).controls; let i = index" [formGroupName]="i" class="condition-item">
+                        <div *ngFor="let field of q.item.fields" class="form-field">
+                          <label>{{ field.label }}</label>
+                          <ng-container [ngSwitch]="field.type">
+                            <input 
+                              *ngSwitchCase="'text'" 
+                              [formControlName]="field.key" 
+                              [placeholder]="field.placeholder"
+                              (input)="onFormChange()" />
+                            <select 
+                              *ngSwitchCase="'dropdown'" 
+                              [formControlName]="field.key" 
+                              (change)="field.key === 'logic' ? onLogicChange(q, i) : onFormChange()">
+                              <option *ngIf="field.key === 'logic'" value="NONE">(none)</option>
+                              <option *ngFor="let opt of getTypeOptions(field, q)" [value]="opt.value">{{ opt.label }}</option>
+                            </select>
+                          </ng-container>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="final-condition">
+                      <strong>Condition String:</strong> {{ getFinalConditionString(q) }}
+                    </div>
+                  </div>
+                  
+                  <!-- Days of Week Checkbox Group -->
+                  <div *ngSwitchCase="'days-of-week'">
+                    <label>{{ q.label }}</label>
+                    <div class="checkbox-group">
+                      <div class="checkbox-item" *ngFor="let day of q.options">
+                        <input 
+                          type="checkbox" 
+                          [id]="day.value"
+                          [value]="day.value"
+                          [checked]="isDaySelected(day.value)"
+                          (change)="onDayOfWeekChange($event)" />
+                        <label [for]="day.value">{{ day.label }}</label>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Default case for any other types -->
+                  <div *ngSwitchDefault>
+                    <label>{{ q.label }}</label>
+                    <input 
+                      [formControlName]="q.key" 
+                      [placeholder]="q.placeholder || ''"
+                      (input)="onFormChange()" />
+                  </div>
+                  
                 </div>
-                <!-- ...add more cases as needed... -->
-              </div>
-            </ng-container>
+              </ng-container>
+            </div>
           </div>
         </ng-container>
       </div>

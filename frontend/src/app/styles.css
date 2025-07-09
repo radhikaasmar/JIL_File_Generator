@@ -355,3 +355,63 @@ body.dark-theme ::-webkit-scrollbar-thumb {
             }
             
         }
+/* Time Group Styling */
+.time-group-container {
+  display: flex;
+  gap: 20px;
+  align-items: flex-end;
+  margin-top: 8px;
+}
+
+.time-field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.time-field label {
+  margin-bottom: 5px;
+  font-weight: 500;
+  font-size: 14px;
+  color: #333;
+}
+
+.time-field select,
+.time-field input {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  min-height: 40px;
+}
+
+.time-field select:focus,
+.time-field input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+/* Responsive design for mobile */
+@media (max-width: 768px) {
+  .time-group-container {
+    flex-direction: column;
+    gap: 15px;
+    align-items: stretch;
+  }
+  
+  .time-field {
+    flex: none;
+  }
+}
+
+/* Ensure consistent styling with other form fields */
+.form-field .time-group-container {
+  width: 100%;
+}
+
+.form-field > label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
