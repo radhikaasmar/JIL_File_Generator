@@ -1,1 +1,61 @@
-<app-dynamic-form-viewer [sections]="sections" [form]="form"></app-dynamic-form-viewer>
+<div class="dynamic-form-container">
+  <div class="form-header">
+    <h1>Dynamic Job Configuration</h1>
+    
+    <!-- Add Function Job Dropdown -->
+    <div class="add-function-section">
+      <label for="functionSelect">Add Function of Job:</label>
+      <select id="functionSelect" (change)="onAddFunctionJob($event)" class="function-dropdown">
+        <option value="">Select function to add...</option>
+        <option 
+          *ngFor="let option of availableFunctionOptions" 
+          [value]="option.value">
+          {{ option.label }}
+        </option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Subform Instances -->
+  <div class="subforms-container">
+    <div 
+      *ngFor="let instance of subformInstances; trackBy: trackByInstanceId" 
+      class="subform-wrapper"
+      [ngClass]="'subform-' + instance.type">
+      
+      <!-- Subform Header -->
+      <div class="subform-header">
+        <h2>{{ instance.displayName }}</h2>
+        <button 
+          *ngIf="instance.removable" 
+          (click)="removeSubformInstance(instance.id)"
+          class="remove-btn"
+          type="button">
+          ✕ Remove
+        </button>
+      </div>
+
+      <!-- Job Name Display for non-top subforms -->
+      <div *ngIf="instance.type !== 'top'" class="job-name-display">
+        <strong>Job Name:</strong> {{ getJobNameForInstance(instance) }}
+        <div *ngIf="isJobNameTruncated(instance)" class="warning">
+          Warning: Job name is limited to 64 characters and has been truncated.
+        </div>
+      </div>
+
+      <!-- Dynamic Form Viewer for this subform -->
+      <app-dynamic-form-viewer 
+        [sections]="instance.sections" 
+        [form]="instance.form"
+        [subformContext]="instance"
+        (formChange)="onSubformChange(instance)">
+      </app-dynamic-form-viewer>
+    </div>
+  </div>
+
+  <!-- Debug Information (optional, remove in production) -->
+  <div class="debug-section" *ngIf="false">
+    <h3>Debug Info</h3>
+    <pre>{{ getDebugInfo() | json }}</pre>
+  </div>
+</div>

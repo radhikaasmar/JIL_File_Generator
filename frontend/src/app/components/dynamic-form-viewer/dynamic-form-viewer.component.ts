@@ -1,7 +1,7 @@
 import { Component, Input,Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormArray } from '@angular/forms';
-import { DynamicFormBuilderService } from '../../services/dynamic-form-builder.service';
+import { DynamicFormBuilderService, SubformInstance } from '../../services/dynamic-form-builder.service';
 
 @Component({
   selector: 'app-dynamic-form-viewer',
@@ -13,6 +13,7 @@ import { DynamicFormBuilderService } from '../../services/dynamic-form-builder.s
 export class DynamicFormViewerComponent {
   @Input() sections: any[] = [];
   @Input() form!: FormGroup;
+  @Input() subformContext?: SubformInstance;
    @Output() formChange = new EventEmitter();
 
   constructor(private formBuilder: DynamicFormBuilderService) {}
@@ -137,43 +138,18 @@ export class DynamicFormViewerComponent {
       .join('') || 'No conditions defined';
   }
 get integratedJobValue(): string {
-    if (!this.form) return '';
-    
-    const fields = ['csi', 'efforttype', 'prodlob', 'purpose', 'loadfreq', 'loadlayer', 'funofjob', 'jobtitle'];
-    
-    // Get all values as uppercase strings
+  if (!this.form) return '';
+  
+  // For top subform, show only the base job name (first 6 fields)
+  if (this.subformContext?.type === 'top') {
+    const fields = ['csi', 'efforttype', 'prodlob', 'purpose', 'loadfreq', 'loadlayer'];
     const values = fields.map(f => this.form.get(f)?.value || '').map(v => v.toString().toUpperCase());
-    
-    // If purpose is empty, just join and return
-    if (!values[3]) {
-      return values.filter(v => v !== '').join('_') || 'Job name will appear here';
-    }
-
-    // Calculate the job name with current values
-    let jobName = values.filter(v => v !== '').join('_');
-    
-    // If jobName is too long, truncate only the purpose field
-    if (jobName.length > 64) {
-      // Find the index of 'purpose' in fields (which is 3)
-      const purposeIdx = 3;
-      // Remove purpose temporarily to get base length
-      const valuesWithoutPurpose = [...values];
-      valuesWithoutPurpose[purposeIdx] = '';
-      const baseName = valuesWithoutPurpose.filter(v => v !== '').join('_');
-      
-      // Max allowed length for purpose
-      const baseLength = baseName.length;
-      const needsUnderscore = baseName.length > 0 && values[purposeIdx].length > 0;
-      const maxPurposeLength = 64 - baseLength - (needsUnderscore ? 1 : 0);
-      
-      // Truncate purpose
-      const truncatedPurpose = values[purposeIdx].slice(0, Math.max(0, maxPurposeLength));
-      values[purposeIdx] = truncatedPurpose;
-      jobName = values.filter(v => v !== '').join('_');
-    }
-
-    return jobName || 'Job name will appear here';
+    return values.filter(v => v !== '').join('_') || 'Job name will appear here';
   }
+  
+  // For other subforms, this will be handled by the parent component
+  return '';
+}
 
   get isJobNameTruncated(): boolean {
     if (!this.form) return false;
@@ -189,7 +165,13 @@ get integratedJobValue(): string {
 
   // Check if current section is Insert Job Configuration
   isInsertJobSection(section: any): boolean {
-    return section.section === 'Insert Job Configuration';
+  return section.title === 'Insert Job Configuration';
+}
+  isFieldReadonly(fieldKey: string): boolean {
+    if (fieldKey === 'box_name' && this.subformContext) {
+      return ['cmd', 'cfw', 'fw'].includes(this.subformContext.type);
+    }
+    return false;
   }
 
     // Method to check if a question has required validator

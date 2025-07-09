@@ -7,7 +7,7 @@
       <div class="form-fields">
         <ng-container *ngFor="let section of sections">
           <div class="form-section" [ngClass]="{'insert-job-section': isInsertJobSection(section)}">
-            <h3>{{ section.section }}</h3>
+            <h3>{{ section.title }}</h3>
             
             <!-- Special handling for Insert Job Configuration section -->
             <div *ngIf="isInsertJobSection(section)" class="integrated-job-display">

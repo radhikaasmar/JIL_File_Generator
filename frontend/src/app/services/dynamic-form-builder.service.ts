@@ -1,6 +1,16 @@
 import { Injectable } from '@angular/core';
 import { FormBuilder, FormGroup, FormControl, Validators, ValidatorFn, FormArray } from '@angular/forms';
 
+export interface SubformInstance {
+  id: string;
+  type: string;
+  displayName: string;
+  functionOfJob?: string;
+  form: FormGroup;
+  sections: any[];
+  removable: boolean;
+}
+
 @Injectable({ providedIn: 'root' })
 export class DynamicFormBuilderService {
   constructor(private fb: FormBuilder) {}
@@ -10,13 +20,14 @@ export class DynamicFormBuilderService {
     sections.forEach(section => {
       section.questions.forEach((q: any) => {
         if (q.type === 'conditions-array') {
-          // Create a FormArray for conditions, ensure at least one group
-          const arr = this.fb.array<FormGroup>([]);
-          if (q.item && q.item.fields) {
-            arr.push(this.buildConditionGroup(q.item.fields));
-          }
-          group[q.key] = arr;
-        } else if (q.type === 'array') {
+        // Explicitly type the FormArray to accept FormGroup elements
+        const arr = this.fb.array<FormGroup>([]);
+        if (q.item && q.item.fields) {
+          arr.push(this.buildConditionGroup(q.item.fields));
+        }
+        group[q.key] = arr;
+      }
+         else if (q.type === 'array') {
           group[q.key] = this.fb.array([]);
         } else if (q.type === 'group') {
           const subGroup: any = {};
@@ -37,12 +48,9 @@ export class DynamicFormBuilderService {
           });
         } else {
           let validators = this.mapValidators(q.validators);
-
-          // Ensure the validators array only includes valid functions
           const validValidators = Array.isArray(validators)
             ? validators.filter((v: any) => typeof v === 'function')
             : [];
-
           group[q.key] = validValidators.length > 0
             ? new FormControl(q.defaultValue || '', validValidators)
             : new FormControl(q.defaultValue || '');
@@ -52,7 +60,10 @@ export class DynamicFormBuilderService {
     return this.fb.group(group);
   }
 
-  // Helper to build a FormGroup for a single condition (for conditions-array)
+  buildSubform(sections: any[], prefilledData?: any): FormGroup {
+    return this.buildForm(sections);
+  }
+
   buildConditionGroup(conditionFields: any[]): FormGroup {
     const group: any = {};
     conditionFields.forEach((field: any) => {
@@ -69,7 +80,6 @@ export class DynamicFormBuilderService {
 
   private mapValidators(validators?: any[]): ValidatorFn[] {
     if (!validators) return [];
-
     return validators
       .map(v => {
         switch (v.type) {
