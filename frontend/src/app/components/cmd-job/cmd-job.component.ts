@@ -171,10 +171,10 @@ export class CmdJobComponent implements OnInit {
       'date_conditions',
       'days_of_week',
       'start_time',
+      'timezone',
       'description',
       'alarm_if_fail',
       'alarm_if_terminated',
-      'timezone',
       'status'
     ];
 

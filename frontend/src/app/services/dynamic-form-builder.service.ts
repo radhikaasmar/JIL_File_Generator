@@ -46,17 +46,6 @@ export class DynamicFormBuilderService {
               group[controlKey] = new FormControl(field.defaultValue || '');
             });
           });
-        } else if (q.type === 'time-group') {
-          // Add each field in the time-group as a control
-          q.fields.forEach((field: any) => {
-            let validators = this.mapValidators(field.validators);
-            const validValidators = Array.isArray(validators)
-              ? validators.filter((v: any) => typeof v === 'function')
-              : [];
-            group[field.key] = validValidators.length > 0
-              ? new FormControl(field.defaultValue || '', validValidators)
-              : new FormControl(field.defaultValue || '');
-          });
         } else {
           let validators = this.mapValidators(q.validators);
           const validValidators = Array.isArray(validators)

@@ -139,11 +139,11 @@ export class BoxJobComponent implements OnInit {
       'permission',
       'date_conditions',
       'days_of_week',
-      'start_time',
+      'start_time', // ensure this is present
+      'timezone',   // ensure this is present
       'description',
       'alarm_if_fail',
       'alarm_if_terminated',
-      'timezone',
       'status'
     ];
 

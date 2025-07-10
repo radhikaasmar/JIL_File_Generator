@@ -91,7 +91,7 @@ export class FormService {
       dateCond: ['n', Validators.required],
       timezone: ['us central', Validators.required],
       runCalendar: ['', Validators.required],
-      startTime: ['', Validators.required],
+      start_time: ['', Validators.required], // add this line
       sendNotif: ['y', Validators.required],
       status: ['', Validators.required],
     });
@@ -117,7 +117,7 @@ export class FormService {
       dateCond: ['n', Validators.required],
       timezone: ['us central', Validators.required],
       runCalendar: ['', Validators.required],
-      startTime: ['', Validators.required],
+      start_time: ['', Validators.required], // add this line
       sendNotif: ['y', Validators.required],
       status: ['', Validators.required],
     });
@@ -141,6 +141,7 @@ export class FormService {
       stdErrFile: ['', Validators.required],
       command: ['', Validators.required],
       status: ['', Validators.required],
+      start_time: ['', Validators.required], // add this line
     });
     if (data) {
       formGroup.patchValue(data);
@@ -162,6 +163,7 @@ export class FormService {
       stdErrFile: ['', Validators.required],
       command: ['', Validators.required],
       status: ['', Validators.required],
+      start_time: ['', Validators.required], // add this line
     });
     if (data) {
       formGroup.patchValue(data);
@@ -182,7 +184,7 @@ export class FormService {
       `date_conditions: ${v.dateCond === 'y' ? 1 : 0}\n` +
       `timezone: ${v.timezone}\n` +
       `run_calendar: ${v.runCalendar}\n` +
-      `start_times: "${v.startTime}"\n` +
+      `start_times: "${v.start_time}"\n` +
       `send_notification: ${v.sendNotif === 'y' ? 1 : 0}\n` +
       `status: ${v.status}`;
 
@@ -200,7 +202,7 @@ export class FormService {
         `date_conditions: ${fw.dateCond === 'y' ? 1 : 0}\n` +
         `timezone: ${fw.timezone}\n` +
         `run_calendar: ${fw.runCalendar}\n` +
-        `start_times: "${fw.startTime}"\n` +
+        `start_times: "${fw.start_time}"\n` +
         `send_notification: ${fw.sendNotif === 'y' ? 1 : 0}\n` +
         `status: ${fw.status}`;
 
