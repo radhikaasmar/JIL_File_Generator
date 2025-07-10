@@ -1,5 +1,6 @@
-import { Component, OnInit } from '@angular/core';
-import { FormGroup } from '@angular/forms';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
+import { Subscription } from 'rxjs';
+import { FormGroup, Validators } from '@angular/forms';
 import { DynamicQuestionService } from '../services/dynamic-question.service';
 import { DynamicFormBuilderService, SubformInstance } from '../services/dynamic-form-builder.service';
 import { SubformConfigService, ResolvedSubformConfig } from '../services/subform-config.service';
@@ -8,6 +9,7 @@ import { DynamicFormViewerComponent } from '../components/dynamic-form-viewer/dy
 import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
+import { EnvironmentStateService } from '../services/environment-state.service';
 
 @Component({
   selector: 'app-dynamic-form-page',
@@ -24,12 +26,22 @@ export class DynamicFormPageComponent implements OnInit {
     private questionService: DynamicQuestionService,
     private formBuilder: DynamicFormBuilderService,
     private subformConfigService: SubformConfigService,
-    private functionJobMappingService: FunctionJobMappingService
+    private functionJobMappingService: FunctionJobMappingService,
+    private environmentStateService: EnvironmentStateService
   ) {}
 
   ngOnInit() {
-    this.loadSubformConfigs();
-  }
+  this.loadSubformConfigs();
+
+  // Initialize environment state after subforms are loaded
+  setTimeout(() => {
+    const topInstance = this.subformInstances.find(s => s.type === 'top');
+    if (topInstance) {
+      const selectedEnvs = this.getSelectedEnvironments(topInstance.form);
+      this.environmentStateService.updateSelectedEnvironments(selectedEnvs);
+    }
+  }, 100);
+}
 
   private loadSubformConfigs() {
     this.subformConfigService.loadAllSubformConfigs().subscribe(configs => {
@@ -115,8 +127,14 @@ export class DynamicFormPageComponent implements OnInit {
   }
 
   onSubformChange(instance: SubformInstance) {
-    this.updateJobNames();
+  this.updateJobNames();
+
+  if (instance.type === 'top') {
+    const selectedEnvs = this.getSelectedEnvironments(instance.form);
+    this.environmentStateService.updateSelectedEnvironments(selectedEnvs);
+    this.updateEnvironmentValidators();
   }
+}
 
   private updateJobNames() {
     const topInstance = this.subformInstances.find(s => s.type === 'top');
@@ -196,4 +214,72 @@ getDebugInfo(): any {
   };
 }
 
+private updateEnvironmentValidators() {
+  const topInstance = this.subformInstances.find(s => s.type === 'top');
+  if (!topInstance) return;
+
+  // Get selected environments from top form
+  const selectedEnvs = this.getSelectedEnvironments(topInstance.form);
+
+  // Update validators for all other subforms
+  this.subformInstances
+    .filter(instance => instance.type !== 'top')
+    .forEach(instance => {
+      this.setEnvironmentFieldValidators(instance, selectedEnvs);
+    });
 }
+
+private getSelectedEnvironments(topForm: FormGroup): string[] {
+  const selectedEnvs: string[] = [];
+  const envKeys = ['dev', 'uat', 'prod', 'cob'];
+
+  envKeys.forEach(env => {
+    if (topForm.get(env)?.value) {
+      selectedEnvs.push(env);
+    }
+  });
+
+  return selectedEnvs;
+}
+
+private setEnvironmentFieldValidators(instance: SubformInstance, selectedEnvs: string[]) {
+  const envKeys = ['dev', 'uat', 'prod', 'cob'];
+
+  envKeys.forEach(env => {
+    const isSelected = selectedEnvs.includes(env);
+
+    // Get fields to validate based on job type
+    const fieldsToValidate = this.getFieldsForJobType(instance.type);
+
+    fieldsToValidate.forEach(field => {
+      const controlKey = `${env}_${field}`;
+      const control = instance.form.get(controlKey);
+
+      if (control) {
+        if (isSelected) {
+          // Add required validator
+          control.setValidators([Validators.required]);
+        } else {
+          // Remove validators
+          control.clearValidators();
+        }
+        control.updateValueAndValidity();
+      }
+    });
+  });
+}
+
+private getFieldsForJobType(jobType: string): string[] {
+  switch (jobType) {
+    case 'box':
+      return ['owner']; // Only owner field for box jobs
+    case 'cmd':
+    case 'cfw':
+    case 'fw':
+      return ['owner', 'machine', 'command']; // All fields for other job types
+    default:
+      return [];
+  }
+}
+}
+

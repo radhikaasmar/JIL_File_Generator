@@ -11,6 +11,12 @@
       ]
     },
     {
+      "title": "Environment Configuration",
+      "questionIds": [
+        "q_environments_details"
+      ]
+    },
+    {
       "title": "Job Configuration",
       "questionIds": [
         "q_days_of_week"

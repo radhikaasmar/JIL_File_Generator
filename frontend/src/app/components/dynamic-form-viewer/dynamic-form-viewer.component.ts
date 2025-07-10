@@ -1,7 +1,10 @@
-import { Component, Input,Output, EventEmitter } from '@angular/core';
+import { Component, Input,Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormArray } from '@angular/forms';
 import { DynamicFormBuilderService, SubformInstance } from '../../services/dynamic-form-builder.service';
+import { EnvironmentStateService } from '../../services/environment-state.service';
+import { Subscription } from 'rxjs';
+
 
 @Component({
   selector: 'app-dynamic-form-viewer',
@@ -16,7 +19,10 @@ export class DynamicFormViewerComponent {
   @Input() subformContext?: SubformInstance;
    @Output() formChange = new EventEmitter();
 
-  constructor(private formBuilder: DynamicFormBuilderService) {}
+  constructor(
+  private formBuilder: DynamicFormBuilderService,
+  private environmentStateService: EnvironmentStateService // Add this
+) {}
 
   isDaySelected(dayValue: string): boolean {
     if (!this.form) return false;
@@ -175,10 +181,17 @@ get integratedJobValue(): string {
   }
 
     // Method to check if a question has required validator
-  hasRequiredValidator(question: any): boolean {
-    if (!question.validators) return false;
-    return question.validators.some((validator: any) => validator.type === 'required');
+  hasRequiredValidator(question: any, env?: string, field?: string): boolean {
+  if (!question.validators) return false;
+
+  // For environment fields, check dynamic validation
+  if (env && field) {
+    return this.isEnvironmentFieldRequired(env, field);
   }
+
+  // For regular fields, check static validators
+  return question.validators.some((validator: any) => validator.type === 'required');
+}
 
   // Method to handle form changes
   onFormChange() {
@@ -186,4 +199,72 @@ get integratedJobValue(): string {
     // This should trigger recalculation of the integrated job value
     this.formChange.emit(this.form.value);
   }
+
+  isEnvironmentFieldRequired(env: string, field: string): boolean {
+  if (!this.subformContext) return false;
+
+  // Get the top form instance to check selected environments
+  const topInstance = this.getTopFormInstance();
+  if (!topInstance) return false;
+
+  // Check if this environment is selected in top form
+  const isEnvSelected = topInstance.form.get(env)?.value;
+  return !!isEnvSelected;
+}
+private getTopFormInstance(): any {
+  // This would need to be injected or passed from parent
+  // For now, return null - you'll implement this based on your architecture
+  return null;
+}
+// Add this method to DynamicFormViewerComponent
+shouldShowEnvironmentField(env: any, field: any): boolean {
+  if (!this.subformContext) return true;
+
+  const jobType = this.subformContext.type;
+
+  // For top subform, show all fields (but they won't be displayed due to other logic)
+  if (jobType === 'top') return true;
+
+  // For box jobs, only show owner field
+  if (jobType === 'box') {
+    return field.key === 'owner';
+  }
+
+  // For cmd, cfw, fw jobs, show all fields (owner, machine, command)
+  if (['cmd', 'cfw', 'fw'].includes(jobType)) {
+    return ['owner', 'machine', 'command'].includes(field.key);
+  }
+
+  return true;
+}
+isEnvironmentSelected(envKey: string): boolean {
+  // For top form, don't show detail fields
+  if (this.subformContext?.type === 'top') {
+    return false;
+  }
+
+  // For other forms, only show if environment is selected in top form
+  return this.selectedEnvironments.includes(envKey);
+}
+
+
+selectedEnvironments: string[] = [];
+  private environmentSubscription?: Subscription;
+
+  ngOnInit() {
+    // Subscribe to environment changes
+    this.environmentSubscription = this.environmentStateService.selectedEnvironments$.subscribe(
+      selectedEnvs => {
+        this.selectedEnvironments = selectedEnvs;
+      }
+    );
+  }
+
+  ngOnDestroy() {
+    if (this.environmentSubscription) {
+      this.environmentSubscription.unsubscribe();
+    }
+  }
+
+
 }
