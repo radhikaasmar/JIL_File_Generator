@@ -386,8 +386,24 @@
     "type": "text",
     "placeholder": "Enter machine name",
     "validators": []
+    },
+    {
+      "id": "q_status",
+      "key": "status",
+      "label": "Status",
+      "type": "dropdown",
+      "defaultValue": "inactive",
+      "options": [
+        { "value": "failure", "label": "failure" },
+        { "value": "inactive", "label": "inactive" },
+        { "value": "on_hold", "label": "on_hold" },
+        { "value": "on_ice", "label": "on_ice" },
+        { "value": "on_noexec", "label": "on_noexec" },
+        { "value": "success", "label": "success" },
+        { "value": "terminated", "label": "terminated" }
+      ],
+      "validators": [{ "type": "required" }]
     }
-
 
   ]
 }

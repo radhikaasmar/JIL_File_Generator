@@ -7,7 +7,7 @@
       "title": "Insert Job Configuration",
       "questionIds": [
         "q_csi",
-        "q_efforttype", 
+        "q_efforttype",
         "q_prodlob",
         "q_purpose",
         "q_loadfreq",
@@ -40,7 +40,8 @@
       "questionIds": [
         "q_description",
         "q_alarm_if_fail",
-        "q_alarm_if_terminated"
+        "q_alarm_if_terminated",
+        "q_status"
       ]
     }
   ]
