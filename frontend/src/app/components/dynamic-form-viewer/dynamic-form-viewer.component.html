@@ -13,7 +13,7 @@
             <div *ngIf="isInsertJobSection(section)" class="integrated-job-display">
               {{ integratedJobValue }}
               <div *ngIf="isJobNameTruncated" class="warning">
-                Warning: Job name is limited to 64 characters and has been truncated.
+                Warning: Job name is limited to 60 characters and has been truncated.
               </div>
             </div>
             
@@ -51,25 +51,7 @@
                       (change)="onFormChange()" />
                   </div>
                   
-                  <!-- NEW: Time Group for Timezone and Start Time -->
-                  <div *ngSwitchCase="'time-group'">
-                    <label>{{ q.label }}</label>
-                    <div class="time-group-container">
-                      <div *ngFor="let field of q.fields" class="time-field">
-                        <label>{{ field.label }}</label>
-                        <ng-container [ngSwitch]="field.type">
-                          <select *ngSwitchCase="'dropdown'" [formControlName]="field.key" (change)="onFormChange()">
-                            <option value="">Select...</option>
-                            <option *ngFor="let opt of field.options" [value]="opt.value">{{ opt.label }}</option>
-                          </select>
-                          <input *ngSwitchCase="'time'" 
-                            type="time" 
-                            [formControlName]="field.key" 
-                            (change)="onFormChange()" />
-                        </ng-container>
-                      </div>
-                    </div>
-                  </div>
+
                   
                   <!-- Checkbox Group -->
                   <div *ngSwitchCase="'checkbox-group'">

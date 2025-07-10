@@ -23,7 +23,7 @@
       <div *ngIf="instance.type !== 'top'" class="job-name-display">
         <strong>Job Name:</strong> {{ getJobNameForInstance(instance) }}
         <div *ngIf="isJobNameTruncated(instance)" class="warning">
-          Warning: Job name is limited to 64 characters and has been truncated.
+          Warning: Job name is limited to 60 characters and has been truncated.
         </div>
       </div>
 
