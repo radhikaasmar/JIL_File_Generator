@@ -14,11 +14,11 @@
 
 .form-box {
   background: var(--surface);
-  border-radius: 16px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  border-radius: 1rem;
+  box-shadow: 0 0.25rem 1.5rem rgba(0, 0, 0, 0.08);
   padding: 1.5rem;
   margin: 1rem auto;
-  max-width: 1200px;
+  max-width: 75rem;
   transition: all 0.3s ease;
   width: 100%;
   box-sizing: border-box;
@@ -30,7 +30,7 @@
   justify-content: space-between;
   padding: 0.75rem;
   background: var(--surface-hover);
-  border-radius: 12px;
+  border-radius: 0.75rem;
   margin-bottom: 1.5rem;
   flex-wrap: wrap;
   gap: 0.75rem;
@@ -38,18 +38,18 @@
 
 .collapsible-header h2 {
   font-size: 1.5rem;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--text);
   margin: 0;
   flex: 1;
-  min-width: 200px;
+  min-width: 12.5rem;
 }
 
 .form-section {
   background: var(--surface);
-  border-radius: 12px;
-  padding: 1rem;
-  margin-bottom: 1.5rem;
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
   border: 1px solid var(--border);
   transition: all 0.2s ease;
   width: 100%;
@@ -57,15 +57,16 @@
 }
 
 .form-section:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.05);
 }
 
 .form-section h3 {
   font-size: 1.25rem;
   color: var(--primary);
+  font-weight: 400;
   margin-bottom: 1rem;
   padding-bottom: 0.5rem;
-  border-bottom: 2px solid var(--border);
+  border-bottom: 0.125rem solid var(--border);
 }
 
 /* Form fields container with flex layout */
@@ -87,27 +88,27 @@
 /* Individual form field styling */
 .form-field {
   flex: 1;
-  min-width: 200px;
+  min-width: 12.5rem;
   margin-bottom: 0;
 }
 
 /* Special sizing for specific field types */
 .form-field[class*="text"] {
-  min-width: 250px;
+  min-width: 15.625rem;
 }
 
 .form-field[class*="dropdown"] {
-  min-width: 180px;
+  min-width: 11.25rem;
 }
 
 .form-field[class*="time"] {
-  min-width: 150px;
+  min-width: 9.375rem;
 }
 
 /* Responsive flex behavior */
 .form-section > div > .form-field {
   flex: 1 1 auto;
-  min-width: 200px;
+  min-width: 12.5rem;
   max-width: 100%;
 }
 
@@ -129,12 +130,12 @@
 
 .insert-job-fields .form-field {
   flex: 1;
-  min-width: 180px;
+  min-width: 11.25rem;
 }
 
 .form-field label {
   display: block;
-  font-weight: 500;
+  font-weight: 400;
   margin-bottom: 0.4rem;
   color: var(--text);
 }
@@ -148,8 +149,8 @@
 input, select, textarea {
   width: 100%;
   padding: 0.6rem 0.8rem;
-  border: 1.5px solid var(--border);
-  border-radius: 8px;
+  border: 0.094rem solid var(--border);
+  border-radius: 0.5rem;
   font-size: 0.95rem;
   transition: all 0.2s ease;
   background: var(--surface);
@@ -160,8 +161,8 @@ input, select, textarea {
 /* Enhanced final condition display */
 .final-condition {
   background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
-  border: 2px solid var(--success);
-  border-radius: 10px;
+  border: 0.125rem solid var(--success);
+  border-radius: 0.625rem;
   padding: 0.75rem;
   margin-top: 1rem;
   font-family: 'Roboto Mono', monospace;
@@ -169,15 +170,15 @@ input, select, textarea {
   word-break: break-word;
   font-size: 0.9rem;
   line-height: 1.4;
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.1);
+  box-shadow: 0 0.125rem 0.5rem rgba(16, 185, 129, 0.1);
 }
 
 /* Enhanced input styling with better focus states */
 input, select, textarea {
   width: 100%;
   padding: 0.6rem 0.8rem;
-  border: 1.5px solid var(--border);
-  border-radius: 8px;
+  border: 0.094rem solid var(--border);
+  border-radius: 0.5rem;
   font-size: 0.95rem;
   transition: all 0.2s ease;
   background: var(--surface);
@@ -203,9 +204,9 @@ input:focus, select:focus, textarea:focus {
   font-size: 0.85rem;
   margin-top: 0.4rem;
   padding: 0.5rem;
-  border-radius: 6px;
+  border-radius: 0.375rem;
   background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.2);
+  border: 0.063rem solid rgba(239, 68, 68, 0.2);
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -218,15 +219,15 @@ input:focus, select:focus, textarea:focus {
 
 .integrated-job-display {
   background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-  border: 2px solid var(--primary-light);
-  border-radius: 10px;
+  border: 0.125rem solid var(--primary-light);
+  border-radius: 0.625rem;
   padding: 0.75rem;
   margin-bottom: 1.5rem;
   font-family: 'Roboto Mono', monospace;
   font-size: 1.1rem;
   color: var(--primary);
   text-align: center;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: inset 0 0.125rem 0.25rem rgba(0, 0, 0, 0.05);
   word-break: break-word;
 }
 
@@ -241,7 +242,7 @@ input:focus, select:focus, textarea:focus {
 
 .checkbox-group {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(8.75rem, 1fr));
   gap: 0.75rem;
   margin-top: 0.4rem;
 }
@@ -251,7 +252,7 @@ input:focus, select:focus, textarea:focus {
   align-items: center;
   gap: 0.4rem;
   padding: 0.4rem;
-  border-radius: 6px;
+  border-radius: 0.375rem;
   transition: background 0.2s ease;
 }
 
@@ -262,8 +263,8 @@ input:focus, select:focus, textarea:focus {
 .checkbox-item input[type="checkbox"] {
   width: 1.2rem;
   height: 1.2rem;
-  border-radius: 4px;
-  border: 2px solid var(--primary-light);
+  border-radius: 0.25rem;
+  border: 0.125rem solid var(--primary-light);
   cursor: pointer;
   flex-shrink: 0;
 }
@@ -278,14 +279,14 @@ input:focus, select:focus, textarea:focus {
 
 .condition-item {
   background: var(--surface-hover);
-  border-radius: 10px;
+  border-radius: 0.625rem;
   padding: 1rem;
   margin-bottom: 0;
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
   align-items: flex-end;
-  border: 1px solid var(--border);
+  border: 0.063rem solid var(--border);
   transition: all 0.2s ease;
 }
 
@@ -295,7 +296,7 @@ input:focus, select:focus, textarea:focus {
 
 .condition-item .form-field {
   flex: 1;
-  min-width: 150px;
+  min-width: 9.375rem;
   margin-bottom: 0;
 }
 
@@ -307,14 +308,14 @@ input:focus, select:focus, textarea:focus {
   align-items: flex-end;
   background: var(--surface-hover);
   padding: 0.75rem;
-  border-radius: 8px;
-  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  border: 0.063rem solid var(--border);
   margin-top: 0.5rem;
 }
 
 .time-group-container .time-field {
   flex: 1;
-  min-width: 140px;
+  min-width: 8.75rem;
 }
 
 /* Enhanced checkbox group */
@@ -325,8 +326,8 @@ input:focus, select:focus, textarea:focus {
   margin-top: 0.5rem;
   padding: 0.5rem;
   background: var(--surface-hover);
-  border-radius: 8px;
-  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  border: 0.063rem solid var(--border);
 }
 
 .checkbox-item {
@@ -334,12 +335,13 @@ input:focus, select:focus, textarea:focus {
   align-items: center;
   gap: 0.4rem;
   padding: 0.5rem 0.75rem;
-  border-radius: 6px;
+  border-radius: 0.375rem;
   transition: all 0.2s ease;
   background: var(--surface);
   border: 1px solid transparent;
   cursor: pointer;
   white-space: nowrap;
+  font-weight: 400;
 }
 
 .checkbox-item:hover {
@@ -352,8 +354,8 @@ input:focus, select:focus, textarea:focus {
 .checkbox-item input[type="checkbox"] {
   width: 1.1rem;
   height: 1.1rem;
-  border-radius: 4px;
-  border: 2px solid var(--primary-light);
+  border-radius: 0.25rem;
+  border: 0.125rem solid var(--primary-light);
   cursor: pointer;
   flex-shrink: 0;
 }
@@ -366,7 +368,7 @@ input:focus, select:focus, textarea:focus {
 /* Enhanced environments group */
 .environments-group .form-field {
   flex: 1;
-  min-width: 200px;
+  min-width: 12.5rem;
   margin-bottom: 0.75rem;
 }
 
@@ -377,17 +379,17 @@ input:focus, select:focus, textarea:focus {
   margin-bottom: 1rem;
   padding: 0.75rem;
   background: var(--surface-hover);
-  border-radius: 8px;
-  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  border: 0.063rem solid var(--border);
 }
 
 /* Button styles */
 .btn {
   padding: 0.75rem 1.5rem;
   border: none;
-  border-radius: 8px;
+  border-radius: 0.5rem;
   font-size: 0.95rem;
-  font-weight: 500;
+  font-weight: 400;
   cursor: pointer;
   transition: all 0.2s ease;
   display: inline-flex;
@@ -401,6 +403,7 @@ input:focus, select:focus, textarea:focus {
 .btn-primary {
   background: var(--primary);
   color: white;
+  font-weight: 400;
 }
 
 .btn-primary:hover {
@@ -438,7 +441,7 @@ input:focus, select:focus, textarea:focus {
   .form-box {
     padding: 1rem;
     margin: 0.5rem;
-    border-radius: 12px;
+    border-radius: 0.75rem;
   }
 
   .collapsible-header {
@@ -453,11 +456,14 @@ input:focus, select:focus, textarea:focus {
   }
 
   .form-section {
-    padding: 1rem;
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
   }
 
   .form-section h3 {
     font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.2rem;
   }
 
   .form-row {
@@ -507,7 +513,7 @@ input:focus, select:focus, textarea:focus {
 
 @media (max-width: 480px) {
   .form-box {
-    padding: 0.75rem;
+    padding: 0.5rem;
     margin: 0.25rem;
   }
 
@@ -516,21 +522,22 @@ input:focus, select:focus, textarea:focus {
   }
 
   .form-section {
-    padding: 0.75rem;
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
   }
 
   .btn {
-    padding: 0.6rem 1.2rem;
+    padding: 0.4rem 0.8rem;
     font-size: 0.9rem;
   }
 
   .checkbox-item {
-    padding: 0.4rem;
+    padding: 0.3rem;
   }
 
   .checkbox-item input[type="checkbox"] {
-    width: 1.1rem;
-    height: 1.1rem;
+    width: 1rem;
+    height: 1rem;
   }
 }
 
