@@ -1,4 +1,4 @@
-import { Component, Input,Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormArray } from '@angular/forms';
 import { DynamicFormBuilderService, SubformInstance } from '../../services/dynamic-form-builder.service';
@@ -17,7 +17,7 @@ export class DynamicFormViewerComponent {
   @Input() sections: any[] = [];
   @Input() form!: FormGroup;
   @Input() subformContext?: SubformInstance;
-   @Output() formChange = new EventEmitter();
+  @Output() formChange = new EventEmitter();
 
   constructor(
   private formBuilder: DynamicFormBuilderService,
@@ -26,36 +26,29 @@ export class DynamicFormViewerComponent {
 
   isDaySelected(dayValue: string): boolean {
     if (!this.form) return false;
-
     const daysOfWeekControl = this.form.get('days_of_week');
     if (!daysOfWeekControl || !daysOfWeekControl.value) return false;
 
     const selectedDays = daysOfWeekControl.value;
-
     if (Array.isArray(selectedDays)) {
       return selectedDays.includes(dayValue);
     }
-
     if (typeof selectedDays === 'string') {
       return selectedDays.includes(dayValue);
     }
-
     return false;
   }
 
   // Method to handle day of week checkbox changes
   onDayOfWeekChange(event: any) {
     if (!this.form) return;
-
     const checkbox = event.target;
     const dayValue = checkbox.value;
     const isChecked = checkbox.checked;
-
     const daysOfWeekControl = this.form.get('days_of_week');
     if (!daysOfWeekControl) return;
 
     let currentDays = daysOfWeekControl.value || [];
-
     if (typeof currentDays === 'string') {
       currentDays = currentDays.split(',').filter(d => d.trim() !== '');
     }
@@ -94,6 +87,7 @@ export class DynamicFormViewerComponent {
     const current = arr.at(index);
     const logic = current.get('logic')?.value;
     const isLast = index === arr.length - 1;
+
     if ((logic === 'and' || logic === 'or') && isLast) {
       arr.push(this.formBuilder.buildConditionGroup(q.item.fields));
     } else if ((!logic || logic === '' || logic === 'NONE') && !isLast) {
@@ -109,9 +103,7 @@ export class DynamicFormViewerComponent {
     if (field.key === 'type') {
       // Add extra options for type
       const base = field.options || [];
-      const extra: any[] = [
-
-      ];
+      const extra: any[] = [];
       // Avoid duplicates if already present
       const all = [...base];
       extra.forEach(opt => {
@@ -128,12 +120,15 @@ export class DynamicFormViewerComponent {
   getFinalConditionString(q: any): string {
     const arr = this.getConditionsArray(q.key);
     if (arr.length === 0) return 'No conditions defined';
+
     return arr.controls
       .map((ctrl, idx) => {
         const type = ctrl.get('type')?.value;
         const job = ctrl.get('job')?.value;
         const logic = ctrl.get('logic')?.value;
+
         if (!job || !type) return '';
+
         let conditionStr = `${type}(${job})`;
         if (logic && logic !== 'NONE' && idx < arr.length - 1) {
           conditionStr += ` ${logic.toUpperCase()} `;
@@ -143,36 +138,79 @@ export class DynamicFormViewerComponent {
       .filter(str => str !== '')
       .join('') || 'No conditions defined';
   }
-get integratedJobValue(): string {
-  if (!this.form) return '';
 
-  // For top subform, show only the base job name (first 6 fields)
-  if (this.subformContext?.type === 'top') {
-    const fields = ['csi', 'efforttype', 'prodlob', 'purpose', 'loadfreq', 'loadlayer'];
-    const values = fields.map(f => this.form.get(f)?.value || '').map(v => v.toString().toUpperCase());
-    return values.filter(v => v !== '').join('_') || 'Job name will appear here';
+  get integratedJobValue(): string {
+    if (!this.form) return '';
+
+    // For top subform, show the base job name with truncation
+    if (this.subformContext?.type === 'top') {
+      const fields = ['csi', 'efforttype', 'prodlob', 'purpose', 'loadfreq', 'loadlayer'];
+      return this.generateTruncatedJobName(fields);
+    }
+
+    // For other subforms, this will be handled by the parent component
+    return '';
   }
 
-  // For other subforms, this will be handled by the parent component
-  return '';
-}
+  private generateTruncatedJobName(fields: string[]): string {
+    const values = fields.map(f => this.form.get(f)?.value || '').map(v => v.toString().toUpperCase());
+    const nonEmptyValues = values.filter(v => v !== '');
+
+    if (nonEmptyValues.length === 0) return 'Job name will appear here';
+
+    const fullJobName = nonEmptyValues.join('_');
+
+    // If job name is within limit, return as is
+    if (fullJobName.length <= 60) {
+      return fullJobName;
+    }
+
+    // Truncate the purpose field (4th field, index 3)
+    return this.truncateWithPurpose(values);
+  }
+
+  private truncateWithPurpose(values: string[]): string {
+    const purposeIndex = 3;
+    const purpose = values[purposeIndex] || '';
+
+    if (purpose.length === 0) {
+      const jobName = values.filter(v => v !== '').join('_');
+      return jobName.substring(0, 60);
+    }
+
+    // Calculate space available for purpose
+    const valuesWithoutPurpose = [...values];
+    valuesWithoutPurpose[purposeIndex] = '';
+    const jobNameWithoutPurpose = valuesWithoutPurpose.filter(v => v !== '').join('_');
+
+    const availableSpace = 60 - jobNameWithoutPurpose.length - 1;
+
+    if (availableSpace <= 0) {
+      return jobNameWithoutPurpose.substring(0, 60);
+    }
+
+    const truncatedPurpose = purpose.substring(0, availableSpace);
+    const truncatedValues = [...values];
+    truncatedValues[purposeIndex] = truncatedPurpose;
+
+    return truncatedValues.filter(v => v !== '').join('_');
+  }
 
   get isJobNameTruncated(): boolean {
     if (!this.form) return false;
 
-    const fields = ['csi', 'efforttype', 'prodlob', 'purpose', 'loadfreq', 'loadlayer', 'funofjob', 'jobtitle'];
+    const fields = ['csi', 'efforttype', 'prodlob', 'purpose', 'loadfreq', 'loadlayer'];
     const values = fields.map(f => this.form.get(f)?.value || '').map(v => v.toString().toUpperCase());
+    const fullJobName = values.filter(v => v !== '').join('_');
 
-    if (!values[3]) return false; // if purpose is empty, never truncated
-
-    const originalJobName = values.filter(v => v !== '').join('_');
-    return originalJobName.length > 64;
+    return fullJobName.length > 60;
   }
 
   // Check if current section is Insert Job Configuration
   isInsertJobSection(section: any): boolean {
-  return section.title === 'Insert Job Configuration';
-}
+    return section.title === 'Insert Job Configuration';
+  }
+
   isFieldReadonly(fieldKey: string): boolean {
     if (fieldKey === 'box_name' && this.subformContext) {
       return ['cmd', 'cfw', 'fw'].includes(this.subformContext.type);

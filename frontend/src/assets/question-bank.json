@@ -249,28 +249,24 @@
         { "value": 0, "label": "No (0)" }
       ]
     },
-    {
-      "id": "q_time_section",
-      "key": "time_section",
-      "label": "Time Configuration",
-      "type": "time-group",
-      "fields": [
-        {
-          "key": "timezone",
-          "label": "Timezone",
-          "type": "dropdown",
-          "options": [
-            { "value": "US CENTRAL", "label": "US CENTRAL" },
-            { "value": "US EASTERN", "label": "US EASTERN" }
-          ]
-        },
-        {
-          "key": "start_time",
-          "label": "Start Time",
-          "type": "time"
-        }
-      ]
-    },
+{
+  "id": "q_timezone",
+  "key": "timezone",
+  "label": "Timezone",
+  "type": "dropdown",
+  "options": [
+    { "value": "US CENTRAL", "label": "US CENTRAL" },
+    { "value": "US EASTERN", "label": "US EASTERN" }
+  ],
+  "validators": []
+},
+{
+  "id": "q_start_time",
+  "key": "start_time",
+  "label": "Start Time",
+  "type": "time",
+  "validators": []
+},
     {
   "id": "q_command",
   "key": "command",

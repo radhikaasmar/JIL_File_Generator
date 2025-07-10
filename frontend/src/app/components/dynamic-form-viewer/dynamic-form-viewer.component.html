@@ -13,7 +13,7 @@
             <div *ngIf="isInsertJobSection(section)" class="integrated-job-display">
               {{ integratedJobValue }}
               <div *ngIf="isJobNameTruncated" class="warning">
-                Warning: Job name is limited to 64 characters and has been truncated.
+                Warning: Job name is limited to 60 characters and has been truncated.
               </div>
             </div>
 
@@ -70,6 +70,9 @@
                       </div>
                     </div>
                   </div>
+
+
+
 
                   <!-- Checkbox Group -->
                   <div *ngSwitchCase="'checkbox-group'">

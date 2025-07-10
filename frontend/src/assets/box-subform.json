@@ -25,7 +25,7 @@
     {
       "title": "Time Configuration",
       "questionIds": [
-        "q_time_section"
+        "q_start_time"
       ]
     }
   ]

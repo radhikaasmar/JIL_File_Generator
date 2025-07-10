@@ -15,6 +15,10 @@
       ]
     },
     {
+      "title":"Time Configuration",
+      "questionIds":["q_timezone"]
+    },
+    {
       "title": "Environment Configuration",
       "questionIds": [
         "q_environments",
