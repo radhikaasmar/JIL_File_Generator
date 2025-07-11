@@ -1,64 +1,54 @@
 <div class="dynamic-form-container">
+  <div class="form-header">
+    <h1>Dynamic Form Viewer</h1>
+    
+    <!-- Download JIL Button -->
+    <button type="button" class="btn btn-primary download-btn" (click)="downloadJILFiles()">
+      <span>📥</span> Download JIL Files
+    </button>
+    
+    <!-- Add Function Section -->
+    <div class="add-function-section">
+      <label>Add Function of Job:</label>
+      <div class="function-checkbox-list">
+        <label *ngFor="let option of availableFunctionOptions">
+          <input type="checkbox" 
+                 [value]="option.value"
+                 (change)="onFunctionCheckboxChange($event, option)">
+          {{ option.label }}
+        </label>
+      </div>
+    </div>
+  </div>
 
-  <!-- Subform Instances -->
   <div class="subforms-container">
-    <div
-      *ngFor="let instance of subformInstances; trackBy: trackByInstanceId"
-      class="subform-wrapper"
-      [ngClass]="'subform-' + instance.type">
-
-      <!-- Subform Header -->
+    <div *ngFor="let instance of subformInstances; trackBy: trackByInstanceId" 
+         class="subform-wrapper">
+      
       <div class="subform-header">
         <h2>{{ instance.displayName }}</h2>
-        <button
-          *ngIf="instance.removable"
-          (click)="removeSubformInstance(instance.id)"
-          class="remove-btn"
-          type="button">
-          ✕ Remove
+        <button *ngIf="instance.removable" 
+                type="button" 
+                class="remove-btn"
+                (click)="removeSubformInstance(instance.id)">
+          Remove
         </button>
       </div>
 
-      <!-- Job Name Display for non-top subforms -->
-      <div *ngIf="instance.type !== 'top'" class="job-name-display">
+      <!-- Job name display for each subform -->
+      <div *ngIf="getJobNameForInstance(instance)" class="job-name-display">
         <strong>Job Name:</strong> {{ getJobNameForInstance(instance) }}
         <div *ngIf="isJobNameTruncated(instance)" class="warning">
-          Warning: Job name is limited to 60 characters and has been truncated.
+          ⚠️ Job name has been truncated to fit 60 character limit
         </div>
       </div>
 
-      <!-- Dynamic Form Viewer for this subform -->
-      <app-dynamic-form-viewer
+      <app-dynamic-form-viewer 
         [sections]="instance.sections"
         [form]="instance.form"
         [subformContext]="instance"
         (formChange)="onSubformChange(instance)">
       </app-dynamic-form-viewer>
     </div>
-  </div>
-
-
-      <!-- Add Function Job Checkbox Section -->
-      <div class="add-function-section" style="margin-top:2rem;">
-        <label>Add Function of Job:</label>
-        <div class="function-checkbox-list">
-          <ng-container *ngFor="let option of availableFunctionOptions">
-            <label style="margin-right: 1.5rem;">
-              <input
-                type="checkbox"
-                [value]="option.value"
-                (change)="onFunctionCheckboxChange($event, option)"
-                [checked]="false"
-              />
-              {{ option.label }}
-            </label>
-          </ng-container>
-        </div>
-      </div>
-
-  <!-- Debug Information (optional, remove in production) -->
-  <div class="debug-section" *ngIf="false">
-    <h3>Debug Info</h3>
-    <pre>{{ getDebugInfo() | json }}</pre>
   </div>
 </div>

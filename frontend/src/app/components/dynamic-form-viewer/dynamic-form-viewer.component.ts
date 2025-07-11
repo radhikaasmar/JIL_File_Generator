@@ -25,45 +25,62 @@ export class DynamicFormViewerComponent {
 ) {}
 
   isDaySelected(dayValue: string): boolean {
-    if (!this.form) return false;
-    const daysOfWeekControl = this.form.get('days_of_week');
-    if (!daysOfWeekControl || !daysOfWeekControl.value) return false;
+  if (!this.form) return false;
+  const daysOfWeekControl = this.form.get('days_of_week');
+  if (!daysOfWeekControl || !daysOfWeekControl.value) return false;
 
-    const selectedDays = daysOfWeekControl.value;
-    if (Array.isArray(selectedDays)) {
-      return selectedDays.includes(dayValue);
-    }
-    if (typeof selectedDays === 'string') {
-      return selectedDays.includes(dayValue);
-    }
-    return false;
+  const selectedDays = daysOfWeekControl.value;
+  
+  // Handle array format (preferred)
+  if (Array.isArray(selectedDays)) {
+    return selectedDays.includes(dayValue);
   }
+  
+  // Handle string format (fallback)
+  if (typeof selectedDays === 'string') {
+    const daysArray = selectedDays.split(',').map(d => d.trim());
+    return daysArray.includes(dayValue);
+  }
+  
+  return false;
+}
+
 
   // Method to handle day of week checkbox changes
   onDayOfWeekChange(event: any) {
-    if (!this.form) return;
-    const checkbox = event.target;
-    const dayValue = checkbox.value;
-    const isChecked = checkbox.checked;
-    const daysOfWeekControl = this.form.get('days_of_week');
-    if (!daysOfWeekControl) return;
-
-    let currentDays = daysOfWeekControl.value || [];
-    if (typeof currentDays === 'string') {
-      currentDays = currentDays.split(',').filter(d => d.trim() !== '');
-    }
-
-    if (isChecked) {
-      if (!currentDays.includes(dayValue)) {
-        currentDays.push(dayValue);
-      }
-    } else {
-      currentDays = currentDays.filter((day: string) => day !== dayValue);
-    }
-
-    daysOfWeekControl.setValue(currentDays);
-    this.onFormChange();
+  if (!this.form) return;
+  
+  const checkbox = event.target;
+  const dayValue = checkbox.value;
+  const isChecked = checkbox.checked;
+  
+  const daysOfWeekControl = this.form.get('days_of_week');
+  if (!daysOfWeekControl) {
+    console.error('days_of_week control not found in form');
+    return;
   }
+
+  let currentDays = daysOfWeekControl.value || [];
+  
+  // Ensure we're working with an array
+  if (typeof currentDays === 'string') {
+    currentDays = currentDays.split(',').filter(d => d.trim() !== '');
+  } else if (!Array.isArray(currentDays)) {
+    currentDays = [];
+  }
+
+  if (isChecked) {
+    if (!currentDays.includes(dayValue)) {
+      currentDays = [...currentDays, dayValue]; // Use spread operator for immutability
+    }
+  } else {
+    currentDays = currentDays.filter((day: string) => day !== dayValue);
+  }
+
+  daysOfWeekControl.setValue(currentDays);
+  this.onFormChange();
+}
+
 
   getConditionsArray(key: string): FormArray {
     return this.form.get(key) as FormArray;

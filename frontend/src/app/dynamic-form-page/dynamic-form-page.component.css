@@ -189,3 +189,57 @@
     font-size: 1rem;
   }
 }
+.download-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+}
+
+.download-btn:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.download-btn span {
+  font-size: 1.2rem;
+}
+
+.form-header {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  margin-bottom: 2.2rem;
+  align-items: flex-start;
+}
+
+.form-header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--primary-dark);
+  margin: 0 0 0.5rem 0;
+  letter-spacing: 0.01em;
+}
+
+/* Update existing add-function-section to work with new layout */
+.add-function-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  background: var(--surface-hover);
+  padding: 1rem 1.5rem;
+  border-radius: 10px;
+  border: 1.5px solid var(--primary-light);
+  width: 100%;
+}

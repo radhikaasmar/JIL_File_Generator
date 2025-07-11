@@ -1,8 +1,7 @@
 import { Routes } from '@angular/router';
 import { DynamicFormPageComponent } from './dynamic-form-page/dynamic-form-page.component';
-import { DashboardComponent } from './dashboard/dashboard.component';
 
 export const routes: Routes = [
-    { path: '', component: DashboardComponent }, // Default route
-    { path: 'dynamic-form', component: DynamicFormPageComponent }
+    { path: '', redirectTo: 'dynamic-form', pathMatch: 'full' }, // Redirect root to dynamic-form
+    { path: 'dynamic-form', component: DynamicFormPageComponent },
 ];

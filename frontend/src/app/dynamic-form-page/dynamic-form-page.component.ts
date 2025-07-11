@@ -525,6 +525,312 @@ private setDefaultMachineValues(instance: SubformInstance, selectedEnvs: string[
 }
 
 
+// Add this method to generate and download JIL files
+downloadJILFiles() {
+  const topInstance = this.subformInstances.find(s => s.type === 'top');
+  if (!topInstance) {
+    alert('No configuration found to generate JIL files');
+    return;
+  }
+this.debugDaysOfWeek(topInstance.form);
+  const selectedEnvs = this.getSelectedEnvironments(topInstance.form);
+  if (selectedEnvs.length === 0) {
+    alert('Please select at least one environment');
+    return;
+  }
+
+  const baseJobName = this.generateBaseJobName(topInstance.form);
+  if (!baseJobName) {
+    alert('Please fill in the required fields to generate job name');
+    return;
+  }
+
+  // Generate JIL files for each selected environment
+  selectedEnvs.forEach(env => {
+    const jilContent = this.generateJILContent(env, baseJobName, topInstance);
+    const fileName = `${baseJobName}_${env.toUpperCase()}.jil.txt`;
+    this.downloadFile(jilContent, fileName);
+  });
+}
+private generateJILContent(environment: string, baseJobName: string, topInstance: SubformInstance): string {
+  let jilContent = '';
+  
+  // 1. Generate Box Job first
+  const boxInstance = this.subformInstances.find(s => s.type === 'box');
+  if (boxInstance) {
+    jilContent += this.generateDynamicJobJIL(environment, baseJobName, topInstance, boxInstance, 'box');
+    jilContent += '\n\n';
+  }
+
+  // 2. Generate Function Jobs (CMD, FW, CFW)
+  const functionInstances = this.subformInstances.filter(s => ['cmd', 'fw', 'cfw'].includes(s.type));
+  functionInstances.forEach(instance => {
+    jilContent += this.generateDynamicJobJIL(environment, baseJobName, topInstance, instance, instance.type);
+    jilContent += '\n\n';
+  });
+
+  return jilContent;
+}
+
+private generateDynamicJobJIL(environment: string, baseJobName: string, topInstance: SubformInstance, jobInstance: SubformInstance, jobType: string): string {
+  const jobForm = jobInstance.form;
+  const topForm = topInstance.form;
+  
+  // Generate job name
+  const funofjob = jobForm.get('funofjob')?.value || '';
+  const jobtitle = jobForm.get('jobtitle')?.value || '';
+  const jobName = `${baseJobName}_${funofjob.toUpperCase()}_${jobtitle.toUpperCase()}`;
+  
+  let jil = `insert_job: ${jobName}\n`;
+  
+  // Set job_type based on job type
+  if (jobType === 'box') {
+    jil += `job_type: b\n`;
+  } else {
+    jil += `job_type: ${jobtitle.toLowerCase()}\n`;
+  }
+  
+  // Add box_name for non-box jobs only
+  if (jobType !== 'box') {
+    const boxName = jobForm.get('box_name')?.value || '';
+    if (boxName) {
+      jil += `box_name: ${boxName}\n`;
+    }
+  }
+  
+  // 1. Add common fields from top form (applies to all job types)
+  jil += this.extractCommonFields(topForm);
+  
+  // 2. Add environment-specific fields from current job form
+  jil += this.extractEnvironmentSpecificFields(jobForm, environment);
+  
+  // 3. Add job-specific fields from current job form (excluding common and environment fields)
+  jil += this.extractJobSpecificFields(jobForm, jobType);
+  
+  return jil;
+}
+private extractCommonFields(topForm: FormGroup): string {
+  let jil = '';
+  const commonFieldMappings: {[key: string]: string} = {
+    'permission': 'permission',
+    'description': 'description',
+    'alarm_if_fail': 'alarm_if_fail',
+    'alarm_if_terminated': 'alarm_if_terminated',
+    'timezone': 'timezone',
+    'date_conditions': 'date_conditions',
+    'run_calendar': 'run_calendar',
+    'status': 'status'
+  };
+
+  // Iterate through all controls in top form
+  Object.keys(topForm.controls).forEach(controlKey => {
+    const control = topForm.get(controlKey);
+    
+    // General handling for other fields
+    if (control && this.hasValidValue(control.value)) {
+      if (commonFieldMappings[controlKey]) {
+        const jilFieldName = commonFieldMappings[controlKey];
+        const value = control.value;
+        
+        if (controlKey === 'description') {
+          jil += `${jilFieldName}: "${value}"\n`;
+        } else if (controlKey === 'date_conditions' && value) {
+          jil += `${jilFieldName}: 1\n`;
+        } else if (typeof value === 'string' || typeof value === 'number') {
+          jil += `${jilFieldName}: ${value}\n`;
+        }
+      }
+    }
+  });
+
+  // Handle days of week as individual checkboxes
+  const daysOfWeekString = this.extractDaysOfWeekFromIndividualCheckboxes(topForm);
+  if (daysOfWeekString) {
+    jil += daysOfWeekString;
+  }
+
+  // Handle conditions separately (complex field)
+  const conditions = topForm.get('conditions')?.value;
+  if (conditions && Array.isArray(conditions) && conditions.length > 0) {
+    const conditionString = this.buildConditionString(conditions);
+    if (conditionString) {
+      jil += `condition: ${conditionString}\n`;
+    }
+  }
+  
+  return jil;
+}
+private extractDaysOfWeekFromIndividualCheckboxes(topForm: FormGroup): string {
+  const dayMapping: {[key: string]: string} = {
+    'monday': 'mo',
+    'tuesday': 'tu', 
+    'wednesday': 'we',
+    'thursday': 'th',
+    'friday': 'fr',
+    'saturday': 'sa',
+    'sunday': 'su'
+  };
+  
+  const selectedDays: string[] = [];
+  
+  // Check each individual day control
+  Object.keys(dayMapping).forEach(day => {
+    const control = topForm.get(day);
+    if (control && control.value === true) {
+      selectedDays.push(dayMapping[day]);
+    }
+  });
+  
+  if (selectedDays.length > 0) {
+    return `days_of_week: ${selectedDays.join(',')}\n`;
+  }
+  
+  return '';
+}
+
+private hasValidValue(value: any): boolean {
+  if (value === null || value === undefined || value === '') {
+    return false;
+  }
+  
+  if (Array.isArray(value)) {
+    return value.length > 0;
+  }
+  
+  return true;
+}
+private debugDaysOfWeek(topForm: FormGroup): void {
+  // Check for array-based control
+  const daysControl = topForm.get('days_of_week');
+  console.log('Days of week control:', daysControl);
+  console.log('Days of week value:', daysControl?.value);
+  
+  // Check for individual day controls
+  const dayNames = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+  console.log('Individual day controls:');
+  dayNames.forEach(day => {
+    const control = topForm.get(day);
+    console.log(`${day}:`, control?.value);
+  });
+  
+  // Check all form controls to see what's actually there
+  console.log('All form controls:', Object.keys(topForm.controls));
+  
+  // Look for any control that might contain day information
+  Object.keys(topForm.controls).forEach(key => {
+    if (key.toLowerCase().includes('day') || key.toLowerCase().includes('week')) {
+      console.log(`Found day-related control: ${key}`, topForm.get(key)?.value);
+    }
+  });
+}
+
+
+
+private buildConditionString(conditions: any[]): string {
+  return conditions
+    .map((condition, index) => {
+      const type = condition.type || '';
+      const job = condition.job || '';
+      const logic = condition.logic || '';
+      
+      if (!type || !job) return '';
+      
+      let conditionStr = `${type}(${job})`;
+      if (logic && logic !== 'NONE' && index < conditions.length - 1) {
+        conditionStr += ` ${logic.toUpperCase()} `;
+      }
+      
+      return conditionStr;
+    })
+    .filter(str => str !== '')
+    .join('');
+}
+
+private extractEnvironmentSpecificFields(jobForm: FormGroup, environment: string): string {
+  let jil = '';
+  const environmentFields = ['owner', 'machine', 'command'];
+  
+  environmentFields.forEach(field => {
+    const controlKey = `${environment}_${field}`;
+    const control = jobForm.get(controlKey);
+    
+    if (control && control.value !== null && control.value !== undefined && control.value !== '') {
+      const value = control.value;
+      if (field === 'command') {
+        jil += `${field}: "${value}"\n`;
+      } else {
+        jil += `${field}: ${value}\n`;
+      }
+    }
+  });
+  
+  return jil;
+}
+
+private extractJobSpecificFields(jobForm: FormGroup, jobType: string): string {
+  let jil = '';
+  
+  // Define fields to exclude (common fields, environment fields, and system fields)
+  const excludeFields = new Set([
+    'funofjob', 'jobtitle', 'box_name', // System fields
+    'dev_owner', 'dev_machine', 'dev_command', // Environment fields
+    'uat_owner', 'uat_machine', 'uat_command',
+    'prod_owner', 'prod_machine', 'prod_command',
+    'cob_owner', 'cob_machine', 'cob_command'
+  ]);
+  
+  // Iterate through all controls in the job form
+  Object.keys(jobForm.controls).forEach(controlKey => {
+    // Skip excluded fields
+    if (excludeFields.has(controlKey)) {
+      return;
+    }
+    
+    const control = jobForm.get(controlKey);
+    if (control && control.value !== null && control.value !== undefined && control.value !== '') {
+      const value = control.value;
+      
+      // Handle different field types based on job type and field name
+      if (this.isFilePathField(controlKey)) {
+        jil += `${controlKey}: "${value}"\n`;
+      } else if (this.isTimeField(controlKey)) {
+        jil += `${controlKey}: "${value}"\n`;
+      } else if (typeof value === 'string' || typeof value === 'number') {
+        jil += `${controlKey}: ${value}\n`;
+      } else if (Array.isArray(value) && value.length > 0) {
+        jil += `${controlKey}: ${value.join(',')}\n`;
+      }
+    }
+  });
+  
+  return jil;
+}
+
+private isFilePathField(fieldName: string): boolean {
+  const filePathFields = [
+    'std_out_file', 'std_err_file', 'watch_file', 'profile',
+    'command', 'script_path', 'log_file', 'error_file'
+  ];
+  return filePathFields.includes(fieldName);
+}
+
+private isTimeField(fieldName: string): boolean {
+  const timeFields = ['start_time', 'start_times', 'end_time'];
+  return timeFields.includes(fieldName);
+}
+
+
+private downloadFile(content: string, fileName: string) {
+  const blob = new Blob([content], { type: 'text/plain' });
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(url);
+}
 
 }
 
