@@ -104,20 +104,22 @@ export class DynamicFormPageComponent implements OnInit {
     return this.functionJobMappingService.getAvailableFunctions(existingFunctions);
   }
 
-  onAddFunctionJob(event: any) {
-    const selectedFunction = event.target.value;
-    if (!selectedFunction) return;
-
-    const functionOption = this.functionJobMappingService.getFunctionJobOption(selectedFunction);
-    if (!functionOption) return;
-
-    const instanceCount = this.subformInstances.filter(s => s.type === functionOption.subformType).length;
-    const displayName = `${functionOption.subformType.toUpperCase()} Job #${instanceCount + 1}`;
-
-    this.addSubformInstance(functionOption.subformType, displayName, true, selectedFunction);
-
-    // Reset dropdown
-    event.target.value = '';
+  // Remove onAddFunctionJob(event: any)
+  // Add checkbox handler instead
+  onFunctionCheckboxChange(event: any, option: FunctionJobOption) {
+    if (event.target.checked) {
+      // Add subform for this function
+      const instanceCount = this.subformInstances.filter(s => s.type === option.subformType).length;
+      const displayName = `${option.subformType.toUpperCase()} Job #${instanceCount + 1}`;
+      this.addSubformInstance(option.subformType, displayName, true, option.value);
+    } else {
+      // Remove subform(s) for this function
+      // Remove all instances with this functionOfJob
+      this.subformInstances = this.subformInstances.filter(
+        instance => instance.functionOfJob !== option.value
+      );
+      this.updateJobNames();
+    }
   }
 
   removeSubformInstance(instanceId: string) {

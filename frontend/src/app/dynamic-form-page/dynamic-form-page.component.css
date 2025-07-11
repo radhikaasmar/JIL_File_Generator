@@ -44,32 +44,54 @@
 
 .add-function-section {
   display: flex;
-  align-items: center;
-  gap: 0.8rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
   background: var(--surface-hover);
-  padding: 0.7rem 1.2rem;
-  border-radius: 8px;
+  padding: 1rem 1.5rem;
+  border-radius: 10px;
   border: 1.5px solid var(--primary-light);
+  margin-bottom: 1.2rem;
 }
 
-.add-function-section label {
+.add-function-section > label {
+  font-weight: 600;
+  color: var(--primary-dark);
+  margin-bottom: 0.2rem;
+}
+
+.function-checkbox-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.2rem 2.2rem;
+  margin-top: 0.2rem;
+}
+
+.function-checkbox-list label {
+  display: flex;
+  align-items: center;
   font-weight: 500;
-  color: var(--primary-dark);
-}
-
-.function-dropdown {
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  border: 1.5px solid var(--border);
-  background: #fff;
-  color: var(--primary-dark);
+  color: var(--primary);
   font-size: 1rem;
-  transition: border 0.2s;
+  cursor: pointer;
+  gap: 0.5rem;
+  margin: 0;
 }
 
-.function-dropdown:focus {
-  border-color: var(--primary);
-  outline: none;
+.function-checkbox-list input[type="checkbox"] {
+  accent-color: var(--primary);
+  width: 1.1em;
+  height: 1.1em;
+  margin-right: 0.4em;
+  cursor: pointer;
+  border-radius: 3px;
+  border: 1.5px solid var(--primary-light);
+  transition: box-shadow 0.15s;
+}
+
+.function-checkbox-list input[type="checkbox"]:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
 }
 
 .subforms-container {
