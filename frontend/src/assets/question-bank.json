@@ -38,8 +38,13 @@
       "label": "Prod/LOB Name",
       "type": "dropdown",
       "options": [
-        { "value": "prod1", "label": "Prod 1" },
-        { "value": "prod2", "label": "Prod 2" }
+        { "value": "DEP", "label": "DEP" },
+        { "value": "BCD", "label": "BCD" },
+        { "value": "CRS", "label": "CRS" },
+        { "value": "MTG", "label": "MTG" },
+        { "value": "INV", "label": "INV" },
+        { "value": "PLN", "label": "PLN" },
+        { "value": "XLOB", "label": "XLOB" }
       ],
       "validators": [{ "type": "required" }]
     },
