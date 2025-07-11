@@ -7,6 +7,18 @@
       class="subform-wrapper"
       [ngClass]="'subform-' + instance.type">
 
+      <!-- Add Function Job Dropdown moved here -->
+  <div class="add-function-section" style="margin-top:2rem;">
+    <label for="functionSelect">Add Function of Job:</label>
+    <select id="functionSelect" (change)="onAddFunctionJob($event)" class="function-dropdown">
+      <option value="">Select function to add...</option>
+      <option
+        *ngFor="let option of availableFunctionOptions"
+        [value]="option.value">
+        {{ option.label }}
+      </option>
+    </select>
+  </div>
       <!-- Subform Header -->
       <div class="subform-header">
         <h2>{{ instance.displayName }}</h2>
@@ -37,18 +49,7 @@
     </div>
   </div>
 
-  <!-- Add Function Job Dropdown moved here -->
-  <div class="add-function-section" style="margin-top:2rem;">
-    <label for="functionSelect">Add Function of Job:</label>
-    <select id="functionSelect" (change)="onAddFunctionJob($event)" class="function-dropdown">
-      <option value="">Select function to add...</option>
-      <option
-        *ngFor="let option of availableFunctionOptions"
-        [value]="option.value">
-        {{ option.label }}
-      </option>
-    </select>
-  </div>
+
 
   <!-- Debug Information (optional, remove in production) -->
   <div class="debug-section" *ngIf="false">

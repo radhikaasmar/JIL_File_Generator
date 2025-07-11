@@ -25,11 +25,9 @@
     {
       "title": "Runtime Configuration",
       "questionIds": [
-        "q_term_run_time",
         "q_std_out_file",
         "q_std_err_file",
-        "q_profile",
-        "q_envvars"
+        "q_profile"
       ]
     }
   ]

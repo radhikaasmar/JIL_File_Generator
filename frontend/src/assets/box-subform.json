@@ -19,7 +19,9 @@
     {
       "title": "Job Configuration",
       "questionIds": [
-        "q_days_of_week"
+        "q_date_conditions",
+        "q_days_of_week",
+        "q_run_calendar"
       ]
     },
     {

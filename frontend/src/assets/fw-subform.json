@@ -27,7 +27,6 @@
     {
       "title": "Runtime Configuration",
       "questionIds": [
-        "q_term_run_time",
         "q_max_run_alarm",
         "q_job_load",
         "q_priority"

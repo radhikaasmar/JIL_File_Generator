@@ -28,9 +28,8 @@
     {
       "title": "Job Configuration",
       "questionIds": [
-        "q_permission",
-        "q_date_conditions",
-        "q_days_of_week"
+        "q_permission"
+        
       ]
     },
     {
