@@ -1,9 +1,9 @@
 <div class="dashboard-container">
-  <form (ngSubmit)="generateJIL()">
-    <ng-container *ngFor="let job of allJobs.controls; let i = index">
+  <!-- <form (ngSubmit)="generateJIL()">
+    <!-- <ng-container *ngFor="let job of allJobs.controls; let i = index">
       <ng-container [ngSwitch]="job.get('type')?.value">
-        
-        <!-- BOX Job -->
+
+        <!-- BOX Job
         <app-box-job
           *ngSwitchCase="'box'"
           [boxJobForm]="toFormGroup(job.get('form'))"
@@ -11,7 +11,7 @@
           (formChange)="subscribeToBoxJobChanges(i)">
         </app-box-job>
 
-        <!-- FILE WATCHER Job -->
+        FILE WATCHER Job
         <app-file-watcher
           *ngSwitchCase="'fw'"
           [fileWatcherForm]="toFormGroup(job.get('form'))"
@@ -19,7 +19,7 @@
           (delete)="removeJob(i)">
         </app-file-watcher>
 
-        <!-- CMD Job -->
+        CMD Job
         <app-cmd-job
           *ngSwitchCase="'cmd'"
           [cmdJobForm]="toFormGroup(job.get('form'))"
@@ -27,26 +27,26 @@
           (delete)="removeJob(i)">
         </app-cmd-job>
 
-        <!-- CFW Job -->
-        <app-cfw-job
+        CFW Job -->
+        <!-- <app-cfw-job
           *ngSwitchCase="'cfw'"
           [cfwJobForm]="toFormGroup(job.get('form'))"
           [boxJobNaming]="boxJobNaming"
           (delete)="removeJob(i)">
-        </app-cfw-job>
+        </app-cfw-job> -->
 
-      </ng-container>
-    </ng-container>
+      <!-- </ng-container>
+    </ng-container> -->
 
-    <div class="form-actions">
+    <!-- <div class="form-actions">
       <button type="button" (click)="addFileWatcherJob()">Add File Watcher Job</button>
       <button type="button" (click)="addCmdJob()">Add CMD Job</button>
       <button type="button" (click)="addCfwJob()">Add CFW Job</button>
-      <button type="submit" 
+      <button type="submit"
               [disabled]="allJobs.invalid || isFormInvalid(allJobs)">
         Generate txt JIL
-      </button>
-    </div>
+      </button> -->
+    <!-- </div>
   </form>
 
   <app-jil-output
@@ -54,7 +54,7 @@
     [showJIL]="showJIL">
   </app-jil-output>
 
-  <button type="button" (click)="downloadJILFile()">Download JIL</button>
+  <button type="button" (click)="downloadJILFile()">Download JIL</button> -->
 <button type="button" (click)="navigateToDynamicForm()">
   Go to Dynamic Form Page
 </button>

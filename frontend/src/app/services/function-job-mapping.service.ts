@@ -24,7 +24,7 @@ export class FunctionJobMappingService {
     { value: 'pub', label: 'PUB (CMD)', jobType: 'cmd', subformType: 'cmd' },
     { value: 'drv', label: 'DRV (CMD)', jobType: 'cmd', subformType: 'cmd' },
     { value: 'fw', label: 'FW', jobType: 'fw', subformType: 'fw' },
-    { value: 'cfw', label: 'CFW', jobType: 'cfw', subformType: 'cfw' }
+    { value: 'cfw', label: 'CFW', jobType: 'CMD', subformType: 'cfw' }
   ];
 
   getAllFunctionJobOptions(): FunctionJobOption[] {

@@ -1,11 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormArray, FormGroup,Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { BoxJobComponent } from '../components/box-job/box-job.component';
-import { FileWatcherComponent } from '../components/file-watcher/file-watcher.component';
-import { JilOutputComponent } from '../components/jil-output/jil-output.component';
-import { CmdJobComponent } from '../components/cmd-job/cmd-job.component';
-import { CfwJobComponent } from '../components/cfw-job/cfw-job.component';
+// import { JilOutputComponent } from '../components/jil-output/jil-output.component';
 import { FormService } from '../services/form.service';
 import { AbstractControl } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -16,7 +12,7 @@ import { Router } from '@angular/router';
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
   standalone: true,
-  imports: [CommonModule, BoxJobComponent, FileWatcherComponent, JilOutputComponent, CmdJobComponent, CfwJobComponent]
+  imports: [CommonModule]
 })
 export class DashboardComponent implements OnInit {
   generatedJIL: string = '';
