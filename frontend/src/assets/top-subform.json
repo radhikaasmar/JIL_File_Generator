@@ -21,15 +21,14 @@
     {
       "title": "Environment Configuration",
       "questionIds": [
-        "q_environments",
-        "q_environments_details"
+        "q_environments"
       ]
     },
     {
       "title": "Job Configuration",
       "questionIds": [
         "q_permission"
-        
+
       ]
     },
     {

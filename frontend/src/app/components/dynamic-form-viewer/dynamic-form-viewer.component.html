@@ -91,34 +91,25 @@
                   <!-- In dynamic-form-viewer.component.html -->
 <!-- Environments Group -->
 <div *ngSwitchCase="'environments-group'">
-  <!-- Only show environment details for non-top subforms -->
-  <div *ngIf="subformContext?.type !== 'top'">
-    <div *ngFor="let env of q.environments">
-      <ng-container *ngIf="isEnvironmentSelected(env.key)">
-        <h4>{{ env.label }} Environment</h4>
-        <div *ngFor="let field of env.fields" class="form-field">
-          <ng-container *ngIf="shouldShowEnvironmentField(env, field)">
-            <label [ngClass]="{'required': isEnvironmentFieldRequired(env.key, field.key)}">
-              {{ field.label }}
-            </label>
-            <input
-              [formControlName]="env.key + '_' + field.key"
-              [placeholder]="field.label"
-              (input)="onFormChange()" />
-
-            <!-- Validation error display -->
-            <div *ngIf="isEnvironmentFieldRequired(env.key, field.key) &&
-                        form.get(env.key + '_' + field.key)?.invalid &&
-                        form.get(env.key + '_' + field.key)?.touched"
-                 class="error-message">
-              This field is required for selected environment
-            </div>
-          </ng-container>
-        </div>
-      </ng-container>
-    </div>
+  <div *ngFor="let env of q.environments">
+    <ng-container *ngIf="isEnvironmentSelected(env.key)">
+      <h4>{{ env.label }} Environment</h4>
+      <div *ngFor="let field of env.fields" class="form-field">
+        <ng-container *ngIf="shouldShowEnvironmentField(env, field)">
+          <label [ngClass]="{'required': isEnvironmentFieldRequired(env.key, field.key)}">
+            {{ field.label }}
+          </label>
+          <input
+            [formControlName]="env.key + '_' + field.key"
+            [placeholder]="field.label"
+            [readonly]="isFieldReadonly(env.key + '_' + field.key)"
+            (input)="onFormChange()" />
+        </ng-container>
+      </div>
+    </ng-container>
   </div>
 </div>
+
 
 
 

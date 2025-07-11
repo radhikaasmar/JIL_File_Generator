@@ -7,23 +7,6 @@
       class="subform-wrapper"
       [ngClass]="'subform-' + instance.type">
 
-      <!-- Add Function Job Checkbox Section -->
-      <div class="add-function-section" style="margin-top:2rem;">
-        <label>Add Function of Job:</label>
-        <div class="function-checkbox-list">
-          <ng-container *ngFor="let option of availableFunctionOptions">
-            <label style="margin-right: 1.5rem;">
-              <input
-                type="checkbox"
-                [value]="option.value"
-                (change)="onFunctionCheckboxChange($event, option)"
-                [checked]="false"
-              />
-              {{ option.label }}
-            </label>
-          </ng-container>
-        </div>
-      </div>
       <!-- Subform Header -->
       <div class="subform-header">
         <h2>{{ instance.displayName }}</h2>
@@ -55,6 +38,23 @@
   </div>
 
 
+      <!-- Add Function Job Checkbox Section -->
+      <div class="add-function-section" style="margin-top:2rem;">
+        <label>Add Function of Job:</label>
+        <div class="function-checkbox-list">
+          <ng-container *ngFor="let option of availableFunctionOptions">
+            <label style="margin-right: 1.5rem;">
+              <input
+                type="checkbox"
+                [value]="option.value"
+                (change)="onFunctionCheckboxChange($event, option)"
+                [checked]="false"
+              />
+              {{ option.label }}
+            </label>
+          </ng-container>
+        </div>
+      </div>
 
   <!-- Debug Information (optional, remove in production) -->
   <div class="debug-section" *ngIf="false">

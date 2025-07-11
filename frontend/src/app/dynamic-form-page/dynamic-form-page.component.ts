@@ -107,20 +107,31 @@ export class DynamicFormPageComponent implements OnInit {
   // Remove onAddFunctionJob(event: any)
   // Add checkbox handler instead
   onFunctionCheckboxChange(event: any, option: FunctionJobOption) {
-    if (event.target.checked) {
-      // Add subform for this function
-      const instanceCount = this.subformInstances.filter(s => s.type === option.subformType).length;
-      const displayName = `${option.subformType.toUpperCase()} Job #${instanceCount + 1}`;
-      this.addSubformInstance(option.subformType, displayName, true, option.value);
-    } else {
-      // Remove subform(s) for this function
-      // Remove all instances with this functionOfJob
-      this.subformInstances = this.subformInstances.filter(
-        instance => instance.functionOfJob !== option.value
-      );
-      this.updateJobNames();
+  if (event.target.checked) {
+    const instanceCount = this.subformInstances.filter(s => s.type === option.subformType).length;
+    const displayName = `${option.subformType.toUpperCase()} Job #${instanceCount + 1}`;
+    this.addSubformInstance(option.subformType, displayName, true, option.value);
+
+    // After creating the subform, set default values
+    const selectedEnvs = this.environmentStateService.getSelectedEnvironments();
+    const newInstance = this.subformInstances[this.subformInstances.length - 1];
+
+    // Set machine defaults immediately
+    this.setDefaultMachineValues(newInstance, selectedEnvs);
+
+    // If box form exists, propagate owner values
+    const boxInstance = this.subformInstances.find(s => s.type === 'box');
+    if (boxInstance) {
+      this.propagateOwnerValuesFromBox(boxInstance.form);
     }
+  } else {
+    this.subformInstances = this.subformInstances.filter(
+      instance => instance.functionOfJob !== option.value
+    );
+    this.updateJobNames();
   }
+}
+
 
   removeSubformInstance(instanceId: string) {
     this.subformInstances = this.subformInstances.filter(instance => instance.id !== instanceId);
@@ -135,7 +146,69 @@ export class DynamicFormPageComponent implements OnInit {
     this.environmentStateService.updateSelectedEnvironments(selectedEnvs);
     this.updateEnvironmentValidators();
   }
+
+  // If change is from box form, propagate owner values to cmd/fw
+  if (instance.type === 'box') {
+    this.propagateOwnerValuesFromBox(instance.form);
+  }
 }
+
+private propagateOwnerValuesFromBox(boxForm: FormGroup) {
+  const selectedEnvs = this.environmentStateService.getSelectedEnvironments();
+  const ownerValues: {[key: string]: string} = {};
+
+  // Extract owner values from box form
+  selectedEnvs.forEach(env => {
+    const ownerValue = boxForm.get(`${env}_owner`)?.value;
+    if (ownerValue) {
+      ownerValues[env] = ownerValue;
+    }
+  });
+
+  // Set owner values in cmd and fw subforms (editable, not readonly)
+  this.subformInstances
+    .filter(instance => ['cmd', 'fw'].includes(instance.type))
+    .forEach(instance => {
+      selectedEnvs.forEach(env => {
+        const ownerControl = instance.form.get(`${env}_owner`);
+        if (ownerControl && ownerValues[env]) {
+          ownerControl.setValue(ownerValues[env]);
+          // Don't disable - keep it editable
+        }
+      });
+
+      // Also set machine defaults when propagating
+      this.setDefaultMachineValues(instance, selectedEnvs);
+    });
+}
+
+
+
+private propagateOwnerValues(topForm: FormGroup, selectedEnvs: string[]) {
+  const ownerValues: {[key: string]: string} = {};
+
+  // Extract owner values from top form
+  selectedEnvs.forEach(env => {
+    const ownerValue = topForm.get(`${env}_owner`)?.value;
+    if (ownerValue) {
+      ownerValues[env] = ownerValue;
+    }
+  });
+
+  // Set owner values in cmd and fw subforms
+  this.subformInstances
+    .filter(instance => ['cmd', 'fw'].includes(instance.type))
+    .forEach(instance => {
+      selectedEnvs.forEach(env => {
+        const ownerControl = instance.form.get(`${env}_owner`);
+        if (ownerControl && ownerValues[env]) {
+          ownerControl.setValue(ownerValues[env]);
+          ownerControl.disable(); // Make it readonly
+        }
+      });
+    });
+}
+
 
   private updateJobNames() {
     const topInstance = this.subformInstances.find(s => s.type === 'top');
@@ -432,5 +505,26 @@ private getFieldsForJobType(jobType: string): string[] {
       return [];
   }
 }
+private setDefaultMachineValues(instance: SubformInstance, selectedEnvs: string[]) {
+  const defaultMachines: Record<string, string> = {
+    'dev': 'V169912_EAP_GCG_NAM_INGESTION_DEV',
+    'uat': 'V169912_EAP_GCG_NAM_INGESTION_UAT',
+    'prod': 'V169912_EAP_GCG_NAM_INGESTION_PROD',
+    'cob': 'V169912_EAP_GCG_NAM_INGESTION_COB'
+  };
+
+  if (['cmd', 'fw'].includes(instance.type)) {
+    selectedEnvs.forEach(env => {
+      const machineControl = instance.form.get(`${env}_machine`);
+      if (machineControl) {
+        // Always set default value, even if field already has a value
+        machineControl.setValue(defaultMachines[env] || '');
+      }
+    });
+  }
+}
+
+
+
 }
 

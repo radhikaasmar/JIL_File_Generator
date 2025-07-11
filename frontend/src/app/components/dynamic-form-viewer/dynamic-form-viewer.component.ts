@@ -212,11 +212,12 @@ export class DynamicFormViewerComponent {
   }
 
   isFieldReadonly(fieldKey: string): boolean {
-    if (fieldKey === 'box_name' && this.subformContext) {
-      return ['cmd', 'cfw', 'fw'].includes(this.subformContext.type);
-    }
-    return false;
-  }
+  // Remove the readonly logic for owner fields
+  // Owner fields should be editable in all forms
+  return false;
+}
+
+
 
     // Method to check if a question has required validator
   hasRequiredValidator(question: any, env?: string, field?: string): boolean {
@@ -260,21 +261,34 @@ shouldShowEnvironmentField(env: any, field: any): boolean {
 
   const jobType = this.subformContext.type;
 
-  // For top subform, show all fields (but they won't be displayed due to other logic)
-  if (jobType === 'top') return true;
+  // For top subform, don't show any environment detail fields
+  if (jobType === 'top') {
+    return false;
+  }
 
-  // For box jobs, only show owner field
+  // For box jobs, only show owner fields
   if (jobType === 'box') {
     return field.key === 'owner';
   }
 
-  // For cmd, cfw, fw jobs, show all fields (owner, machine, command)
-  if (['cmd', 'cfw', 'fw'].includes(jobType)) {
+  // For cmd jobs, show owner, machine, and command
+  if (jobType === 'cmd') {
     return ['owner', 'machine', 'command'].includes(field.key);
+  }
+
+  // For fw jobs, show owner and machine
+  if (jobType === 'fw') {
+    return ['owner', 'machine'].includes(field.key);
   }
 
   return true;
 }
+
+
+
+
+
+
 isEnvironmentSelected(envKey: string): boolean {
   // For top form, don't show detail fields
   if (this.subformContext?.type === 'top') {

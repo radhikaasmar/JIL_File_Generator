@@ -19,9 +19,7 @@
     {
       "title": "Environment Configuration",
       "questionIds": [
-        "q_owner",
-        "q_machine",
-        "q_command"
+        "q_environments_details"
       ]
     },
     {

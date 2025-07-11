@@ -127,7 +127,7 @@
           "fields": [
             { "key": "owner", "label": "Owner (DEV)", "type": "text" },
             { "key": "machine", "label": "Machine (DEV)", "type": "text" },
-            { "key": "version", "label": "Version (DEV)", "type": "text" }
+            { "key": "command", "label": "Command (DEV)", "type": "text" }
           ]
         },
         {
@@ -135,7 +135,8 @@
           "label": "PROD",
           "fields": [
             { "key": "owner", "label": "Owner (PROD)", "type": "text" },
-            { "key": "machine", "label": "Machine (PROD)", "type": "text" }
+            { "key": "machine", "label": "Machine (PROD)", "type": "text" },
+            { "key": "command", "label": "Command (DEV)", "type": "text" }
           ]
         },
         {
@@ -144,7 +145,7 @@
           "fields": [
             { "key": "owner", "label": "Owner (COB)", "type": "text" },
             { "key": "machine", "label": "Machine (COB)", "type": "text" },
-            { "key": "version", "label": "Version (COB)", "type": "text" }
+            { "key": "command", "label": "Command (DEV)", "type": "text" }
           ]
         },
         {
@@ -153,7 +154,7 @@
           "fields": [
             { "key": "owner", "label": "Owner (UAT)", "type": "text" },
             { "key": "machine", "label": "Machine (UAT)", "type": "text" },
-            { "key": "version", "label": "Version (UAT)", "type": "text" }
+            { "key": "command", "label": "Command (DEV)", "type": "text" }
           ]
         }
       ]
