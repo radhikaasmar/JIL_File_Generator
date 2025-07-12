@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { LoadFrequencyService } from '../services/load-frequency.service'; // Add this import
 import { FormGroup, Validators } from '@angular/forms';
 import { DynamicQuestionService } from '../services/dynamic-question.service';
 import { DynamicFormBuilderService, SubformInstance } from '../services/dynamic-form-builder.service';
@@ -29,7 +29,8 @@ export class DynamicFormPageComponent implements OnInit {
     private subformConfigService: SubformConfigService,
     private functionJobMappingService: FunctionJobMappingService,
     private environmentStateService: EnvironmentStateService,
-    private daysOfWeekService: DaysOfWeekService // Add this injection
+    private daysOfWeekService: DaysOfWeekService, // Add this injection
+    private loadFrequencyService: LoadFrequencyService 
   )  {}
 
   ngOnInit() {

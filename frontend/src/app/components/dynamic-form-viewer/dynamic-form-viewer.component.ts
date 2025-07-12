@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormArray } from '@angular/forms';
 import { DynamicFormBuilderService, SubformInstance } from '../../services/dynamic-form-builder.service';
 import { EnvironmentStateService } from '../../services/environment-state.service';
-import { DaysOfWeekService } from '../../services/days-of-week.service'; // Add this import
+import { DaysOfWeekService } from '../../services/days-of-week.service';
+import { LoadFrequencyService } from '../../services/load-frequency.service'; // Add this import
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -21,11 +22,14 @@ export class DynamicFormViewerComponent implements OnInit, OnDestroy {
 
   selectedEnvironments: string[] = [];
   private environmentSubscription?: Subscription;
+  private loadFrequencySubscription?: Subscription;
+  private currentLoadFrequency: string = '';
 
   constructor(
     private formBuilder: DynamicFormBuilderService,
     private environmentStateService: EnvironmentStateService,
-    private daysOfWeekService: DaysOfWeekService // Add this injection
+    private daysOfWeekService: DaysOfWeekService,
+    private loadFrequencyService: LoadFrequencyService // Add this injection
   ) {}
 
   ngOnInit() {
@@ -34,13 +38,78 @@ export class DynamicFormViewerComponent implements OnInit, OnDestroy {
         this.selectedEnvironments = selectedEnvs;
       }
     );
+
+    // Subscribe to load frequency changes
+    this.loadFrequencySubscription = this.loadFrequencyService.loadFrequency$.subscribe(
+      frequency => {
+        this.currentLoadFrequency = frequency;
+      }
+    );
+
+    // Initialize load frequency if this form has the control
+    const loadFreqControl = this.form?.get('loadfreq');
+    if (loadFreqControl && loadFreqControl.value) {
+      this.loadFrequencyService.updateLoadFrequency(loadFreqControl.value);
+    }
   }
 
   ngOnDestroy() {
     if (this.environmentSubscription) {
       this.environmentSubscription.unsubscribe();
     }
+    if (this.loadFrequencySubscription) {
+      this.loadFrequencySubscription.unsubscribe();
+    }
   }
+
+  // Updated shouldShowField method to use service
+  shouldShowField(questionKey: string): boolean {
+    const loadFreqValue = this.loadFrequencyService.getLoadFrequency();
+    
+    if (questionKey === 'days_of_week') {
+      return loadFreqValue === 'D' || loadFreqValue === 'W';
+    }
+    
+    if (questionKey === 'run_calendar') {
+      return loadFreqValue === 'M' || loadFreqValue === 'C';
+    }
+    
+    return true;
+  }
+
+  // Updated onLoadFrequencyChange method
+  onLoadFrequencyChange() {
+    const loadFreqControl = this.form.get('loadfreq');
+    const loadFreqValue = loadFreqControl?.value;
+    
+    console.log('Load frequency changed to:', loadFreqValue);
+    
+    // Update the service to communicate across all form instances
+    this.loadFrequencyService.updateLoadFrequency(loadFreqValue);
+    
+    // Clear conflicting fields based on selection
+    if (loadFreqValue === 'M' || loadFreqValue === 'C') {
+      // Clear days of week selection
+      const daysControl = this.form.get('days_of_week');
+      if (daysControl) {
+        daysControl.setValue([]);
+        this.daysOfWeekService.clearSelectedDays();
+      }
+    }
+    
+    if (loadFreqValue === 'D' || loadFreqValue === 'W') {
+      // Clear run calendar
+      const runCalendarControl = this.form.get('run_calendar');
+      if (runCalendarControl) {
+        runCalendarControl.setValue('');
+      }
+    }
+    
+    this.onFormChange();
+  }
+
+  // Rest of your existing methods remain the same...
+
 
   // Method to check if an option is selected in mcq_multi
   isOptionSelected(questionKey: string, optionValue: string): boolean {
@@ -307,3 +376,4 @@ export class DynamicFormViewerComponent implements OnInit, OnDestroy {
     return this.selectedEnvironments.includes(envKey);
   }
 }
+

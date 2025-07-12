@@ -20,74 +20,79 @@
             <!-- Regular form fields -->
             <div [ngClass]="{'insert-job-fields': isInsertJobSection(section)}">
               <ng-container *ngFor="let q of section.questions">
-                <div class="form-field" [ngSwitch]="q.type">
+                <!-- Apply conditional visibility check here -->
+                <ng-container *ngIf="shouldShowField(q.key)">
+    <div class="form-field" [ngSwitch]="q.type">
 
-                  <!-- Text Input -->
-                  <div *ngSwitchCase="'text'">
-                    <label [ngClass]="{'required': hasRequiredValidator(q)}">{{ q.label }}</label>
-                    <input
-                      [formControlName]="q.key"
-                      [placeholder]="q.placeholder"
-                      [maxlength]="q.key === 'csi' ? 6 : null"
-                      [attr.pattern]="q.key === 'csi' ? '^\\d{6}$' : null"
-                      (input)="onFormChange()" />
-                  </div>
+                    <!-- Text Input -->
+                    <div *ngSwitchCase="'text'">
+                      <label [ngClass]="{'required': hasRequiredValidator(q)}">{{ q.label }}</label>
+                      <input
+                        [formControlName]="q.key"
+                        [placeholder]="q.placeholder"
+                        [maxlength]="q.key === 'csi' ? 6 : null"
+                        [attr.pattern]="q.key === 'csi' ? '^\\d{6}$' : null"
+                        (input)="onFormChange()" />
+                    </div>
 
-                  <!-- Dropdown -->
-                  <div *ngSwitchCase="'dropdown'">
-                    <label [ngClass]="{'required': hasRequiredValidator(q)}">{{ q.label }}</label>
-                    <select [formControlName]="q.key" (change)="onFormChange()">
-                      <option value="">Select...</option>
-                      <option *ngFor="let opt of q.options" [value]="opt.value">{{ opt.label }}</option>
-                    </select>
-                  </div>
+                     <!-- Dropdown with special handling for loadfreq -->
+      <div *ngSwitchCase="'dropdown'">
+        <label [ngClass]="{'required': hasRequiredValidator(q)}">{{ q.label }}</label>
+        <select 
+          [formControlName]="q.key" 
+          (change)="q.key === 'loadfreq' ? onLoadFrequencyChange() : onFormChange()">
+          <option value="">Select...</option>
+          <option *ngFor="let opt of q.options" [value]="opt.value">{{ opt.label }}</option>
+        </select>
+      </div>
 
-                  <!-- Time Input -->
-                  <div *ngSwitchCase="'time'">
-                    <label [ngClass]="{'required': hasRequiredValidator(q)}">{{ q.label }}</label>
-                    <input
-                      type="time"
-                      [formControlName]="q.key"
-                      (change)="onFormChange()" />
-                  </div>
 
-                  <!-- Time Group for Timezone and Start Time -->
-                  <div *ngSwitchCase="'time-group'">
-                    <label>{{ q.label }}</label>
-                    <div class="time-group-container">
-                      <div *ngFor="let field of q.fields" class="time-field">
-                        <label>{{ field.label }}</label>
-                        <ng-container [ngSwitch]="field.type">
-                          <select *ngSwitchCase="'dropdown'" [formControlName]="field.key" (change)="onFormChange()">
-                            <option value="">Select...</option>
-                            <option *ngFor="let opt of field.options" [value]="opt.value">{{ opt.label }}</option>
-                          </select>
-                          <input *ngSwitchCase="'time'"
-                            type="time"
-                            [formControlName]="field.key"
-                            (change)="onFormChange()" />
-                        </ng-container>
+                    <!-- Time Input -->
+                    <div *ngSwitchCase="'time'">
+                      <label [ngClass]="{'required': hasRequiredValidator(q)}">{{ q.label }}</label>
+                      <input
+                        type="time"
+                        [formControlName]="q.key"
+                        (change)="onFormChange()" />
+                    </div>
+
+                    <!-- Time Group for Timezone and Start Time -->
+                    <div *ngSwitchCase="'time-group'">
+                      <label>{{ q.label }}</label>
+                      <div class="time-group-container">
+                        <div *ngFor="let field of q.fields" class="time-field">
+                          <label>{{ field.label }}</label>
+                          <ng-container [ngSwitch]="field.type">
+                            <select *ngSwitchCase="'dropdown'" [formControlName]="field.key" (change)="onFormChange()">
+                              <option value="">Select...</option>
+                              <option *ngFor="let opt of field.options" [value]="opt.value">{{ opt.label }}</option>
+                            </select>
+                            <input *ngSwitchCase="'time'"
+                              type="time"
+                              [formControlName]="field.key"
+                              (change)="onFormChange()" />
+                          </ng-container>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <!-- MCQ Multi (Days of Week) - Clean Implementation -->
-                  <div *ngSwitchCase="'mcq_multi'">
-                    <label [ngClass]="{'required': hasRequiredValidator(q)}">{{ q.label }}</label>
-                    <div class="mcq-multi-group">
-                      <div *ngFor="let option of q.options" class="mcq-multi-item">
-                        <label>
-                          <input 
-                            type="checkbox" 
-                            [value]="option.value"
-                            [checked]="isOptionSelected(q.key, option.value)"
-                            (change)="onMcqMultiChange($event, q.key, option.value)"
-                          />
-                          {{ option.label }}
-                        </label>
+                    <!-- MCQ Multi (Days of Week) - Clean Implementation -->
+                    <div *ngSwitchCase="'mcq_multi'">
+                      <label [ngClass]="{'required': hasRequiredValidator(q)}">{{ q.label }}</label>
+                      <div class="mcq-multi-group">
+                        <div *ngFor="let option of q.options" class="mcq-multi-item">
+                          <label>
+                            <input 
+                              type="checkbox" 
+                              [value]="option.value"
+                              [checked]="isOptionSelected(q.key, option.value)"
+                              (change)="onMcqMultiChange($event, q.key, option.value)"
+                            />
+                            {{ option.label }}
+                          </label>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
                   <!-- Checkbox Group -->
                   <div *ngSwitchCase="'checkbox-group'">
@@ -154,15 +159,16 @@
                   </div>
 
                   <!-- Default case for any other types -->
-                  <div *ngSwitchDefault>
-                    <label>{{ q.label }}</label>
-                    <input
-                      [formControlName]="q.key"
-                      [placeholder]="q.placeholder || ''"
-                      (input)="onFormChange()" />
-                  </div>
+                   <div *ngSwitchDefault>
+                      <label>{{ q.label }}</label>
+                      <input
+                        [formControlName]="q.key"
+                        [placeholder]="q.placeholder || ''"
+                        (input)="onFormChange()" />
+                    </div>
 
-                </div>
+                  </div>
+                </ng-container>
               </ng-container>
             </div>
           </div>
