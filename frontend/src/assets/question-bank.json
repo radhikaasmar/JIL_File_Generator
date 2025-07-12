@@ -87,10 +87,21 @@
       "label": "Function of Job",
       "type": "dropdown",
       "options": [
-        { "value": "etl", "label": "ETL" },
-        { "value": "report", "label": "Report" },
-        { "value": "master", "label": "MASTER" },
-        { "value": "dq", "label": "DQ" }
+        { "value": "ing", "label": "ING" },
+        { "value": "dq", "label": "DQ" },
+        { "value": "ext", "label": "EXT" },
+        { "value": "ld", "label": "LD" },
+        { "value": "ndm", "label": "NDM" },
+        { "value": "pg", "label": "PG" },
+        { "value": "rp", "label": "RP" },
+        { "value": "rv", "label": "RV" },
+        { "value": "re", "label": "RE" },
+        { "value": "cs", "label": "CS" },
+        { "value": "purge", "label": "PURGE" },
+        { "value": "pub", "label": "PUB" },
+        { "value": "drv", "label": "DRV" },
+        { "value": "fw", "label": "FW" },
+        { "value": "cfw", "label": "CFW" }
       ],
       "validators": [{ "type": "required" }]
     },
