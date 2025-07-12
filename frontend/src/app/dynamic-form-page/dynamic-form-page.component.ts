@@ -802,7 +802,7 @@ export class DynamicFormPageComponent implements OnInit {
   private collectBoxFieldsFiltered(jobForm: FormGroup, jilFields: {[key: string]: string}) {
     const startTime = jobForm.get('start_time')?.value;
     if (startTime) {
-      jilFields['start_times'] = `"${startTime}"`;
+      jilFields['start_times'] = `${startTime}`;
     }
   }
 

@@ -35,13 +35,13 @@
       "questionIds": [
         "q_watch_file",
         "q_watch_interval",
-        "extra"
+        "q_extra"
       ]
     },
     {
       "title": "additional",
       "questionIds": [
-        "extra2"
+        "q_extra2"
       ]
     }
   ]

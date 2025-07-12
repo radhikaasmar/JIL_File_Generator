@@ -20,90 +20,146 @@
             <!-- Regular form fields -->
             <div [ngClass]="{'insert-job-fields': isInsertJobSection(section)}">
               <ng-container *ngFor="let q of section.questions">
-                <!-- Apply conditional visibility check here -->
-                <ng-container *ngIf="shouldShowField(q.key)">
-    <div class="form-field" [ngSwitch]="q.type">
+                <div class="form-field" [ngSwitch]="q.type">
 
-                    <!-- Text Input -->
-                    <div *ngSwitchCase="'text'">
+                  <!-- **ENHANCED: Text Input with validation** -->
+                  <div *ngSwitchCase="'text'">
+                    <ng-container *ngIf="q.key !== 'run_calendar'">
+                      <!-- Regular text inputs -->
                       <label [ngClass]="{'required': hasRequiredValidator(q)}">{{ q.label }}</label>
                       <input
                         [formControlName]="q.key"
                         [placeholder]="q.placeholder"
-                        [maxlength]="q.key === 'csi' ? 6 : null"
-                        [attr.pattern]="q.key === 'csi' ? '^\\d{6}$' : null"
-                        (input)="onFormChange()" />
-                    </div>
-
-                     <!-- Dropdown with special handling for loadfreq -->
-      <div *ngSwitchCase="'dropdown'">
-        <label [ngClass]="{'required': hasRequiredValidator(q)}">{{ q.label }}</label>
-        <select 
-          [formControlName]="q.key" 
-          (change)="q.key === 'loadfreq' ? onLoadFrequencyChange() : onFormChange()">
-          <option value="">Select...</option>
-          <option *ngFor="let opt of q.options" [value]="opt.value">{{ opt.label }}</option>
-        </select>
-      </div>
-
-
-                    <!-- Time Input -->
-                    <div *ngSwitchCase="'time'">
-                      <label [ngClass]="{'required': hasRequiredValidator(q)}">{{ q.label }}</label>
-                      <input
-                        type="time"
-                        [formControlName]="q.key"
-                        (change)="onFormChange()" />
-                    </div>
-
-                    <!-- Time Group for Timezone and Start Time -->
-                    <div *ngSwitchCase="'time-group'">
-                      <label>{{ q.label }}</label>
-                      <div class="time-group-container">
-                        <div *ngFor="let field of q.fields" class="time-field">
-                          <label>{{ field.label }}</label>
-                          <ng-container [ngSwitch]="field.type">
-                            <select *ngSwitchCase="'dropdown'" [formControlName]="field.key" (change)="onFormChange()">
-                              <option value="">Select...</option>
-                              <option *ngFor="let opt of field.options" [value]="opt.value">{{ opt.label }}</option>
-                            </select>
-                            <input *ngSwitchCase="'time'"
-                              type="time"
-                              [formControlName]="field.key"
-                              (change)="onFormChange()" />
-                          </ng-container>
+                        [type]="getInputType(q)"
+                        [maxlength]="getMaxLength(q)"
+                        [pattern]="getPattern(q)"
+                        [class]="getInputClass(q.key)"
+                        (input)="onFormChange()"
+                        (blur)="onFieldBlur(q.key)" />
+                      
+                      <!-- Validation Error Display -->
+                      <div *ngIf="hasValidationError(q.key)" class="validation-error">
+                        <small>{{ getValidationErrorMessage(q.key, q) }}</small>
+                      </div>
+                    </ng-container>
+                    
+                    <!-- **ENHANCED: Special handling for run_calendar with conditional visibility** -->
+                    <ng-container *ngIf="q.key === 'run_calendar'">
+                      <div *ngIf="shouldShowField(q.key)" class="conditional-field">
+                        <label [ngClass]="{'required': hasRequiredValidator(q)}">{{ q.label }}</label>
+                        <input
+                          [formControlName]="q.key"
+                          [placeholder]="q.placeholder"
+                          [type]="getInputType(q)"
+                          [maxlength]="getMaxLength(q)"
+                          [pattern]="getPattern(q)"
+                          [class]="getInputClass(q.key)"
+                          (input)="onFormChange()"
+                          (blur)="onFieldBlur(q.key)" />
+                        
+                        <!-- Validation Error Display -->
+                        <div *ngIf="hasValidationError(q.key)" class="validation-error">
+                          <small>{{ getValidationErrorMessage(q.key, q) }}</small>
+                        </div>
+                        
+                        <div class="field-dependency-info">
+                          <small>Visible when Load Frequency is Monthly or Custom</small>
                         </div>
                       </div>
-                    </div>
+                    </ng-container>
+                  </div>
 
-                    <!-- MCQ Multi (Days of Week) - Clean Implementation -->
-                    <div *ngSwitchCase="'mcq_multi'">
-                      <label [ngClass]="{'required': hasRequiredValidator(q)}">{{ q.label }}</label>
-                      <div class="mcq-multi-group">
-                        <div *ngFor="let option of q.options" class="mcq-multi-item">
-                          <label>
-                            <input 
-                              type="checkbox" 
-                              [value]="option.value"
-                              [checked]="isOptionSelected(q.key, option.value)"
-                              (change)="onMcqMultiChange($event, q.key, option.value)"
-                            />
-                            {{ option.label }}
-                          </label>
-                        </div>
+                  <!-- **ENHANCED: Dropdown with disabled state and validation** -->
+                  <div *ngSwitchCase="'dropdown'">
+                    <label [ngClass]="{'required': hasRequiredValidator(q)}">{{ q.label }}</label>
+                    <select 
+                      [formControlName]="q.key" 
+                      [disabled]="isFieldDisabled(q.key)"
+                      [class]="getInputClass(q.key)"
+                      (change)="q.key === 'loadfreq' ? onLoadFrequencyChange() : onFormChange()"
+                      (blur)="onFieldBlur(q.key)">
+                      <option value="">Select...</option>
+                      <option *ngFor="let opt of q.options" [value]="opt.value">{{ opt.label }}</option>
+                    </select>
+                    
+                    <!-- Validation Error Display -->
+                    <div *ngIf="hasValidationError(q.key)" class="validation-error">
+                      <small>{{ getValidationErrorMessage(q.key, q) }}</small>
+                    </div>
+                    
+                    <!-- Disabled field info -->
+                    <div *ngIf="getDisabledReason(q.key)" class="field-disabled-info">
+                      <small>{{ getDisabledReason(q.key) }}</small>
+                    </div>
+                  </div>
+
+                  <!-- **ENHANCED: Time Input with validation** -->
+                  <div *ngSwitchCase="'time'">
+                    <label [ngClass]="{'required': hasRequiredValidator(q)}">{{ q.label }}</label>
+                    <input
+                      type="time"
+                      [formControlName]="q.key"
+                      [class]="getInputClass(q.key)"
+                      (change)="onFormChange()"
+                      (blur)="onFieldBlur(q.key)" />
+                    
+                    <!-- Validation Error Display -->
+                    <div *ngIf="hasValidationError(q.key)" class="validation-error">
+                      <small>{{ getValidationErrorMessage(q.key, q) }}</small>
+                    </div>
+                  </div>
+
+                  <!-- Time Group for Timezone and Start Time -->
+                  <div *ngSwitchCase="'time-group'">
+                    <label>{{ q.label }}</label>
+                    <div class="time-group-container">
+                      <div *ngFor="let field of q.fields" class="time-field">
+                        <label>{{ field.label }}</label>
+                        <ng-container [ngSwitch]="field.type">
+                          <select *ngSwitchCase="'dropdown'" [formControlName]="field.key" (change)="onFormChange()">
+                            <option value="">Select...</option>
+                            <option *ngFor="let opt of field.options" [value]="opt.value">{{ opt.label }}</option>
+                          </select>
+                          <input *ngSwitchCase="'time'"
+                            type="time"
+                            [formControlName]="field.key"
+                            (change)="onFormChange()" />
+                        </ng-container>
                       </div>
                     </div>
-
-                  <!-- Checkbox Group -->
+                  </div>
                   <div *ngSwitchCase="'checkbox-group'">
                     <label>{{ q.label }}</label>
                     <div class="checkbox-group">
                       <div class="checkbox-item" *ngFor="let opt of q.options">
                         <input
                           type="checkbox"
+                          [id]="opt.key"
                           [formControlName]="opt.key"
                           (change)="onFormChange()" />
-                        {{ opt.label }}
+                        <label [for]="opt.key">{{ opt.label }}</label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- **ENHANCED: MCQ Multi with conditional visibility** -->
+                  <div *ngSwitchCase="'mcq_multi'">
+                    <div *ngIf="shouldShowField(q.key)" class="conditional-field">
+                      <label>{{ q.label }}</label>
+                      <div class="mcq-multi-group">
+                        <div class="mcq-multi-item" *ngFor="let opt of q.options">
+                          <input
+                            type="checkbox"
+                            [id]="q.key + '_' + opt.value"
+                            [value]="opt.value"
+                            [checked]="isOptionSelected(q.key, opt.value)"
+                            (change)="onMcqMultiChange($event, q.key, opt.value)" />
+                          <label [for]="q.key + '_' + opt.value">{{ opt.label }}</label>
+                        </div>
+                      </div>
+                      
+                      <div *ngIf="q.key === 'days_of_week'" class="field-dependency-info">
+                        <small>Visible when Load Frequency is Daily or Weekly</small>
                       </div>
                     </div>
                   </div>
@@ -158,17 +214,26 @@
                     </div>
                   </div>
 
-                  <!-- Default case for any other types -->
-                   <div *ngSwitchDefault>
-                      <label>{{ q.label }}</label>
-                      <input
-                        [formControlName]="q.key"
-                        [placeholder]="q.placeholder || ''"
-                        (input)="onFormChange()" />
+                  <!-- **ENHANCED: Default case with validation** -->
+                  <div *ngSwitchDefault>
+                    <label [ngClass]="{'required': hasRequiredValidator(q)}">{{ q.label }}</label>
+                    <input
+                      [formControlName]="q.key"
+                      [placeholder]="q.placeholder || ''"
+                      [type]="getInputType(q)"
+                      [maxlength]="getMaxLength(q)"
+                      [pattern]="getPattern(q)"
+                      [class]="getInputClass(q.key)"
+                      (input)="onFormChange()"
+                      (blur)="onFieldBlur(q.key)" />
+                    
+                    <!-- Validation Error Display -->
+                    <div *ngIf="hasValidationError(q.key)" class="validation-error">
+                      <small>{{ getValidationErrorMessage(q.key, q) }}</small>
                     </div>
-
                   </div>
-                </ng-container>
+
+                </div>
               </ng-container>
             </div>
           </div>
