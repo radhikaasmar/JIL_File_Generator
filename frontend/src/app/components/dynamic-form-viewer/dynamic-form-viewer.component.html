@@ -79,26 +79,32 @@
 
                   <!-- **ENHANCED: Dropdown with disabled state and validation** -->
                   <div *ngSwitchCase="'dropdown'">
-                    <label [ngClass]="{'required': hasRequiredValidator(q)}">{{ q.label }}</label>
-                    <select 
-                      [formControlName]="q.key" 
-                      [disabled]="isFieldDisabled(q.key)"
-                      [class]="getInputClass(q.key)"
-                      (change)="q.key === 'loadfreq' ? onLoadFrequencyChange() : onFormChange()"
-                      (blur)="onFieldBlur(q.key)">
-                      <option value="">Select...</option>
-                      <option *ngFor="let opt of q.options" [value]="opt.value">{{ opt.label }}</option>
-                    </select>
+                    <!-- Show as read-only display for auto-managed fields -->
+                    <ng-container *ngIf="shouldShowAsReadonly(q.key)">
+                      <label>{{ q.label }}</label>
+                      <div class="readonly-field">
+                        <span class="readonly-value">{{ getDisplayValue(q.key, q) }}</span>
+                        <small class="field-auto-info">Auto</small>
+                      </div>
+                    </ng-container>
                     
-                    <!-- Validation Error Display -->
-                    <div *ngIf="hasValidationError(q.key)" class="validation-error">
-                      <small>{{ getValidationErrorMessage(q.key, q) }}</small>
-                    </div>
-                    
-                    <!-- Disabled field info -->
-                    <div *ngIf="getDisabledReason(q.key)" class="field-disabled-info">
-                      <small>{{ getDisabledReason(q.key) }}</small>
-                    </div>
+                    <!-- Show as regular dropdown for editable fields -->
+                    <ng-container *ngIf="!shouldShowAsReadonly(q.key)">
+                      <label [ngClass]="{'required': hasRequiredValidator(q)}">{{ q.label }}</label>
+                      <select 
+                        [formControlName]="q.key" 
+                        [class]="getInputClass(q.key)"
+                        (change)="q.key === 'loadfreq' ? onLoadFrequencyChange() : onFormChange()"
+                        (blur)="onFieldBlur(q.key)">
+                        <option value="">Select...</option>
+                        <option *ngFor="let opt of q.options" [value]="opt.value">{{ opt.label }}</option>
+                      </select>
+                      
+                      <!-- Validation Error Display -->
+                      <div *ngIf="hasValidationError(q.key)" class="validation-error">
+                        <small>{{ getValidationErrorMessage(q.key, q) }}</small>
+                      </div>
+                    </ng-container>
                   </div>
 
                   <!-- **ENHANCED: Time Input with validation** -->

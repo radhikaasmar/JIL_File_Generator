@@ -134,6 +134,27 @@ export class DynamicFormViewerComponent implements OnInit, OnDestroy {
     
     return patternValidator ? patternValidator.value : '';
   }
+  // **NEW: Check if field should be shown as read-only**
+shouldShowAsReadonly(fieldKey: string): boolean {
+  if (!this.subformContext) return false;
+    
+    return (fieldKey === 'funofjob' || fieldKey === 'jobtitle') && 
+          ['box', 'cmd', 'cfw', 'fw'].includes(this.subformContext.type);
+  }
+
+  // **NEW: Get display value for read-only fields**
+  getDisplayValue(fieldKey: string, question: any): string {
+    const value = this.form.get(fieldKey)?.value;
+    if (!value) return 'Not set';
+    
+    // Find the display label from options
+    if (question && question.options) {
+      const option = question.options.find((opt: any) => opt.value === value);
+      return option ? option.label : value.toString().toUpperCase();
+    }
+    
+    return value.toString().toUpperCase();
+  }
 
   // **NEW: Get CSS class based on validation state**
   getInputClass(fieldKey: string): string {
