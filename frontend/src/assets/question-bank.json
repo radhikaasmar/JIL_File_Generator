@@ -87,6 +87,7 @@
       "label": "Function of Job",
       "type": "dropdown",
       "options": [
+        { "value": "boxfunc", "label": "boxFUNC" },
         { "value": "ing", "label": "ING" },
         { "value": "dq", "label": "DQ" },
         { "value": "ext", "label": "EXT" },

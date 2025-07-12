@@ -67,7 +67,7 @@ export class DynamicFormPageComponent implements OnInit {
     // Always add top subform
     this.addSubformInstance('top', 'Common Configuration', false);
     // Always add box subform
-    this.addSubformInstance('box', 'Box Job #1', false);
+    this.addSubformInstance('box', 'Box Job #1', false,'boxfunc');
   }
 
   private addSubformInstance(type: string, displayName: string, removable: boolean, functionOfJob?: string) {
