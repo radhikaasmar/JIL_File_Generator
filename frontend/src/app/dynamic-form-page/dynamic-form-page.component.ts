@@ -133,19 +133,35 @@ isFunctionSelected(functionValue: string): boolean {
     );
     this.updateJobNames();
   }
+
+  // Sort to ensure proper order (box always after top, before others)
+  this.sortSubformInstances();
 }
 
+
 get allFunctionOptions(): FunctionJobOption[] {
-  return this.functionJobMappingService.getAllFunctionJobOptions(); // Use the existing method
+  const options = this.functionJobMappingService.getAllFunctionJobOptions();
+  return options.sort((a, b) => {
+    // Box type (boxfunc) always comes first
+    if (a.value === 'boxfunc' && b.value !== 'boxfunc') return -1;
+    if (a.value !== 'boxfunc' && b.value === 'boxfunc') return 1;
+    // For other types, maintain alphabetical order by label
+    return a.label.localeCompare(b.label);
+  });
 }
+
 
 
 
 
   removeSubformInstance(instanceId: string) {
-    this.subformInstances = this.subformInstances.filter(instance => instance.id !== instanceId);
-    this.updateJobNames();
-  }
+  this.subformInstances = this.subformInstances.filter(instance => instance.id !== instanceId);
+  this.updateJobNames();
+
+  // Sort to maintain proper order
+  this.sortSubformInstances();
+}
+
 
   onSubformChange(instance: SubformInstance) {
     this.updateJobNames();
@@ -1045,4 +1061,23 @@ isSectionCollapsed(sectionId: string): boolean {
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
   }
+
+  private sortSubformInstances(): void {
+  this.subformInstances.sort((a, b) => {
+    // Define the desired order
+    const typeOrder = {
+      'top': 0,      // Common Configuration always first
+      'box': 1,      // Box type always second
+      'cmd': 2,      // CMD types after box
+      'fw': 3,       // FW types after CMD
+      'cfw': 4       // CFW types last
+    };
+
+    const orderA = typeOrder[a.type as keyof typeof typeOrder] ?? 999;
+    const orderB = typeOrder[b.type as keyof typeof typeOrder] ?? 999;
+
+    return orderA - orderB;
+  });
+}
+
 }
