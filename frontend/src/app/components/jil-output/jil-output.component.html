@@ -1,4 +1,27 @@
-<div *ngIf="showJIL" class="jil-output">
-  <h3>Generated JIL</h3>
-  <pre>{{ generatedJIL }}</pre>
-</div> 
+<div class="jil-output" *ngIf="showJIL">
+  <div class="jil-header">
+    <h3>JIL Preview - {{ environment.toUpperCase() }} Environment</h3>
+    <div class="jil-actions">
+      <button class="btn btn-secondary" (click)="copyToClipboard()" title="Copy to clipboard">
+        📋 Copy
+      </button>
+      <button class="btn btn-primary" (click)="onDownloadJIL()" title="Download JIL file">
+        💾 Download
+      </button>
+      <button class="btn btn-close" (click)="onClosePreview()" title="Close preview">
+        ✕
+      </button>
+    </div>
+  </div>
+  
+  <div class="jil-content">
+    <div class="jil-info">
+      <span class="job-name">Job: {{ jobName }}</span>
+      <span class="env-badge">{{ environment.toUpperCase() }}</span>
+    </div>
+    
+    <div class="jil-code-container">
+      <pre class="jil-code">{{ generatedJIL }}</pre>
+    </div>
+  </div>
+</div>

@@ -1,54 +1,103 @@
 <div class="dynamic-form-container">
   <div class="form-header">
-    <h1>Dynamic Form Viewer</h1>
+    <h1>Dynamic Form Configuration</h1>
     
-    <!-- Download JIL Button -->
-    <button type="button" class="btn btn-primary download-btn" (click)="downloadJILFiles()">
-      <span>📥</span> Download JIL Files
-    </button>
-    
-    <!-- Add Function Section -->
-    <div class="add-function-section">
-      <label>Add Function of Job:</label>
-      <div class="function-checkbox-list">
+    <!-- Compact Add Function Section -->
+    <div class="add-function-section" *ngIf="getAvailableEnvironments().length === 0 || availableFunctionOptions.length > 0">
+      <div class="section-header">
+        <button class="collapse-btn" (click)="toggleSectionCollapse('add-function')" 
+                [title]="isSectionCollapsed('add-function') ? 'Expand section' : 'Collapse section'">
+          <svg class="collapse-icon" [class.rotated]="!isSectionCollapsed('add-function')" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+          </svg>
+        </button>
+        <label>Add Function of Job</label>
+      </div>
+      
+      <div class="function-checkbox-list" [class.collapsed]="isSectionCollapsed('add-function')">
         <label *ngFor="let option of availableFunctionOptions">
-          <input type="checkbox" 
-                 [value]="option.value"
-                 (change)="onFunctionCheckboxChange($event, option)">
+          <input type="checkbox" (change)="onFunctionCheckboxChange($event, option)">
           {{ option.label }}
         </label>
       </div>
     </div>
   </div>
 
+  <!-- Subforms Container -->
   <div class="subforms-container">
-    <div *ngFor="let instance of subformInstances; trackBy: trackByInstanceId" 
-         class="subform-wrapper">
-      
+    <div *ngFor="let instance of subformInstances; trackBy: trackByInstanceId" class="subform-wrapper">
       <div class="subform-header">
-        <h2>{{ instance.displayName }}</h2>
-        <button *ngIf="instance.removable" 
-                type="button" 
-                class="remove-btn"
-                (click)="removeSubformInstance(instance.id)">
+        <div class="header-left">
+          <button class="collapse-btn" (click)="toggleSectionCollapse(instance.id)" 
+                  [title]="isSectionCollapsed(instance.id) ? 'Expand form' : 'Collapse form'">
+            <svg class="collapse-icon" [class.rotated]="!isSectionCollapsed(instance.id)" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+            </svg>
+          </button>
+          <h2>{{ instance.displayName }}</h2>
+        </div>
+        
+        <button *ngIf="instance.removable" class="remove-btn" (click)="removeSubformInstance(instance.id)">
           Remove
         </button>
       </div>
 
-      <!-- Job name display for each subform -->
-      <div *ngIf="getJobNameForInstance(instance)" class="job-name-display">
-        <strong>Job Name:</strong> {{ getJobNameForInstance(instance) }}
-        <div *ngIf="isJobNameTruncated(instance)" class="warning">
-          ⚠️ Job name has been truncated to fit 60 character limit
-        </div>
+      <div [class.collapsed]="isSectionCollapsed(instance.id)">
+        <app-dynamic-form-viewer
+          [sections]="instance.sections"
+          [form]="instance.form"
+          [subformContext]="instance"
+          [jobNameForDisplay]="getJobNameForInstance(instance)"
+          [isJobNameTruncatedForDisplay]="isJobNameTruncated(instance)"
+          (formChange)="onSubformChange(instance)">
+        </app-dynamic-form-viewer>
       </div>
-
-      <app-dynamic-form-viewer 
-        [sections]="instance.sections"
-        [form]="instance.form"
-        [subformContext]="instance"
-        (formChange)="onSubformChange(instance)">
-      </app-dynamic-form-viewer>
     </div>
   </div>
+
+  <!-- JIL Actions Section -->
+  <div class="jil-actions-section" *ngIf="getAvailableEnvironments().length > 0">
+    <div class="actions-header">
+      <h3>JIL File Actions</h3>
+    </div>
+    
+    <div class="actions-content">
+      <div class="buttons-row">
+        <div class="preview-group">
+          <label class="section-label">Preview JIL Files:</label>
+          <div class="preview-buttons">
+            <button 
+              *ngFor="let env of getAvailableEnvironments()" 
+              class="btn btn-preview"
+              (click)="previewJILForEnvironment(env)"
+              [title]="'Preview JIL for ' + env.toUpperCase() + ' environment'">
+              <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+              </svg>
+              Preview {{ env.toUpperCase() }}
+            </button>
+          </div>
+        </div>
+        
+        <div class="download-group">
+          <button class="btn btn-download" (click)="downloadJILFiles()">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+            </svg>
+            Download All JIL Files
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JIL Preview Component -->
+  <app-jil-output
+    [generatedJIL]="previewJILContent"
+    [showJIL]="showJILPreview"
+    [environment]="previewEnvironment"
+    [jobName]="previewJobName"
+    (closePreview)="closeJILPreview()"
+    (downloadJIL)="downloadFromPreview($event)">
+  </app-jil-output>
 </div>

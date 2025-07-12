@@ -19,6 +19,8 @@ export class DynamicFormViewerComponent implements OnInit, OnDestroy {
   @Input() form!: FormGroup;
   @Input() subformContext?: SubformInstance;
   @Output() formChange = new EventEmitter();
+  @Input() jobNameForDisplay?: string;
+@Input() isJobNameTruncatedForDisplay?: boolean;
 
   selectedEnvironments: string[] = [];
   private environmentSubscription?: Subscription;
@@ -78,35 +80,37 @@ export class DynamicFormViewerComponent implements OnInit, OnDestroy {
   }
 
   // Updated onLoadFrequencyChange method
-  onLoadFrequencyChange() {
-    const loadFreqControl = this.form.get('loadfreq');
-    const loadFreqValue = loadFreqControl?.value;
-    
-    console.log('Load frequency changed to:', loadFreqValue);
-    
-    // Update the service to communicate across all form instances
-    this.loadFrequencyService.updateLoadFrequency(loadFreqValue);
-    
-    // Clear conflicting fields based on selection
-    if (loadFreqValue === 'M' || loadFreqValue === 'C') {
-      // Clear days of week selection
-      const daysControl = this.form.get('days_of_week');
-      if (daysControl) {
-        daysControl.setValue([]);
-        this.daysOfWeekService.clearSelectedDays();
-      }
+// Enhanced onLoadFrequencyChange method
+onLoadFrequencyChange() {
+  const loadFreqControl = this.form.get('loadfreq');
+  const loadFreqValue = loadFreqControl?.value;
+  
+  console.log('Load frequency changed to:', loadFreqValue);
+  
+  // Update the service to communicate across all form instances
+  this.loadFrequencyService.updateLoadFrequency(loadFreqValue);
+  
+  // Clear conflicting fields based on selection
+  if (loadFreqValue === 'M' || loadFreqValue === 'C') {
+    // Clear days of week selection from BOTH form control AND service
+    const daysControl = this.form.get('days_of_week');
+    if (daysControl) {
+      daysControl.setValue([]);
     }
-    
-    if (loadFreqValue === 'D' || loadFreqValue === 'W') {
-      // Clear run calendar
-      const runCalendarControl = this.form.get('run_calendar');
-      if (runCalendarControl) {
-        runCalendarControl.setValue('');
-      }
-    }
-    
-    this.onFormChange();
+    // IMPORTANT: Clear the service as well
+    this.daysOfWeekService.clearSelectedDays();
   }
+  
+  if (loadFreqValue === 'D' || loadFreqValue === 'W') {
+    // Clear run calendar
+    const runCalendarControl = this.form.get('run_calendar');
+    if (runCalendarControl) {
+      runCalendarControl.setValue('');
+    }
+  }
+  
+  this.onFormChange();
+}
 
   // Rest of your existing methods remain the same...
 
@@ -248,15 +252,21 @@ export class DynamicFormViewerComponent implements OnInit, OnDestroy {
   }
 
   get integratedJobValue(): string {
-    if (!this.form) return '';
-    
-    if (this.subformContext?.type === 'top') {
-      const fields = ['csi', 'efforttype', 'prodlob', 'purpose', 'loadfreq', 'loadlayer'];
-      return this.generateTruncatedJobName(fields);
-    }
-    
-    return '';
+  // If job name is passed from parent, use it
+  if (this.jobNameForDisplay) {
+    return this.jobNameForDisplay;
   }
+  
+  // Fallback to original logic for top forms
+  if (!this.form) return '';
+  
+  if (this.subformContext?.type === 'top') {
+    const fields = ['csi', 'efforttype', 'prodlob', 'purpose', 'loadfreq', 'loadlayer'];
+    return this.generateTruncatedJobName(fields);
+  }
+  
+  return '';
+}
 
   private generateTruncatedJobName(fields: string[]): string {
     const values = fields.map(f => this.form.get(f)?.value || '').map(v => v.toString().toUpperCase());
@@ -299,14 +309,19 @@ export class DynamicFormViewerComponent implements OnInit, OnDestroy {
   }
 
   get isJobNameTruncated(): boolean {
-    if (!this.form) return false;
-    
-    const fields = ['csi', 'efforttype', 'prodlob', 'purpose', 'loadfreq', 'loadlayer'];
-    const values = fields.map(f => this.form.get(f)?.value || '').map(v => v.toString().toUpperCase());
-    const fullJobName = values.filter(v => v !== '').join('_');
-    
-    return fullJobName.length > 60;
+  // If truncation status is passed from parent, use it
+  if (this.isJobNameTruncatedForDisplay !== undefined) {
+    return this.isJobNameTruncatedForDisplay;
   }
+  
+  // Fallback to original logic for top forms
+  if (!this.form) return false;
+  
+  const fields = ['csi', 'efforttype', 'prodlob', 'purpose', 'loadfreq', 'loadlayer'];
+  const values = fields.map(f => this.form.get(f)?.value || '').map(v => v.toString().toUpperCase());
+  const fullJobName = values.filter(v => v !== '').join('_');
+  return fullJobName.length > 60;
+}
 
   isInsertJobSection(section: any): boolean {
     return section.title === 'Insert Job Configuration';

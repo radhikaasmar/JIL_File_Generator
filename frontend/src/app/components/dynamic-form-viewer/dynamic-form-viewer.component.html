@@ -3,6 +3,14 @@
     <h2>Dynamic Form Viewer</h2>
   </div>
   <div>
+    <!-- Job Name Display for All Form Types -->
+<div class="integrated-job-display" *ngIf="integratedJobValue">
+  {{ integratedJobValue }}
+  <div *ngIf="isJobNameTruncated" class="warning">
+    Warning: Job name is limited to 60 characters and has been truncated.
+  </div>
+</div>
+
     <form *ngIf="form" [formGroup]="form">
       <div class="form-fields">
         <ng-container *ngFor="let section of sections">

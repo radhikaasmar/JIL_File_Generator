@@ -17,4 +17,8 @@ export class DaysOfWeekService {
   clearSelectedDays() {
     this.selectedDaysSubject.next([]);
   }
+  // Add a method to check current state
+    getCurrentState(): string[] {
+    return this.selectedDaysSubject.value;
+    }
 }

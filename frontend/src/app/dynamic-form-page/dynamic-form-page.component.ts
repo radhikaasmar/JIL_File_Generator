@@ -12,12 +12,13 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { EnvironmentStateService } from '../services/environment-state.service';
 import { DaysOfWeekService } from '../services/days-of-week.service';
 import { JILFieldOrder, getFieldOrder, EXCLUDED_FROM_JIL, JOB_TYPE_RESTRICTIONS } from '../enums/jil-field-order.enum';
+import { JilOutputComponent } from '../components/jil-output/jil-output.component';
 
 @Component({
   selector: 'app-dynamic-form-page',
   templateUrl: './dynamic-form-page.component.html',
   standalone: true,
-  imports: [DynamicFormViewerComponent, RouterModule, CommonModule, ReactiveFormsModule],
+  imports: [DynamicFormViewerComponent, RouterModule, CommonModule, ReactiveFormsModule, JilOutputComponent],
   styleUrls: ['./dynamic-form-page.component.css']
 })
 export class DynamicFormPageComponent implements OnInit {
@@ -429,7 +430,7 @@ export class DynamicFormPageComponent implements OnInit {
 
     return false;
   }
-
+  
   getDebugInfo(): any {
     return {
       subformCount: this.subformInstances.length,
@@ -529,6 +530,75 @@ export class DynamicFormPageComponent implements OnInit {
       });
     }
   }
+// Add these properties to the component class
+showJILPreview: boolean = false;
+previewJILContent: string = '';
+previewEnvironment: string = '';
+previewJobName: string = '';
+
+// Add these methods to the component
+
+// Method to generate preview for specific environment
+previewJILForEnvironment(environment: string) {
+  const topInstance = this.subformInstances.find(s => s.type === 'top');
+  if (!topInstance) {
+    alert('No configuration found to generate JIL preview');
+    return;
+  }
+
+  const selectedEnvs = this.getSelectedEnvironments(topInstance.form);
+  if (!selectedEnvs.includes(environment)) {
+    alert(`${environment.toUpperCase()} environment is not selected`);
+    return;
+  }
+
+  const baseJobName = this.generateBaseJobName(topInstance.form);
+  if (!baseJobName) {
+    alert('Please fill in the required fields to generate job name');
+    return;
+  }
+
+  // Generate JIL content for preview
+  const jilContent = this.generateJILContent(environment, baseJobName, topInstance);
+  
+  // Set preview data
+  this.previewJILContent = jilContent;
+  this.previewEnvironment = environment;
+  this.previewJobName = baseJobName;
+  this.showJILPreview = true;
+}
+
+// Method to close preview
+closeJILPreview() {
+  this.showJILPreview = false;
+  this.previewJILContent = '';
+  this.previewEnvironment = '';
+  this.previewJobName = '';
+}
+
+// Method to handle download from preview
+downloadFromPreview(event: {content: string, fileName: string}) {
+  this.downloadFile(event.content, event.fileName);
+}
+
+// Method to get available environments for preview buttons
+getAvailableEnvironments(): string[] {
+  const topInstance = this.subformInstances.find(s => s.type === 'top');
+  if (!topInstance) return [];
+  
+  return this.getSelectedEnvironments(topInstance.form);
+}
+// Add these properties to the component class
+collapsedSections: {[key: string]: boolean} = {};
+
+// Add these methods
+toggleSectionCollapse(sectionId: string) {
+  this.collapsedSections[sectionId] = !this.collapsedSections[sectionId];
+}
+
+isSectionCollapsed(sectionId: string): boolean {
+  return this.collapsedSections[sectionId] || false;
+}
 
   // Enhanced JIL generation with enum-based ordering and filtering
   downloadJILFiles() {

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -8,34 +8,51 @@ import { CommonModule } from '@angular/common';
   templateUrl: './header.component.html',
   styleUrl: './header.component.css'
 })
-export class HeaderComponent implements OnInit {
-  isDark = false;
+export class HeaderComponent implements OnInit, OnDestroy {
   dateTime: string = '';
   intervalId: any;
+  isDarkMode: boolean = false;
 
   ngOnInit() {
-    this.isDark = localStorage.getItem('theme') === 'dark';
-    this.applyTheme();
     this.updateDateTime();
     this.intervalId = setInterval(() => this.updateDateTime(), 1000);
+    
+    // Check for saved theme preference
+    const savedTheme = localStorage.getItem('theme');
+    this.isDarkMode = savedTheme === 'dark';
+    this.applyTheme();
   }
 
   ngOnDestroy() {
-    clearInterval(this.intervalId);
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+    }
+  }
+
+  private updateDateTime() {
+    const now = new Date();
+    this.dateTime = now.toLocaleString('en-US', {
+      weekday: 'short',
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
   }
 
   toggleTheme() {
-    this.isDark = !this.isDark;
-    localStorage.setItem('theme', this.isDark ? 'dark' : 'light');
+    this.isDarkMode = !this.isDarkMode;
+    localStorage.setItem('theme', this.isDarkMode ? 'dark' : 'light');
     this.applyTheme();
   }
 
-  applyTheme() {
-    document.body.classList.toggle('dark-theme', this.isDark);
+  private applyTheme() {
+    if (this.isDarkMode) {
+      document.body.classList.add('dark-theme');
+    } else {
+      document.body.classList.remove('dark-theme');
+    }
   }
-
-  updateDateTime() {
-    const now = new Date();
-    this.dateTime = now.toLocaleString();
-  }
-} 
+}
