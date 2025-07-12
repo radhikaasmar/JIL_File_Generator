@@ -100,38 +100,47 @@ export class DynamicFormPageComponent implements OnInit {
     this.updateJobNames();
   }
 
-  get availableFunctionOptions(): FunctionJobOption[] {
-    const existingFunctions = this.subformInstances
-      .filter(instance => instance.functionOfJob)
-      .map(instance => instance.functionOfJob!);
-    return this.functionJobMappingService.getAvailableFunctions(existingFunctions);
-  }
+
+// Add a method to check if a function is currently selected
+isFunctionSelected(functionValue: string): boolean {
+  return this.subformInstances.some(instance => instance.functionOfJob === functionValue);
+}
+
 
   onFunctionCheckboxChange(event: any, option: FunctionJobOption) {
-    if (event.target.checked) {
-      const instanceCount = this.subformInstances.filter(s => s.type === option.subformType).length;
-      const displayName = `${option.subformType.toUpperCase()} Job #${instanceCount + 1}`;
-      this.addSubformInstance(option.subformType, displayName, true, option.value);
+  if (event.target.checked) {
+    // Add the subform if checked
+    const instanceCount = this.subformInstances.filter(s => s.type === option.subformType).length;
+    const displayName = `${option.subformType.toUpperCase()} Job #${instanceCount + 1}`;
+    this.addSubformInstance(option.subformType, displayName, true, option.value);
 
-      // After creating the subform, set default values
-      const selectedEnvs = this.environmentStateService.getSelectedEnvironments();
-      const newInstance = this.subformInstances[this.subformInstances.length - 1];
+    // After creating the subform, set default values
+    const selectedEnvs = this.environmentStateService.getSelectedEnvironments();
+    const newInstance = this.subformInstances[this.subformInstances.length - 1];
 
-      // Set machine defaults immediately
-      this.setDefaultMachineValues(newInstance, selectedEnvs);
+    // Set machine defaults immediately
+    this.setDefaultMachineValues(newInstance, selectedEnvs);
 
-      // If box form exists, propagate owner values
-      const boxInstance = this.subformInstances.find(s => s.type === 'box');
-      if (boxInstance) {
-        this.propagateOwnerValuesFromBox(boxInstance.form);
-      }
-    } else {
-      this.subformInstances = this.subformInstances.filter(
-        instance => instance.functionOfJob !== option.value
-      );
-      this.updateJobNames();
+    // If box form exists, propagate owner values
+    const boxInstance = this.subformInstances.find(s => s.type === 'box');
+    if (boxInstance) {
+      this.propagateOwnerValuesFromBox(boxInstance.form);
     }
+  } else {
+    // Remove the subform if unchecked
+    this.subformInstances = this.subformInstances.filter(
+      instance => instance.functionOfJob !== option.value
+    );
+    this.updateJobNames();
   }
+}
+
+get allFunctionOptions(): FunctionJobOption[] {
+  return this.functionJobMappingService.getAllFunctionJobOptions(); // Use the existing method
+}
+
+
+
 
   removeSubformInstance(instanceId: string) {
     this.subformInstances = this.subformInstances.filter(instance => instance.id !== instanceId);
@@ -430,19 +439,20 @@ export class DynamicFormPageComponent implements OnInit {
 
     return false;
   }
-  
+
   getDebugInfo(): any {
-    return {
-      subformCount: this.subformInstances.length,
-      availableFunctions: this.availableFunctionOptions.length,
-      instances: this.subformInstances.map(i => ({
-        id: i.id,
-        type: i.type,
-        functionOfJob: i.functionOfJob,
-        removable: i.removable
-      }))
-    };
-  }
+  return {
+    subformCount: this.subformInstances.length,
+    availableFunctions: this.allFunctionOptions.length, // Changed from availableFunctionOptions
+    instances: this.subformInstances.map(i => ({
+      id: i.id,
+      type: i.type,
+      functionOfJob: i.functionOfJob,
+      removable: i.removable
+    }))
+  };
+}
+
 
   private updateEnvironmentValidators() {
     const topInstance = this.subformInstances.find(s => s.type === 'top');
@@ -560,7 +570,7 @@ previewJILForEnvironment(environment: string) {
 
   // Generate JIL content for preview
   const jilContent = this.generateJILContent(environment, baseJobName, topInstance);
-  
+
   // Set preview data
   this.previewJILContent = jilContent;
   this.previewEnvironment = environment;
@@ -585,7 +595,7 @@ downloadFromPreview(event: {content: string, fileName: string}) {
 getAvailableEnvironments(): string[] {
   const topInstance = this.subformInstances.find(s => s.type === 'top');
   if (!topInstance) return [];
-  
+
   return this.getSelectedEnvironments(topInstance.form);
 }
 // Add these properties to the component class
