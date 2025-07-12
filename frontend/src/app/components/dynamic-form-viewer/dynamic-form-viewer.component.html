@@ -1,15 +1,15 @@
 <div class="form-box">
-  <div class="collapsible-header">
+  <!-- <div class="collapsible-header">
     <h2>Dynamic Form Viewer</h2>
-  </div>
+  </div> -->
   <div>
     <!-- Job Name Display for All Form Types -->
-<div class="integrated-job-display" *ngIf="integratedJobValue">
+<!-- <div class="integrated-job-display" *ngIf="integratedJobValue">
   {{ integratedJobValue }}
   <div *ngIf="isJobNameTruncated" class="warning">
     Warning: Job name is limited to 60 characters and has been truncated.
   </div>
-</div>
+</div> -->
 
     <form *ngIf="form" [formGroup]="form">
       <div class="form-fields">
@@ -44,13 +44,13 @@
                         [class]="getInputClass(q.key)"
                         (input)="onFormChange()"
                         (blur)="onFieldBlur(q.key)" />
-                      
+
                       <!-- Validation Error Display -->
                       <div *ngIf="hasValidationError(q.key)" class="validation-error">
                         <small>{{ getValidationErrorMessage(q.key, q) }}</small>
                       </div>
                     </ng-container>
-                    
+
                     <!-- **ENHANCED: Special handling for run_calendar with conditional visibility** -->
                     <ng-container *ngIf="q.key === 'run_calendar'">
                       <div *ngIf="shouldShowField(q.key)" class="conditional-field">
@@ -64,12 +64,12 @@
                           [class]="getInputClass(q.key)"
                           (input)="onFormChange()"
                           (blur)="onFieldBlur(q.key)" />
-                        
+
                         <!-- Validation Error Display -->
                         <div *ngIf="hasValidationError(q.key)" class="validation-error">
                           <small>{{ getValidationErrorMessage(q.key, q) }}</small>
                         </div>
-                        
+
                         <div class="field-dependency-info">
                           <small>Visible when Load Frequency is Monthly or Custom</small>
                         </div>
@@ -87,19 +87,19 @@
                         <small class="field-auto-info">Auto</small>
                       </div>
                     </ng-container>
-                    
+
                     <!-- Show as regular dropdown for editable fields -->
                     <ng-container *ngIf="!shouldShowAsReadonly(q.key)">
                       <label [ngClass]="{'required': hasRequiredValidator(q)}">{{ q.label }}</label>
-                      <select 
-                        [formControlName]="q.key" 
+                      <select
+                        [formControlName]="q.key"
                         [class]="getInputClass(q.key)"
                         (change)="q.key === 'loadfreq' ? onLoadFrequencyChange() : onFormChange()"
                         (blur)="onFieldBlur(q.key)">
                         <option value="">Select...</option>
                         <option *ngFor="let opt of q.options" [value]="opt.value">{{ opt.label }}</option>
                       </select>
-                      
+
                       <!-- Validation Error Display -->
                       <div *ngIf="hasValidationError(q.key)" class="validation-error">
                         <small>{{ getValidationErrorMessage(q.key, q) }}</small>
@@ -116,7 +116,7 @@
                       [class]="getInputClass(q.key)"
                       (change)="onFormChange()"
                       (blur)="onFieldBlur(q.key)" />
-                    
+
                     <!-- Validation Error Display -->
                     <div *ngIf="hasValidationError(q.key)" class="validation-error">
                       <small>{{ getValidationErrorMessage(q.key, q) }}</small>
@@ -171,7 +171,7 @@
                           <label [for]="q.key + '_' + opt.value">{{ opt.label }}</label>
                         </div>
                       </div>
-                      
+
                       <div *ngIf="q.key === 'days_of_week'" class="field-dependency-info">
                         <small>Visible when Load Frequency is Daily or Weekly</small>
                       </div>
@@ -240,7 +240,7 @@
                       [class]="getInputClass(q.key)"
                       (input)="onFormChange()"
                       (blur)="onFieldBlur(q.key)" />
-                    
+
                     <!-- Validation Error Display -->
                     <div *ngIf="hasValidationError(q.key)" class="validation-error">
                       <small>{{ getValidationErrorMessage(q.key, q) }}</small>
