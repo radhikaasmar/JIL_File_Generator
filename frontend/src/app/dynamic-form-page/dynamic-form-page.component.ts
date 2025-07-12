@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
-import { LoadFrequencyService } from '../services/load-frequency.service'; // Add this import
+import { LoadFrequencyService } from '../services/load-frequency.service';
 import { FormGroup, Validators } from '@angular/forms';
 import { DynamicQuestionService } from '../services/dynamic-question.service';
 import { DynamicFormBuilderService, SubformInstance } from '../services/dynamic-form-builder.service';
@@ -10,7 +10,8 @@ import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { EnvironmentStateService } from '../services/environment-state.service';
-import { DaysOfWeekService } from '../services/days-of-week.service'; // Add this import
+import { DaysOfWeekService } from '../services/days-of-week.service';
+import { JILFieldOrder, getFieldOrder, EXCLUDED_FROM_JIL, JOB_TYPE_RESTRICTIONS } from '../enums/jil-field-order.enum';
 
 @Component({
   selector: 'app-dynamic-form-page',
@@ -29,22 +30,21 @@ export class DynamicFormPageComponent implements OnInit {
     private subformConfigService: SubformConfigService,
     private functionJobMappingService: FunctionJobMappingService,
     private environmentStateService: EnvironmentStateService,
-    private daysOfWeekService: DaysOfWeekService, // Add this injection
-    private loadFrequencyService: LoadFrequencyService 
-  )  {}
+    private daysOfWeekService: DaysOfWeekService,
+    private loadFrequencyService: LoadFrequencyService
+  ) {}
 
   ngOnInit() {
-  this.loadSubformConfigs();
-
-  // Initialize environment state after subforms are loaded
-  setTimeout(() => {
-    const topInstance = this.subformInstances.find(s => s.type === 'top');
-    if (topInstance) {
-      const selectedEnvs = this.getSelectedEnvironments(topInstance.form);
-      this.environmentStateService.updateSelectedEnvironments(selectedEnvs);
-    }
-  }, 100);
-}
+    this.loadSubformConfigs();
+    // Initialize environment state after subforms are loaded
+    setTimeout(() => {
+      const topInstance = this.subformInstances.find(s => s.type === 'top');
+      if (topInstance) {
+        const selectedEnvs = this.getSelectedEnvironments(topInstance.form);
+        this.environmentStateService.updateSelectedEnvironments(selectedEnvs);
+      }
+    }, 100);
+  }
 
   private loadSubformConfigs() {
     this.subformConfigService.loadAllSubformConfigs().subscribe(configs => {
@@ -103,38 +103,34 @@ export class DynamicFormPageComponent implements OnInit {
     const existingFunctions = this.subformInstances
       .filter(instance => instance.functionOfJob)
       .map(instance => instance.functionOfJob!);
-
     return this.functionJobMappingService.getAvailableFunctions(existingFunctions);
   }
 
-  // Remove onAddFunctionJob(event: any)
-  // Add checkbox handler instead
   onFunctionCheckboxChange(event: any, option: FunctionJobOption) {
-  if (event.target.checked) {
-    const instanceCount = this.subformInstances.filter(s => s.type === option.subformType).length;
-    const displayName = `${option.subformType.toUpperCase()} Job #${instanceCount + 1}`;
-    this.addSubformInstance(option.subformType, displayName, true, option.value);
+    if (event.target.checked) {
+      const instanceCount = this.subformInstances.filter(s => s.type === option.subformType).length;
+      const displayName = `${option.subformType.toUpperCase()} Job #${instanceCount + 1}`;
+      this.addSubformInstance(option.subformType, displayName, true, option.value);
 
-    // After creating the subform, set default values
-    const selectedEnvs = this.environmentStateService.getSelectedEnvironments();
-    const newInstance = this.subformInstances[this.subformInstances.length - 1];
+      // After creating the subform, set default values
+      const selectedEnvs = this.environmentStateService.getSelectedEnvironments();
+      const newInstance = this.subformInstances[this.subformInstances.length - 1];
 
-    // Set machine defaults immediately
-    this.setDefaultMachineValues(newInstance, selectedEnvs);
+      // Set machine defaults immediately
+      this.setDefaultMachineValues(newInstance, selectedEnvs);
 
-    // If box form exists, propagate owner values
-    const boxInstance = this.subformInstances.find(s => s.type === 'box');
-    if (boxInstance) {
-      this.propagateOwnerValuesFromBox(boxInstance.form);
+      // If box form exists, propagate owner values
+      const boxInstance = this.subformInstances.find(s => s.type === 'box');
+      if (boxInstance) {
+        this.propagateOwnerValuesFromBox(boxInstance.form);
+      }
+    } else {
+      this.subformInstances = this.subformInstances.filter(
+        instance => instance.functionOfJob !== option.value
+      );
+      this.updateJobNames();
     }
-  } else {
-    this.subformInstances = this.subformInstances.filter(
-      instance => instance.functionOfJob !== option.value
-    );
-    this.updateJobNames();
   }
-}
-
 
   removeSubformInstance(instanceId: string) {
     this.subformInstances = this.subformInstances.filter(instance => instance.id !== instanceId);
@@ -142,76 +138,48 @@ export class DynamicFormPageComponent implements OnInit {
   }
 
   onSubformChange(instance: SubformInstance) {
-  this.updateJobNames();
+    this.updateJobNames();
 
-  if (instance.type === 'top') {
-    const selectedEnvs = this.getSelectedEnvironments(instance.form);
-    this.environmentStateService.updateSelectedEnvironments(selectedEnvs);
-    this.updateEnvironmentValidators();
+    if (instance.type === 'top') {
+      const selectedEnvs = this.getSelectedEnvironments(instance.form);
+      this.environmentStateService.updateSelectedEnvironments(selectedEnvs);
+      this.updateEnvironmentValidators();
+    }
+
+    // If change is from box form, propagate owner values to cmd/fw
+    if (instance.type === 'box') {
+      this.propagateOwnerValuesFromBox(instance.form);
+    }
   }
 
-  // If change is from box form, propagate owner values to cmd/fw
-  if (instance.type === 'box') {
-    this.propagateOwnerValuesFromBox(instance.form);
+  private propagateOwnerValuesFromBox(boxForm: FormGroup) {
+    const selectedEnvs = this.environmentStateService.getSelectedEnvironments();
+    const ownerValues: {[key: string]: string} = {};
+
+    // Extract owner values from box form
+    selectedEnvs.forEach(env => {
+      const ownerValue = boxForm.get(`${env}_owner`)?.value;
+      if (ownerValue) {
+        ownerValues[env] = ownerValue;
+      }
+    });
+
+    // Set owner values in cmd and fw subforms (editable, not readonly)
+    this.subformInstances
+      .filter(instance => ['cmd', 'fw'].includes(instance.type))
+      .forEach(instance => {
+        selectedEnvs.forEach(env => {
+          const ownerControl = instance.form.get(`${env}_owner`);
+          if (ownerControl && ownerValues[env]) {
+            ownerControl.setValue(ownerValues[env]);
+            // Don't disable - keep it editable
+          }
+        });
+
+        // Also set machine defaults when propagating
+        this.setDefaultMachineValues(instance, selectedEnvs);
+      });
   }
-}
-
-private propagateOwnerValuesFromBox(boxForm: FormGroup) {
-  const selectedEnvs = this.environmentStateService.getSelectedEnvironments();
-  const ownerValues: {[key: string]: string} = {};
-
-  // Extract owner values from box form
-  selectedEnvs.forEach(env => {
-    const ownerValue = boxForm.get(`${env}_owner`)?.value;
-    if (ownerValue) {
-      ownerValues[env] = ownerValue;
-    }
-  });
-
-  // Set owner values in cmd and fw subforms (editable, not readonly)
-  this.subformInstances
-    .filter(instance => ['cmd', 'fw'].includes(instance.type))
-    .forEach(instance => {
-      selectedEnvs.forEach(env => {
-        const ownerControl = instance.form.get(`${env}_owner`);
-        if (ownerControl && ownerValues[env]) {
-          ownerControl.setValue(ownerValues[env]);
-          // Don't disable - keep it editable
-        }
-      });
-
-      // Also set machine defaults when propagating
-      this.setDefaultMachineValues(instance, selectedEnvs);
-    });
-}
-
-
-
-private propagateOwnerValues(topForm: FormGroup, selectedEnvs: string[]) {
-  const ownerValues: {[key: string]: string} = {};
-
-  // Extract owner values from top form
-  selectedEnvs.forEach(env => {
-    const ownerValue = topForm.get(`${env}_owner`)?.value;
-    if (ownerValue) {
-      ownerValues[env] = ownerValue;
-    }
-  });
-
-  // Set owner values in cmd and fw subforms
-  this.subformInstances
-    .filter(instance => ['cmd', 'fw'].includes(instance.type))
-    .forEach(instance => {
-      selectedEnvs.forEach(env => {
-        const ownerControl = instance.form.get(`${env}_owner`);
-        if (ownerControl && ownerValues[env]) {
-          ownerControl.setValue(ownerValues[env]);
-          ownerControl.disable(); // Make it readonly
-        }
-      });
-    });
-}
-
 
   private updateJobNames() {
     const topInstance = this.subformInstances.find(s => s.type === 'top');
@@ -269,7 +237,6 @@ private propagateOwnerValues(topForm: FormGroup, selectedEnvs: string[]) {
           return this.truncateJobNameForSubform(fullBoxName, topInstance.form);
         }
       }
-
       return fullBoxName;
     }
 
@@ -281,132 +248,130 @@ private propagateOwnerValues(topForm: FormGroup, selectedEnvs: string[]) {
   }
 
   getJobNameForInstance(instance: SubformInstance): string {
-  if (instance.type === 'top') {
-    return this.generateTruncatedBaseJobName(instance.form);
-  }
-
-  const topInstance = this.subformInstances.find(s => s.type === 'top');
-  if (!topInstance) return '';
-
-  const baseJobName = this.generateBaseJobName(topInstance.form);
-  const funofjob = instance.form.get('funofjob')?.value || '';
-  const jobtitle = instance.form.get('jobtitle')?.value || '';
-
-  if (baseJobName && funofjob) {
-    // **NEW: Special handling for FW and CFW - only include function, not job type**
-    if (instance.type === 'fw' || instance.type === 'cfw') {
-      const fullJobName = `${baseJobName}_${funofjob.toUpperCase()}`;
-      return this.truncateJobNameForSubformFwCfw(fullJobName, topInstance.form, funofjob);
+    if (instance.type === 'top') {
+      return this.generateTruncatedBaseJobName(instance.form);
     }
-    
-    // **EXISTING: For other job types, include both function and job type**
-    if (jobtitle) {
-      const fullJobName = `${baseJobName}_${funofjob.toUpperCase()}_${jobtitle.toUpperCase()}`;
-      return this.truncateJobNameForSubform(fullJobName, topInstance.form);
+
+    const topInstance = this.subformInstances.find(s => s.type === 'top');
+    if (!topInstance) return '';
+
+    const baseJobName = this.generateBaseJobName(topInstance.form);
+    const funofjob = instance.form.get('funofjob')?.value || '';
+    const jobtitle = instance.form.get('jobtitle')?.value || '';
+
+    if (baseJobName && funofjob) {
+      // Special handling for FW and CFW - only include function, not job type
+      if (instance.type === 'fw' || instance.type === 'cfw') {
+        const fullJobName = `${baseJobName}_${funofjob.toUpperCase()}`;
+        return this.truncateJobNameForSubformFwCfw(fullJobName, topInstance.form, funofjob);
+      }
+
+      // For other job types, include both function and job type
+      if (jobtitle) {
+        const fullJobName = `${baseJobName}_${funofjob.toUpperCase()}_${jobtitle.toUpperCase()}`;
+        return this.truncateJobNameForSubform(fullJobName, topInstance.form);
+      }
     }
+
+    return baseJobName;
   }
 
-  return baseJobName;
-}
-// **NEW: Special truncation method for FW and CFW jobs (no job type)**
-private truncateJobNameForSubformFwCfw(fullJobName: string, topForm: FormGroup, functionOfJob: string): string {
-  if (fullJobName.length <= 60) {
-    return fullJobName;
+  private truncateJobNameForSubformFwCfw(fullJobName: string, topForm: FormGroup, functionOfJob: string): string {
+    if (fullJobName.length <= 60) {
+      return fullJobName;
+    }
+
+    // Get the original field values from top form
+    const fields = ['csi', 'efforttype', 'prodlob', 'purpose', 'loadfreq', 'loadlayer'];
+    const topValues = fields.map(f => topForm.get(f)?.value || '').map(v => v.toString().toUpperCase());
+
+    // Calculate space needed for function only (no job type for FW/CFW)
+    const functionLength = functionOfJob.length + 1; // +1 for underscore
+
+    // Calculate available space for the base job name
+    const availableSpaceForBase = 60 - functionLength;
+
+    if (availableSpaceForBase <= 0) {
+      return fullJobName.substring(0, 60);
+    }
+
+    // Build truncated base job name that fits in available space
+    const truncatedBaseJobName = this.truncateBaseJobNameToFit(topValues, availableSpaceForBase);
+
+    // Combine truncated base + function (no job type)
+    return `${truncatedBaseJobName}_${functionOfJob}`;
   }
 
-  // Get the original field values from top form
-  const fields = ['csi', 'efforttype', 'prodlob', 'purpose', 'loadfreq', 'loadlayer'];
-  const topValues = fields.map(f => topForm.get(f)?.value || '').map(v => v.toString().toUpperCase());
+  private truncateJobNameForSubform(fullJobName: string, topForm: FormGroup): string {
+    if (fullJobName.length <= 60) {
+      return fullJobName;
+    }
 
-  // Calculate space needed for function only (no job type for FW/CFW)
-  const functionLength = functionOfJob.length + 1; // +1 for underscore
+    // Extract the function and job type from the full job name
+    const jobNameParts = fullJobName.split('_');
+    const functionOfJob = jobNameParts[jobNameParts.length - 2] || '';
+    const jobType = jobNameParts[jobNameParts.length - 1] || '';
 
-  // Calculate available space for the base job name
-  const availableSpaceForBase = 60 - functionLength;
+    // Get the original field values from top form
+    const fields = ['csi', 'efforttype', 'prodlob', 'purpose', 'loadfreq', 'loadlayer'];
+    const topValues = fields.map(f => topForm.get(f)?.value || '').map(v => v.toString().toUpperCase());
 
-  if (availableSpaceForBase <= 0) {
-    return fullJobName.substring(0, 60);
+    // Calculate space needed for function and job type (including underscores)
+    const functionAndTypeLength = functionOfJob.length + jobType.length + 2; // +2 for underscores
+
+    // Calculate available space for the base job name (60 - function - job type)
+    const availableSpaceForBase = 60 - functionAndTypeLength;
+
+    if (availableSpaceForBase <= 0) {
+      // If no space for base, just return truncated full name
+      return fullJobName.substring(0, 60);
+    }
+
+    // Build truncated base job name that fits in available space
+    const truncatedBaseJobName = this.truncateBaseJobNameToFit(topValues, availableSpaceForBase);
+
+    // Combine truncated base + function + job type
+    return `${truncatedBaseJobName}_${functionOfJob}_${jobType}`;
   }
 
-  // Build truncated base job name that fits in available space
-  const truncatedBaseJobName = this.truncateBaseJobNameToFit(topValues, availableSpaceForBase);
+  private truncateBaseJobNameToFit(values: string[], maxLength: number): string {
+    const purposeIndex = 3; // Purpose is the 4th field (index 3)
 
-  // Combine truncated base + function (no job type)
-  return `${truncatedBaseJobName}_${functionOfJob}`;
-}
+    // First, try with full purpose
+    let jobName = values.filter(v => v !== '').join('_');
+    if (jobName.length <= maxLength) {
+      return jobName;
+    }
 
+    // If too long, truncate purpose field
+    const purpose = values[purposeIndex] || '';
+    if (purpose.length === 0) {
+      // No purpose to truncate, just cut the entire string
+      return jobName.substring(0, maxLength);
+    }
 
+    // Calculate job name without purpose
+    const valuesWithoutPurpose = [...values];
+    valuesWithoutPurpose[purposeIndex] = '';
+    const jobNameWithoutPurpose = valuesWithoutPurpose.filter(v => v !== '').join('_');
 
-private truncateJobNameForSubform(fullJobName: string, topForm: FormGroup): string {
-  if (fullJobName.length <= 60) {
-    return fullJobName;
+    // Calculate available space for purpose
+    const availableSpaceForPurpose = maxLength - jobNameWithoutPurpose.length - 1; // -1 for underscore
+
+    if (availableSpaceForPurpose <= 0) {
+      // No space for purpose at all
+      return jobNameWithoutPurpose.substring(0, maxLength);
+    }
+
+    // Truncate purpose to fit available space
+    const truncatedPurpose = purpose.substring(0, availableSpaceForPurpose);
+
+    // Rebuild the job name with truncated purpose
+    const truncatedValues = [...values];
+    truncatedValues[purposeIndex] = truncatedPurpose;
+
+    return truncatedValues.filter(v => v !== '').join('_');
   }
-
-  // Extract the function and job type from the full job name
-  const jobNameParts = fullJobName.split('_');
-  const functionOfJob = jobNameParts[jobNameParts.length - 2] || '';
-  const jobType = jobNameParts[jobNameParts.length - 1] || '';
-
-  // Get the original field values from top form
-  const fields = ['csi', 'efforttype', 'prodlob', 'purpose', 'loadfreq', 'loadlayer'];
-  const topValues = fields.map(f => topForm.get(f)?.value || '').map(v => v.toString().toUpperCase());
-
-  // Calculate space needed for function and job type (including underscores)
-  const functionAndTypeLength = functionOfJob.length + jobType.length + 2; // +2 for underscores
-
-  // Calculate available space for the base job name (60 - function - job type)
-  const availableSpaceForBase = 60 - functionAndTypeLength;
-
-  if (availableSpaceForBase <= 0) {
-    // If no space for base, just return truncated full name
-    return fullJobName.substring(0, 60);
-  }
-
-  // Build truncated base job name that fits in available space
-  const truncatedBaseJobName = this.truncateBaseJobNameToFit(topValues, availableSpaceForBase);
-
-  // Combine truncated base + function + job type
-  return `${truncatedBaseJobName}_${functionOfJob}_${jobType}`;
-}
-
-private truncateBaseJobNameToFit(values: string[], maxLength: number): string {
-  const purposeIndex = 3; // Purpose is the 4th field (index 3)
-
-  // First, try with full purpose
-  let jobName = values.filter(v => v !== '').join('_');
-  if (jobName.length <= maxLength) {
-    return jobName;
-  }
-
-  // If too long, truncate purpose field
-  const purpose = values[purposeIndex] || '';
-  if (purpose.length === 0) {
-    // No purpose to truncate, just cut the entire string
-    return jobName.substring(0, maxLength);
-  }
-
-  // Calculate job name without purpose
-  const valuesWithoutPurpose = [...values];
-  valuesWithoutPurpose[purposeIndex] = '';
-  const jobNameWithoutPurpose = valuesWithoutPurpose.filter(v => v !== '').join('_');
-
-  // Calculate available space for purpose
-  const availableSpaceForPurpose = maxLength - jobNameWithoutPurpose.length - 1; // -1 for underscore
-
-  if (availableSpaceForPurpose <= 0) {
-    // No space for purpose at all
-    return jobNameWithoutPurpose.substring(0, maxLength);
-  }
-
-  // Truncate purpose to fit available space
-  const truncatedPurpose = purpose.substring(0, availableSpaceForPurpose);
-
-  // Rebuild the job name with truncated purpose
-  const truncatedValues = [...values];
-  truncatedValues[purposeIndex] = truncatedPurpose;
-
-  return truncatedValues.filter(v => v !== '').join('_');
-}
 
   private truncateJobNameWithPurpose(values: string[]): string {
     const purposeIndex = 3; // Purpose is the 4th field (index 3)
@@ -465,108 +430,108 @@ private truncateBaseJobNameToFit(values: string[], maxLength: number): string {
     return false;
   }
 
-getDebugInfo(): any {
-  return {
-    subformCount: this.subformInstances.length,
-    availableFunctions: this.availableFunctionOptions.length,
-    instances: this.subformInstances.map(i => ({
-      id: i.id,
-      type: i.type,
-      functionOfJob: i.functionOfJob,
-      removable: i.removable
-    }))
-  };
-}
+  getDebugInfo(): any {
+    return {
+      subformCount: this.subformInstances.length,
+      availableFunctions: this.availableFunctionOptions.length,
+      instances: this.subformInstances.map(i => ({
+        id: i.id,
+        type: i.type,
+        functionOfJob: i.functionOfJob,
+        removable: i.removable
+      }))
+    };
+  }
 
-private updateEnvironmentValidators() {
-  const topInstance = this.subformInstances.find(s => s.type === 'top');
-  if (!topInstance) return;
+  private updateEnvironmentValidators() {
+    const topInstance = this.subformInstances.find(s => s.type === 'top');
+    if (!topInstance) return;
 
-  // Get selected environments from top form
-  const selectedEnvs = this.getSelectedEnvironments(topInstance.form);
+    // Get selected environments from top form
+    const selectedEnvs = this.getSelectedEnvironments(topInstance.form);
 
-  // Update validators for all other subforms
-  this.subformInstances
-    .filter(instance => instance.type !== 'top')
-    .forEach(instance => {
-      this.setEnvironmentFieldValidators(instance, selectedEnvs);
+    // Update validators for all other subforms
+    this.subformInstances
+      .filter(instance => instance.type !== 'top')
+      .forEach(instance => {
+        this.setEnvironmentFieldValidators(instance, selectedEnvs);
+      });
+  }
+
+  private getSelectedEnvironments(topForm: FormGroup): string[] {
+    const selectedEnvs: string[] = [];
+    const envKeys = ['dev', 'uat', 'prod', 'cob'];
+
+    envKeys.forEach(env => {
+      if (topForm.get(env)?.value) {
+        selectedEnvs.push(env);
+      }
     });
-}
 
-private getSelectedEnvironments(topForm: FormGroup): string[] {
-  const selectedEnvs: string[] = [];
-  const envKeys = ['dev', 'uat', 'prod', 'cob'];
+    return selectedEnvs;
+  }
 
-  envKeys.forEach(env => {
-    if (topForm.get(env)?.value) {
-      selectedEnvs.push(env);
-    }
-  });
+  private setEnvironmentFieldValidators(instance: SubformInstance, selectedEnvs: string[]) {
+    const envKeys = ['dev', 'uat', 'prod', 'cob'];
 
-  return selectedEnvs;
-}
+    envKeys.forEach(env => {
+      const isSelected = selectedEnvs.includes(env);
 
-private setEnvironmentFieldValidators(instance: SubformInstance, selectedEnvs: string[]) {
-  const envKeys = ['dev', 'uat', 'prod', 'cob'];
+      // Get fields to validate based on job type
+      const fieldsToValidate = this.getFieldsForJobType(instance.type);
 
-  envKeys.forEach(env => {
-    const isSelected = selectedEnvs.includes(env);
+      fieldsToValidate.forEach(field => {
+        const controlKey = `${env}_${field}`;
+        const control = instance.form.get(controlKey);
 
-    // Get fields to validate based on job type
-    const fieldsToValidate = this.getFieldsForJobType(instance.type);
-
-    fieldsToValidate.forEach(field => {
-      const controlKey = `${env}_${field}`;
-      const control = instance.form.get(controlKey);
-
-      if (control) {
-        if (isSelected) {
-          // Add required validator
-          control.setValidators([Validators.required]);
-        } else {
-          // Remove validators
-          control.clearValidators();
+        if (control) {
+          if (isSelected) {
+            // Add required validator
+            control.setValidators([Validators.required]);
+          } else {
+            // Remove validators
+            control.clearValidators();
+          }
+          control.updateValueAndValidity();
         }
-        control.updateValueAndValidity();
-      }
-    });
-  });
-}
-
-private getFieldsForJobType(jobType: string): string[] {
-  switch (jobType) {
-    case 'box':
-      return ['owner']; // Only owner field for box jobs
-    case 'cmd':
-    case 'cfw':
-    case 'fw':
-      return ['owner', 'machine', 'command']; // All fields for other job types
-    default:
-      return [];
-  }
-}
-private setDefaultMachineValues(instance: SubformInstance, selectedEnvs: string[]) {
-  const defaultMachines: Record<string, string> = {
-    'dev': 'V169912_EAP_GCG_NAM_INGESTION_DEV',
-    'uat': 'V169912_EAP_GCG_NAM_INGESTION_UAT',
-    'prod': 'V169912_EAP_GCG_NAM_INGESTION_PROD',
-    'cob': 'V169912_EAP_GCG_NAM_INGESTION_COB'
-  };
-
-  if (['cmd', 'fw'].includes(instance.type)) {
-    selectedEnvs.forEach(env => {
-      const machineControl = instance.form.get(`${env}_machine`);
-      if (machineControl) {
-        // Always set default value, even if field already has a value
-        machineControl.setValue(defaultMachines[env] || '');
-      }
+      });
     });
   }
-}
 
+  private getFieldsForJobType(jobType: string): string[] {
+    switch (jobType) {
+      case 'box':
+        return ['owner']; // Only owner field for box jobs
+      case 'cmd':
+      case 'cfw':
+      case 'fw':
+        return ['owner', 'machine', 'command']; // All fields for other job types
+      default:
+        return [];
+    }
+  }
 
-// Add this method to generate and download JIL files
- downloadJILFiles() {
+  private setDefaultMachineValues(instance: SubformInstance, selectedEnvs: string[]) {
+    const defaultMachines: Record<string, string> = {
+      'dev': 'V169912_EAP_GCG_NAM_INGESTION_DEV',
+      'uat': 'V169912_EAP_GCG_NAM_INGESTION_UAT',
+      'prod': 'V169912_EAP_GCG_NAM_INGESTION_PROD',
+      'cob': 'V169912_EAP_GCG_NAM_INGESTION_COB'
+    };
+
+    if (['cmd', 'fw'].includes(instance.type)) {
+      selectedEnvs.forEach(env => {
+        const machineControl = instance.form.get(`${env}_machine`);
+        if (machineControl) {
+          // Always set default value, even if field already has a value
+          machineControl.setValue(defaultMachines[env] || '');
+        }
+      });
+    }
+  }
+
+  // Enhanced JIL generation with enum-based ordering and filtering
+  downloadJILFiles() {
     const topInstance = this.subformInstances.find(s => s.type === 'top');
     if (!topInstance) {
       alert('No configuration found to generate JIL files');
@@ -592,255 +557,412 @@ private setDefaultMachineValues(instance: SubformInstance, selectedEnvs: string[
     });
   }
 
-private generateJILContent(environment: string, baseJobName: string, topInstance: SubformInstance): string {
-  let jilContent = '';
-  
-  // 1. Generate Box Job first
-  const boxInstance = this.subformInstances.find(s => s.type === 'box');
-  if (boxInstance) {
-    jilContent += this.generateDynamicJobJIL(environment, baseJobName, topInstance, boxInstance, 'box');
-    jilContent += '\n\n';
+  private generateJILContent(environment: string, baseJobName: string, topInstance: SubformInstance): string {
+    let jilContent = '';
+
+    // 1. Generate Box Job first
+    const boxInstance = this.subformInstances.find(s => s.type === 'box');
+    if (boxInstance) {
+      jilContent += this.generateDynamicJobJIL(environment, baseJobName, topInstance, boxInstance, 'box');
+      jilContent += '\n\n';
+    }
+
+    // 2. Generate Function Jobs (CMD, FW, CFW)
+    const functionInstances = this.subformInstances.filter(s => ['cmd', 'fw', 'cfw'].includes(s.type));
+    functionInstances.forEach(instance => {
+      jilContent += this.generateDynamicJobJIL(environment, baseJobName, topInstance, instance, instance.type);
+      jilContent += '\n\n';
+    });
+
+    return jilContent;
   }
 
-  // 2. Generate Function Jobs (CMD, FW, CFW)
-  const functionInstances = this.subformInstances.filter(s => ['cmd', 'fw', 'cfw'].includes(s.type));
-  functionInstances.forEach(instance => {
-    jilContent += this.generateDynamicJobJIL(environment, baseJobName, topInstance, instance, instance.type);
-    jilContent += '\n\n';
-  });
-  
-  return jilContent;
-}
+  // Updated generateDynamicJobJIL method with enum-based ordering and filtering
+  private generateDynamicJobJIL(environment: string, baseJobName: string, topInstance: SubformInstance, jobInstance: SubformInstance, jobType: string): string {
+    const jobForm = jobInstance.form;
+    const topForm = topInstance.form;
 
-private generateDynamicJobJIL(environment: string, baseJobName: string, topInstance: SubformInstance, jobInstance: SubformInstance, jobType: string): string {
-  const jobForm = jobInstance.form;
-  const topForm = topInstance.form;
-  
-  // Generate job name
-  const funofjob = jobForm.get('funofjob')?.value || '';
-  const jobtitle = jobForm.get('jobtitle')?.value || '';
-  let jobName: string;
-  if (funofjob.toLowerCase === 'fw' || funofjob.toLowerCase === 'cfw') {
-    // For FW and CFW, only include function, not job type
-    jobName = `${baseJobName}_${funofjob.toUpperCase()}`;
-  } else {
-    // For other job types, include both function and job type
-    jobName = `${baseJobName}_${funofjob.toUpperCase()}_${jobtitle.toUpperCase()}`;
-  }
-  // const jobName = `${baseJobName}_${funofjob.toUpperCase()}_${jobtitle.toUpperCase()}`;
-  
-  let jil = `insert_job: ${jobName}\n`;
-  
-  // Set job_type based on job type
-  if (jobType === 'box') {
-    jil += `job_type: BOX\n`;
-  } else {
-    jil += `job_type: ${jobtitle.toUpperCase()}\n`;
+    // Generate job name
+    const funofjob = jobForm.get('funofjob')?.value || '';
+    const jobtitle = jobForm.get('jobtitle')?.value || '';
+    let jobName: string;
+
+    if (funofjob.toLowerCase() === 'fw' || funofjob.toLowerCase() === 'cfw') {
+      jobName = `${baseJobName}_${funofjob.toUpperCase()}`;
+    } else {
+      jobName = `${baseJobName}_${funofjob.toUpperCase()}_${jobtitle.toUpperCase()}`;
+    }
+
+    // Collect all field values in a map
+    const jilFields: {[key: string]: string} = {};
+
+    // Always start with insert_job and job_type
+    jilFields['insert_job'] = jobName;
+    jilFields['job_type'] = jobType === 'box' ? 'BOX' : jobtitle.toUpperCase();
+
+    // Add box_name for non-box jobs
+    if (jobType !== 'box') {
+      const boxName = jobForm.get('box_name')?.value || '';
+      if (boxName) {
+        jilFields['box_name'] = boxName;
+      }
+    }
+
+    // Collect all other fields with proper filtering
+    this.collectFilteredFields(topForm, jobForm, environment, jobType, jilFields);
+
+    // Generate ordered JIL content
+    return this.generateOrderedJIL(jilFields);
   }
 
-  // Add box_name for non-box jobs only
-  if (jobType !== 'box') {
-    const boxName = jobForm.get('box_name')?.value || '';
-    if (boxName) {
-      jil += `box_name: ${boxName}\n`;
+  private collectFilteredFields(topForm: FormGroup, jobForm: FormGroup, environment: string, jobType: string, jilFields: {[key: string]: string}) {
+    // Collect common fields from top form (filtered)
+    this.collectCommonFieldsFiltered(topForm, jobType, jilFields);
+
+    // Collect environment-specific fields
+    this.collectEnvironmentFieldsToMap(jobForm, environment, jilFields);
+
+    // Collect job-specific fields (filtered)
+    this.collectJobSpecificFieldsFiltered(jobForm, jobType, jilFields);
+  }
+
+  private collectCommonFieldsFiltered(topForm: FormGroup, jobType: string, jilFields: {[key: string]: string}) {
+    // Permission
+    const permission = topForm.get('permission')?.value;
+    if (permission && this.isFieldAllowedForJobType('permission', jobType)) {
+      jilFields['permission'] = permission;
+    }
+
+    // Description (quoted)
+    const description = topForm.get('description')?.value;
+    if (description && this.isFieldAllowedForJobType('description', jobType)) {
+      jilFields['description'] = `"${description}"`;
+    }
+
+    // Timezone
+    const timezone = topForm.get('timezone')?.value;
+    if (timezone && this.isFieldAllowedForJobType('timezone', jobType)) {
+      jilFields['timezone'] = timezone;
+    }
+
+    // Days of week (only for specific job types and load frequencies)
+    const selectedDays = this.daysOfWeekService.getSelectedDays();
+    if (selectedDays && selectedDays.length > 0 && this.isFieldAllowedForJobType('days_of_week', jobType)) {
+      jilFields['days_of_week'] = selectedDays.join(',');
+    }
+
+    // Run calendar
+    const runCalendar = topForm.get('run_calendar')?.value;
+    if (runCalendar && this.isFieldAllowedForJobType('run_calendar', jobType)) {
+      jilFields['run_calendar'] = runCalendar;
+    }
+
+    // Date conditions
+    const dateConditions = topForm.get('date_conditions')?.value;
+    if (dateConditions && this.isFieldAllowedForJobType('date_conditions', jobType)) {
+      jilFields['date_conditions'] = '1';
+    }
+
+    // Conditions
+    const conditions = topForm.get('conditions')?.value;
+    if (conditions && Array.isArray(conditions) && conditions.length > 0 && this.isFieldAllowedForJobType('condition', jobType)) {
+      const conditionString = this.buildConditionString(conditions);
+      if (conditionString) {
+        jilFields['condition'] = conditionString;
+      }
+    }
+
+    // Alarm settings
+    const alarmIfFail = topForm.get('alarm_if_fail')?.value;
+    if (alarmIfFail && this.isFieldAllowedForJobType('alarm_if_fail', jobType)) {
+      jilFields['alarm_if_fail'] = alarmIfFail;
+    }
+
+    const alarmIfTerminated = topForm.get('alarm_if_terminated')?.value;
+    if (alarmIfTerminated && this.isFieldAllowedForJobType('alarm_if_terminated', jobType)) {
+      jilFields['alarm_if_terminated'] = alarmIfTerminated;
+    }
+
+    // Status
+    const status = topForm.get('status')?.value;
+    if (status && this.isFieldAllowedForJobType('status', jobType)) {
+      jilFields['status'] = status;
+    }
+
+    // Auto-detect additional fields from top form (filtered)
+    this.autoDetectAdditionalFieldsFiltered(topForm, jilFields, jobType);
+  }
+
+  private collectEnvironmentFieldsToMap(jobForm: FormGroup, environment: string, jilFields: {[key: string]: string}) {
+    // Owner
+    const owner = jobForm.get(`${environment}_owner`)?.value;
+    if (owner) {
+      jilFields['owner'] = owner;
+    }
+
+    // Machine
+    const machine = jobForm.get(`${environment}_machine`)?.value;
+    if (machine) {
+      jilFields['machine'] = machine;
+    }
+
+    // Command (quoted)
+    const command = jobForm.get(`${environment}_command`)?.value;
+    if (command) {
+      jilFields['command'] = `"${command}"`;
     }
   }
 
-  // 1. Add common fields from top form (applies to all job types)
-  jil += this.extractCommonFields(topForm);
-  
-  // 2. Add environment-specific fields from current job form
-  jil += this.extractEnvironmentSpecificFields(jobForm, environment);
-  
-  // 3. Add job-specific fields from current job form (excluding common and environment fields)
-  jil += this.extractJobSpecificFields(jobForm, jobType);
-  
-  return jil;
-}
+  private collectJobSpecificFieldsFiltered(jobForm: FormGroup, jobType: string, jilFields: {[key: string]: string}) {
+    switch (jobType) {
+      case 'cmd':
+        this.collectCmdFieldsFiltered(jobForm, jilFields);
+        break;
+      case 'fw':
+        this.collectFwFieldsFiltered(jobForm, jilFields);
+        break;
+      case 'cfw':
+        this.collectCfwFieldsFiltered(jobForm, jilFields);
+        break;
+      case 'box':
+        this.collectBoxFieldsFiltered(jobForm, jilFields);
+        break;
+    }
 
-private extractCommonFields(topForm: FormGroup): string {
-  let jil = '';
-  
-  const commonFieldMappings: {[key: string]: string} = {
-    'permission': 'permission',
-    'description': 'description',
-    'alarm_if_fail': 'alarm_if_fail',
-    'alarm_if_terminated': 'alarm_if_terminated',
-    'timezone': 'timezone',
-    'date_conditions': 'date_conditions',
-    'run_calendar': 'run_calendar',
-    'status': 'status'
-  };
+    // Auto-detect any additional job-specific fields (filtered)
+    this.autoDetectJobSpecificFieldsFiltered(jobForm, jilFields, jobType);
+  }
 
-  // Iterate through all controls in top form
-  Object.keys(topForm.controls).forEach(controlKey => {
-    const control = topForm.get(controlKey);
-    
-    // General handling for other fields
-    if (control && this.hasValidValue(control.value)) {
-      if (commonFieldMappings[controlKey]) {
-        const jilFieldName = commonFieldMappings[controlKey];
+  private collectCmdFieldsFiltered(jobForm: FormGroup, jilFields: {[key: string]: string}) {
+    const stdOutFile = jobForm.get('std_out_file')?.value;
+    if (stdOutFile) {
+      jilFields['std_out_file'] = `"${stdOutFile}"`;
+    }
+
+    const stdErrFile = jobForm.get('std_err_file')?.value;
+    if (stdErrFile) {
+      jilFields['std_err_file'] = `"${stdErrFile}"`;
+    }
+
+    const profile = jobForm.get('profile')?.value;
+    if (profile) {
+      jilFields['profile'] = profile;
+    }
+  }
+
+  private collectFwFieldsFiltered(jobForm: FormGroup, jilFields: {[key: string]: string}) {
+    const watchFile = jobForm.get('watch_file')?.value;
+    if (watchFile) {
+      jilFields['watch_file'] = `"${watchFile}"`;
+    }
+
+    const watchInterval = jobForm.get('watch_interval')?.value;
+    if (watchInterval) {
+      jilFields['watch_interval'] = watchInterval;
+    }
+
+    const maxRunAlarm = jobForm.get('max_run_alarm')?.value;
+    if (maxRunAlarm) {
+      jilFields['max_run_alarm'] = maxRunAlarm;
+    }
+
+    const jobLoad = jobForm.get('job_load')?.value;
+    if (jobLoad) {
+      jilFields['job_load'] = jobLoad;
+    }
+
+    const priority = jobForm.get('priority')?.value;
+    if (priority) {
+      jilFields['priority'] = priority;
+    }
+  }
+
+  private collectCfwFieldsFiltered(jobForm: FormGroup, jilFields: {[key: string]: string}) {
+    const watchFile = jobForm.get('watch_file')?.value;
+    if (watchFile) {
+      jilFields['watch_file'] = `"${watchFile}"`;
+    }
+
+    const watchInterval = jobForm.get('watch_interval')?.value;
+    if (watchInterval) {
+      jilFields['watch_interval'] = watchInterval;
+    }
+
+    const jobLoad = jobForm.get('job_load')?.value;
+    if (jobLoad) {
+      jilFields['job_load'] = jobLoad;
+    }
+
+    const priority = jobForm.get('priority')?.value;
+    if (priority) {
+      jilFields['priority'] = priority;
+    }
+  }
+
+  private collectBoxFieldsFiltered(jobForm: FormGroup, jilFields: {[key: string]: string}) {
+    const startTime = jobForm.get('start_time')?.value;
+    if (startTime) {
+      jilFields['start_times'] = `"${startTime}"`;
+    }
+  }
+
+  // Helper method to check if a field is allowed for a specific job type
+  private isFieldAllowedForJobType(fieldName: string, jobType: string): boolean {
+    // Check if field is globally excluded
+    if (EXCLUDED_FROM_JIL.includes(fieldName)) {
+      return false;
+    }
+
+    // Check job-type specific restrictions
+    const restrictions = JOB_TYPE_RESTRICTIONS[jobType as keyof typeof JOB_TYPE_RESTRICTIONS];
+    if (restrictions && restrictions.includes(fieldName)) {
+      return false;
+    }
+
+    return true;
+  }
+
+  // Auto-detect additional fields from top form (with filtering)
+  private autoDetectAdditionalFieldsFiltered(form: FormGroup, jilFields: {[key: string]: string}, jobType: string) {
+    Object.keys(form.controls).forEach(controlKey => {
+      // Skip if already processed
+      if (jilFields[controlKey]) {
+        return;
+      }
+
+      // Skip if field is not allowed for this job type
+      if (!this.isFieldAllowedForJobType(controlKey, jobType)) {
+        return;
+      }
+
+      // Skip environment-specific fields (they contain underscores with env names)
+      if (controlKey.includes('_') && ['dev', 'uat', 'prod', 'cob'].some(env => controlKey.startsWith(env + '_'))) {
+        return;
+      }
+
+      // Skip complex fields like arrays and objects
+      const control = form.get(controlKey);
+      if (control && this.hasValidValue(control.value)) {
         const value = control.value;
-        
-        if (controlKey === 'description') {
-          jil += `${jilFieldName}: "${value}"\n`;
-        } else if (controlKey === 'date_conditions' && value) {
-          jil += `${jilFieldName}: 1\n`;
-        } else if (typeof value === 'string' || typeof value === 'number') {
-          jil += `${jilFieldName}: ${value}\n`;
+
+        // Only include simple values (string, number, boolean)
+        if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+          jilFields[controlKey] = value.toString();
         }
       }
-    }
-  });
-
-  // Handle days of week with new mcq_multi format
-  const daysOfWeekString = this.getDaysOfWeekJIL(topForm);
-  if (daysOfWeekString) {
-    jil += daysOfWeekString;
+    });
   }
 
-  // Handle conditions separately (complex field)
-  const conditions = topForm.get('conditions')?.value;
-  if (conditions && Array.isArray(conditions) && conditions.length > 0) {
-    const conditionString = this.buildConditionString(conditions);
-    if (conditionString) {
-      jil += `condition: ${conditionString}\n`;
+  // Auto-detect job-specific fields (with filtering)
+  private autoDetectJobSpecificFieldsFiltered(jobForm: FormGroup, jilFields: {[key: string]: string}, jobType: string) {
+    const explicitlyHandledFields = this.getExplicitlyHandledFieldsForJobType(jobType);
+
+    Object.keys(jobForm.controls).forEach(controlKey => {
+      // Skip if already processed or explicitly handled
+      if (jilFields[controlKey] || explicitlyHandledFields.includes(controlKey)) {
+        return;
+      }
+
+      // Skip if field is not allowed for this job type
+      if (!this.isFieldAllowedForJobType(controlKey, jobType)) {
+        return;
+      }
+
+      // Skip environment-specific fields
+      if (controlKey.includes('_') && ['dev', 'uat', 'prod', 'cob'].some(env => controlKey.startsWith(env + '_'))) {
+        return;
+      }
+
+      // Skip complex fields
+      const control = jobForm.get(controlKey);
+      if (control && this.hasValidValue(control.value)) {
+        const value = control.value;
+
+        // Only include simple values
+        if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+          jilFields[controlKey] = value.toString();
+        }
+      }
+    });
+  }
+
+  private getExplicitlyHandledFieldsForJobType(jobType: string): string[] {
+    const baseFields = ['funofjob', 'jobtitle', 'box_name'];
+
+    switch (jobType) {
+      case 'cmd':
+        return [...baseFields, 'std_out_file', 'std_err_file', 'profile'];
+      case 'fw':
+        return [...baseFields, 'watch_file', 'watch_interval', 'max_run_alarm', 'job_load', 'priority'];
+      case 'cfw':
+        return [...baseFields, 'watch_file', 'watch_interval', 'job_load', 'priority'];
+      case 'box':
+        return [...baseFields, 'start_time'];
+      default:
+        return baseFields;
     }
   }
 
-  return jil;
-}
+  // Generate JIL content in the order defined by the enum
+  private generateOrderedJIL(jilFields: {[key: string]: string}): string {
+    let jil = '';
 
- // Updated getDaysOfWeekJIL method (use service directly)
-  private getDaysOfWeekJIL(topForm: FormGroup): string {
-    // Get selected days directly from the service
-    const selectedDays = this.daysOfWeekService.getSelectedDays();
-    
-    if (selectedDays && selectedDays.length > 0) {
-      return `days_of_week: ${selectedDays.join(',')}\n`;
-    }
-    
-    return '';
+    // Create array of field entries with their order values
+    const fieldEntries = Object.entries(jilFields).map(([fieldName, value]) => ({
+      fieldName,
+      value,
+      order: getFieldOrder(fieldName)
+    }));
+
+    // Sort by order value
+    fieldEntries.sort((a, b) => a.order - b.order);
+
+    // Generate JIL content in sorted order
+    fieldEntries.forEach(entry => {
+      jil += `${entry.fieldName}: ${entry.value}\n`;
+    });
+
+    return jil;
   }
 
+  private buildConditionString(conditions: any[]): string {
+    return conditions
+      .map((condition, index) => {
+        const type = condition.type;
+        const job = condition.job;
+        const logic = condition.logic;
 
-private extractEnvironmentSpecificFields(jobForm: FormGroup, environment: string): string {
-  let jil = '';
-  
-  // Environment-specific field mappings
-  const envFieldMappings: {[key: string]: string} = {
-    'owner': 'owner',
-    'machine': 'machine',
-    'command': 'command'
-  };
+        if (!job || !type) return '';
 
-  Object.keys(envFieldMappings).forEach(field => {
-    const controlKey = `${environment}_${field}`;
-    const control = jobForm.get(controlKey);
-    
-    if (control && this.hasValidValue(control.value)) {
-      const jilFieldName = envFieldMappings[field];
-      const value = control.value;
-      
-      if (field === 'command') {
-        jil += `${jilFieldName}: "${value}"\n`;
-      } else {
-        jil += `${jilFieldName}: ${value}\n`;
-      }
-    }
-  });
+        let conditionStr = `${type}(${job})`;
 
-  return jil;
-}
+        if (logic && logic !== 'NONE' && index < conditions.length - 1) {
+          conditionStr += ` ${logic.toUpperCase()} `;
+        }
 
-private extractJobSpecificFields(jobForm: FormGroup, jobType: string): string {
-  let jil = '';
-  
-  // Job-specific field mappings based on job type
-  const jobSpecificMappings: {[key: string]: {[key: string]: string}} = {
-    'cmd': {
-      'std_out_file': 'std_out_file',
-      'std_err_file': 'std_err_file',
-      'profile': 'profile'
-    },
-    'fw': {
-      'watch_file': 'watch_file',
-      'watch_interval': 'watch_interval',
-      'max_run_alarm': 'max_run_alarm',
-      'job_load': 'job_load',
-      'priority': 'priority'
-    },
-    'cfw': {
-      'watch_file': 'watch_file',
-      'watch_interval': 'watch_interval',
-      'job_load': 'job_load',
-      'priority': 'priority'
-    },
-    'box': {
-      'start_time': 'start_times'
-    }
-  };
+        return conditionStr;
+      })
+      .filter(str => str !== '')
+      .join('') || '';
+  }
 
-  const mappings = jobSpecificMappings[jobType] || {};
-  
-  Object.keys(mappings).forEach(field => {
-    const control = jobForm.get(field);
-    
-    if (control && this.hasValidValue(control.value)) {
-      const jilFieldName = mappings[field];
-      const value = control.value;
-      
-      if (field === 'start_time') {
-        jil += `${jilFieldName}: "${value}"\n`;
-      } else if (['watch_file', 'std_out_file', 'std_err_file'].includes(field)) {
-        jil += `${jilFieldName}: "${value}"\n`;
-      } else {
-        jil += `${jilFieldName}: ${value}\n`;
-      }
-    }
-  });
+  private hasValidValue(value: any): boolean {
+    if (value === null || value === undefined) return false;
+    if (typeof value === 'string') return value.trim() !== '';
+    if (typeof value === 'number') return !isNaN(value);
+    if (Array.isArray(value)) return value.length > 0;
+    return !!value;
+  }
 
-  return jil;
-}
-
-private buildConditionString(conditions: any[]): string {
-  return conditions
-    .map((condition, index) => {
-      const type = condition.type;
-      const job = condition.job;
-      const logic = condition.logic;
-      
-      if (!job || !type) return '';
-      
-      let conditionStr = `${type}(${job})`;
-      
-      if (logic && logic !== 'NONE' && index < conditions.length - 1) {
-        conditionStr += ` ${logic.toUpperCase()} `;
-      }
-      
-      return conditionStr;
-    })
-    .filter(str => str !== '')
-    .join('') || '';
-}
-
-private hasValidValue(value: any): boolean {
-  if (value === null || value === undefined) return false;
-  if (typeof value === 'string') return value.trim() !== '';
-  if (typeof value === 'number') return !isNaN(value);
-  if (Array.isArray(value)) return value.length > 0;
-  return !!value;
-}
-
-private downloadFile(content: string, fileName: string) {
-  const blob = new Blob([content], { type: 'text/plain' });
-  const url = window.URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = fileName;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  window.URL.revokeObjectURL(url);
-}
+  private downloadFile(content: string, fileName: string) {
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  }
 }

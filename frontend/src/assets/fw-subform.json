@@ -34,7 +34,14 @@
       "title": "File Watching",
       "questionIds": [
         "q_watch_file",
-        "q_watch_interval"
+        "q_watch_interval",
+        "extra"
+      ]
+    },
+    {
+      "title": "additional",
+      "questionIds": [
+        "extra2"
       ]
     }
   ]

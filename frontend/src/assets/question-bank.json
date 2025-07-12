@@ -437,6 +437,23 @@
       "type": "text",
       "placeholder": "Enter calendar name",
       "validators": []
+    },
+     {
+      "id": "extra",
+      "key": "extra",
+      "label": "Extra",
+      "type": "text",
+      "placeholder": "Enter extra information",
+      "validators": []
+    }
+    ,
+     {
+      "id": "extra2",
+      "key": "extra2",
+      "label": "Extra 2",
+      "type": "text",
+      "placeholder": "Enter extra information",
+      "validators": []
     }
 
   ]
