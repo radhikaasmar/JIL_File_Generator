@@ -100,4 +100,45 @@ export class DynamicFormBuilderService {
       })
       .filter((v): v is ValidatorFn => v !== null);
   }
+  private buildControl(question: any): FormControl {
+  const validators = this.buildValidators(question.validators || []);
+  const value = question.defaultValue || '';
+  
+  return new FormControl(value, validators);
+}
+
+private buildValidators(validatorConfigs: any[]): any[] {
+  const validators: any[] = [];
+  
+  validatorConfigs.forEach(config => {
+    switch (config.type) {
+      case 'required':
+        validators.push(Validators.required);
+        break;
+        
+      case 'pattern':
+        validators.push(Validators.pattern(config.value));
+        break;
+        
+      case 'maxLength':
+        validators.push(Validators.maxLength(config.value));
+        break;
+        
+      case 'minLength':
+        validators.push(Validators.minLength(config.value));
+        break;
+        
+      case 'min':
+        validators.push(Validators.min(config.value));
+        break;
+        
+      case 'max':
+        validators.push(Validators.max(config.value));
+        break;
+    }
+  });
+  
+  return validators;
+}
+
 }

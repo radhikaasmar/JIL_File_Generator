@@ -4,7 +4,7 @@ import { ReactiveFormsModule, FormGroup, FormArray } from '@angular/forms';
 import { DynamicFormBuilderService, SubformInstance } from '../../services/dynamic-form-builder.service';
 import { EnvironmentStateService } from '../../services/environment-state.service';
 import { DaysOfWeekService } from '../../services/days-of-week.service';
-import { LoadFrequencyService } from '../../services/load-frequency.service'; // Add this import
+import { LoadFrequencyService } from '../../services/load-frequency.service';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -31,7 +31,7 @@ export class DynamicFormViewerComponent implements OnInit, OnDestroy {
     private formBuilder: DynamicFormBuilderService,
     private environmentStateService: EnvironmentStateService,
     private daysOfWeekService: DaysOfWeekService,
-    private loadFrequencyService: LoadFrequencyService // Add this injection
+    private loadFrequencyService: LoadFrequencyService
   ) {}
 
   ngOnInit() {
@@ -61,6 +61,159 @@ export class DynamicFormViewerComponent implements OnInit, OnDestroy {
     }
     if (this.loadFrequencySubscription) {
       this.loadFrequencySubscription.unsubscribe();
+    }
+  }
+
+  // **NEW: Check if a field should be disabled**
+  isFieldDisabled(fieldKey: string): boolean {
+    if (!this.subformContext) return false;
+    
+    // Disable function of job and job type dropdowns in non-top subforms
+    if ((fieldKey === 'funofjob' || fieldKey === 'jobtitle') && 
+        ['box', 'cmd', 'cfw', 'fw'].includes(this.subformContext.type)) {
+      return true;
+    }
+    
+    return false;
+  }
+
+  // **NEW: Get disabled reason for user feedback**
+  getDisabledReason(fieldKey: string): string | null {
+    if (!this.subformContext) return null;
+    
+    if (fieldKey === 'funofjob' && ['box', 'cmd', 'cfw', 'fw'].includes(this.subformContext.type)) {
+      return 'Function of Job is automatically set based on subform selection';
+    }
+    
+    if (fieldKey === 'jobtitle' && ['box', 'cmd', 'cfw', 'fw'].includes(this.subformContext.type)) {
+      return 'Job Type is automatically determined by the subform type';
+    }
+    
+    return null;
+  }
+
+  // **NEW: Get input type based on validators**
+  getInputType(question: any): string {
+    if (!question.validators) return 'text';
+    
+    // Check for numeric pattern validators
+    const hasNumericPattern = question.validators.some((validator: any) => 
+      validator.type === 'pattern' && 
+      (validator.value.includes('[0-9]') || validator.value.includes('\\d'))
+    );
+    
+    if (hasNumericPattern) {
+      return 'text'; // Keep as text to allow pattern validation
+    }
+    
+    return 'text';
+  }
+
+  // **NEW: Get maxlength from validators**
+  getMaxLength(question: any): number | null {
+    if (question.key === 'csi') return 6; // Specific case
+    
+    if (!question.validators) return null;
+    
+    const maxLengthValidator = question.validators.find((validator: any) => 
+      validator.type === 'maxLength'
+    );
+    
+    return maxLengthValidator ? maxLengthValidator.value : null;
+  }
+
+  // **NEW: Get pattern from validators**
+  getPattern(question: any): string  {
+    if (question.key === 'csi') return '^\\d{6}$'; // Specific case
+    
+    if (!question.validators) return '';
+    
+    const patternValidator = question.validators.find((validator: any) => 
+      validator.type === 'pattern'
+    );
+    
+    return patternValidator ? patternValidator.value : '';
+  }
+
+  // **NEW: Get CSS class based on validation state**
+  getInputClass(fieldKey: string): string {
+    const control = this.form.get(fieldKey);
+    if (!control) return '';
+    
+    let classes = '';
+    
+    if (control.invalid && (control.dirty || control.touched)) {
+      classes += ' invalid';
+    }
+    
+    if (control.valid && control.dirty) {
+      classes += ' valid';
+    }
+    
+    return classes;
+  }
+
+  // **NEW: Check if field has validation errors**
+  hasValidationError(fieldKey: string): boolean {
+    const control = this.form.get(fieldKey);
+    return !!(control && control.invalid && (control.dirty || control.touched));
+  }
+
+  // **NEW: Get validation error message**
+  getValidationErrorMessage(fieldKey: string, question: any): string {
+    const control = this.form.get(fieldKey);
+    if (!control || !control.errors) return '';
+    
+    const errors = control.errors;
+    
+    if (errors['required']) {
+      return `${question.label} is required`;
+    }
+    
+    if (errors['pattern']) {
+      return this.getPatternErrorMessage(question);
+    }
+    
+    if (errors['maxlength']) {
+      const maxLength = errors['maxlength'].requiredLength;
+      return `${question.label} cannot exceed ${maxLength} characters`;
+    }
+    
+    if (errors['minlength']) {
+      const minLength = errors['minlength'].requiredLength;
+      return `${question.label} must be at least ${minLength} characters`;
+    }
+    
+    return 'Invalid input';
+  }
+
+  // **NEW: Get specific pattern error messages**
+  private getPatternErrorMessage(question: any): string {
+    if (question.key === 'csi') {
+      return 'CSI must be exactly 6 digits';
+    }
+    
+    const patternValidator = question.validators?.find((v: any) => v.type === 'pattern');
+    if (patternValidator) {
+      const pattern = patternValidator.value;
+      
+      if (pattern.includes('\\d') || pattern.includes('[0-9]')) {
+        return `${question.label} must contain only numbers`;
+      }
+      
+      if (pattern.includes('[a-zA-Z]')) {
+        return `${question.label} must contain only letters`;
+      }
+    }
+    
+    return `${question.label} format is invalid`;
+  }
+
+  // **NEW: Handle field blur for validation**
+  onFieldBlur(fieldKey: string): void {
+    const control = this.form.get(fieldKey);
+    if (control) {
+      control.markAsTouched();
     }
   }
 
@@ -118,7 +271,6 @@ onLoadFrequencyChange() {
   // Method to check if an option is selected in mcq_multi
   isOptionSelected(questionKey: string, optionValue: string): boolean {
     if (!this.form) return false;
-    
     const control = this.form.get(questionKey);
     if (!control || !control.value) return false;
     
@@ -133,7 +285,6 @@ onLoadFrequencyChange() {
   // Updated method to handle mcq_multi option changes with service integration
   onMcqMultiChange(event: any, questionKey: string, optionValue: string) {
     if (!this.form) return;
-    
     const checkbox = event.target;
     const isChecked = checkbox.checked;
     const control = this.form.get(questionKey);
@@ -143,7 +294,6 @@ onLoadFrequencyChange() {
     }
     
     let currentValues = control.value || [];
-    
     if (!Array.isArray(currentValues)) {
       currentValues = [];
     }
@@ -169,7 +319,6 @@ onLoadFrequencyChange() {
   // Helper method to get selected values
   getSelectedValues(controlKey: string): string[] {
     if (!this.form) return [];
-    
     const control = this.form.get(controlKey);
     if (!control || !control.value) return [];
     
@@ -180,7 +329,6 @@ onLoadFrequencyChange() {
     return [];
   }
 
-  // Rest of your existing methods remain the same...
   getConditionsArray(key: string): FormArray {
     return this.form.get(key) as FormArray;
   }
@@ -230,21 +378,19 @@ onLoadFrequencyChange() {
   getFinalConditionString(q: any): string {
     const arr = this.getConditionsArray(q.key);
     if (arr.length === 0) return 'No conditions defined';
-    
+
     return arr.controls
       .map((ctrl, idx) => {
         const type = ctrl.get('type')?.value;
         const job = ctrl.get('job')?.value;
         const logic = ctrl.get('logic')?.value;
-        
+
         if (!job || !type) return '';
-        
+
         let conditionStr = `${type}(${job})`;
-        
         if (logic && logic !== 'NONE' && idx < arr.length - 1) {
           conditionStr += ` ${logic.toUpperCase()} `;
         }
-        
         return conditionStr;
       })
       .filter(str => str !== '')
@@ -295,6 +441,7 @@ onLoadFrequencyChange() {
     const valuesWithoutPurpose = [...values];
     valuesWithoutPurpose[purposeIndex] = '';
     const jobNameWithoutPurpose = valuesWithoutPurpose.filter(v => v !== '').join('_');
+    
     const availableSpace = 60 - jobNameWithoutPurpose.length - 1;
     
     if (availableSpace <= 0) {
@@ -347,10 +494,8 @@ onLoadFrequencyChange() {
 
   isEnvironmentFieldRequired(env: string, field: string): boolean {
     if (!this.subformContext) return false;
-    
     const topInstance = this.getTopFormInstance();
     if (!topInstance) return false;
-    
     const isEnvSelected = topInstance.form.get(env)?.value;
     return !!isEnvSelected;
   }
@@ -361,7 +506,6 @@ onLoadFrequencyChange() {
 
   shouldShowEnvironmentField(env: any, field: any): boolean {
     if (!this.subformContext) return true;
-    
     const jobType = this.subformContext.type;
     
     if (jobType === 'top') {
@@ -387,8 +531,6 @@ onLoadFrequencyChange() {
     if (this.subformContext?.type === 'top') {
       return false;
     }
-    
     return this.selectedEnvironments.includes(envKey);
   }
 }
-

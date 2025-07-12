@@ -18,7 +18,7 @@
         { "type": "pattern", "value": "^\\d{6}$" },
         { "type": "maxLength", "value": 6 }
       ],
-      "placeholder": "6 digits",
+      "placeholder": "6 digits only",
       "defaultValue": "169912"
     },
     {
@@ -130,7 +130,7 @@
         { "key": "cob", "label": "COB" },
         { "key": "uat", "label": "UAT" }
       ],
-      "validators": [{}]
+      "validators": []
     },
     {
       "id": "q_environments_details",
@@ -153,7 +153,7 @@
           "fields": [
             { "key": "owner", "label": "Owner (PROD)", "type": "text" },
             { "key": "machine", "label": "Machine (PROD)", "type": "text" },
-            { "key": "command", "label": "Command (DEV)", "type": "text" }
+            { "key": "command", "label": "Command (PROD)", "type": "text" }
           ]
         },
         {
@@ -162,7 +162,7 @@
           "fields": [
             { "key": "owner", "label": "Owner (COB)", "type": "text" },
             { "key": "machine", "label": "Machine (COB)", "type": "text" },
-            { "key": "command", "label": "Command (DEV)", "type": "text" }
+            { "key": "command", "label": "Command (COB)", "type": "text" }
           ]
         },
         {
@@ -171,7 +171,7 @@
           "fields": [
             { "key": "owner", "label": "Owner (UAT)", "type": "text" },
             { "key": "machine", "label": "Machine (UAT)", "type": "text" },
-            { "key": "command", "label": "Command (DEV)", "type": "text" }
+            { "key": "command", "label": "Command (UAT)", "type": "text" }
           ]
         }
       ]
@@ -205,7 +205,25 @@
         { "value": "fr", "label": "Friday" },
         { "value": "sa", "label": "Saturday" },
         { "value": "su", "label": "Sunday" }
-      ]
+      ],
+      "dependsOn": {
+        "field": "loadfreq",
+        "showWhen": ["D", "W"],
+        "description": "Visible when Load Frequency is Daily or Weekly"
+      }
+    },
+    {
+      "id": "q_run_calendar",
+      "key": "run_calendar",
+      "label": "Run Calendar",
+      "type": "text",
+      "placeholder": "Enter calendar name",
+      "validators": [],
+      "dependsOn": {
+        "field": "loadfreq",
+        "showWhen": ["M", "C"],
+        "description": "Visible when Load Frequency is Monthly or Custom"
+      }
     },
     {
       "id": "q_conditions",
@@ -274,145 +292,146 @@
         { "value": 0, "label": "No (0)" }
       ]
     },
-{
-  "id": "q_timezone",
-  "key": "timezone",
-  "label": "Timezone",
-  "type": "dropdown",
-  "options": [
-    { "value": "US CENTRAL", "label": "US CENTRAL" },
-    { "value": "US EASTERN", "label": "US EASTERN" }
-  ],
-  "validators": []
-},
-{
-  "id": "q_start_time",
-  "key": "start_time",
-  "label": "Start Time",
-  "type": "time",
-  "validators": []
-},
     {
-  "id": "q_command",
-  "key": "command",
-  "label": "Command",
-  "type": "text",
-  "placeholder": "Enter command, executable, script, or batch file",
-  "validators": [],
-  "jilFormat": { "type": "quoted" }
+      "id": "q_timezone",
+      "key": "timezone",
+      "label": "Timezone",
+      "type": "dropdown",
+      "options": [
+        { "value": "US CENTRAL", "label": "US CENTRAL" },
+        { "value": "US EASTERN", "label": "US EASTERN" }
+      ],
+      "validators": []
     },
     {
-    "id": "q_term_run_time",
-    "key": "term_run_time",
-    "label": "Terminal Run Time (minutes)",
-    "type": "text",
-    "placeholder": "Enter time in minutes",
-    "validators": [
+      "id": "q_start_time",
+      "key": "start_time",
+      "label": "Start Time",
+      "type": "time",
+      "validators": [],
+      "jilFormat": { "type": "quoted" }
+    },
+    {
+      "id": "q_command",
+      "key": "command",
+      "label": "Command",
+      "type": "text",
+      "placeholder": "Enter command, executable, script, or batch file",
+      "validators": [],
+      "jilFormat": { "type": "quoted" }
+    },
+    {
+      "id": "q_term_run_time",
+      "key": "term_run_time",
+      "label": "Terminal Run Time (minutes)",
+      "type": "text",
+      "placeholder": "Enter time in minutes",
+      "validators": [
         { "type": "pattern", "value": "^[0-9]+$" }
-    ]
+      ]
     },
     {
-    "id": "q_std_out_file",
-    "key": "std_out_file",
-    "label": "Standard Output File",
-    "type": "text",
-    "placeholder": "Enter output file path",
-    "validators": [],
-    "jilFormat": { "type": "quoted" }
+      "id": "q_std_out_file",
+      "key": "std_out_file",
+      "label": "Standard Output File",
+      "type": "text",
+      "placeholder": "Enter output file path",
+      "validators": [],
+      "jilFormat": { "type": "quoted" }
     },
     {
-    "id": "q_std_err_file",
-    "key": "std_err_file",
-    "label": "Standard Error File",
-    "type": "text",
-    "placeholder": "Enter error file path",
-    "validators": [],
-    "jilFormat": { "type": "quoted" }
+      "id": "q_std_err_file",
+      "key": "std_err_file",
+      "label": "Standard Error File",
+      "type": "text",
+      "placeholder": "Enter error file path",
+      "validators": [],
+      "jilFormat": { "type": "quoted" }
     },
     {
-    "id": "q_profile",
-    "key": "profile",
-    "label": "Profile",
-    "type": "text",
-    "placeholder": "Enter profile information",
-    "validators": []
+      "id": "q_profile",
+      "key": "profile",
+      "label": "Profile",
+      "type": "text",
+      "placeholder": "Enter profile information",
+      "validators": []
     },
     {
-    "id": "q_envvars",
-    "key": "envvars",
-    "label": "Environment Variables",
-    "type": "text",
-    "placeholder": "parm_name=parm_value, parm_name2=parm_value2",
-    "validators": []
+      "id": "q_envvars",
+      "key": "envvars",
+      "label": "Environment Variables",
+      "type": "text",
+      "placeholder": "parm_name=parm_value, parm_name2=parm_value2",
+      "validators": []
     },
     {
-    "id": "q_max_run_alarm",
-    "key": "max_run_alarm",
-    "label": "Max Run Alarm (minutes)",
-    "type": "text",
-    "placeholder": "Enter maximum run time in minutes",
-    "validators": [
+      "id": "q_max_run_alarm",
+      "key": "max_run_alarm",
+      "label": "Max Run Alarm (minutes)",
+      "type": "text",
+      "placeholder": "Enter maximum run time in minutes",
+      "validators": [
         { "type": "pattern", "value": "^[0-9]+$" }
-    ]
+      ]
     },
     {
-    "id": "q_job_load",
-    "key": "job_load",
-    "label": "Job Load",
-    "type": "text",
-    "placeholder": "Enter load units (up to 10 digits)",
-    "defaultValue": "0",
-    "validators": [
+      "id": "q_job_load",
+      "key": "job_load",
+      "label": "Job Load",
+      "type": "text",
+      "placeholder": "Enter load units (up to 10 digits)",
+      "defaultValue": "0",
+      "validators": [
         { "type": "pattern", "value": "^[0-9]{1,10}$" }
-    ]
+      ]
     },
     {
-    "id": "q_priority",
-    "key": "priority",
-    "label": "Priority",
-    "type": "text",
-    "placeholder": "Enter priority level (0 = immediate, 1+ = queued)",
-    "defaultValue": "0",
-    "validators": [
+      "id": "q_priority",
+      "key": "priority",
+      "label": "Priority",
+      "type": "text",
+      "placeholder": "Enter priority level (0 = immediate, 1+ = queued)",
+      "defaultValue": "0",
+      "validators": [
         { "type": "pattern", "value": "^[0-9]+$" }
-    ]
+      ]
     },
     {
-    "id": "q_watch_file",
-    "key": "watch_file",
-    "label": "Watch File",
-    "type": "text",
-    "placeholder": "Enter file path to watch",
-    "validators": [],
-    "jilFormat": { "type": "quoted" }
+      "id": "q_watch_file",
+      "key": "watch_file",
+      "label": "Watch File",
+      "type": "text",
+      "placeholder": "Enter file path to watch",
+      "validators": [],
+      "jilFormat": { "type": "quoted" }
     },
     {
-    "id": "q_watch_interval",
-    "key": "watch_interval",
-    "label": "Watch Interval (seconds)",
-    "type": "text",
-    "placeholder": "Enter interval in seconds",
-    "defaultValue": "60",
-    "validators": [
+      "id": "q_watch_interval",
+      "key": "watch_interval",
+      "label": "Watch Interval (seconds)",
+      "type": "text",
+      "placeholder": "Enter interval in seconds",
+      "defaultValue": "60",
+      "validators": [
         { "type": "pattern", "value": "^[0-9]+$" }
-    ]
+      ]
     },
     {
-    "id": "q_box_name",
-    "key": "box_name",
-    "label": "Box Name",
-    "type": "text",
-    "readonly": true,
-    "validators": [],
-    "placeholder": "Auto-generated from job configuration"
+      "id": "q_box_name",
+      "key": "box_name",
+      "label": "Box Name",
+      "type": "text",
+      "readonly": true,
+      "validators": [],
+      "placeholder": "Auto-generated from job configuration"
     },
     {
-    "id": "q_machine",
-    "key": "machine",
-    "label": "Machine",
-    "type": "text",
-    "placeholder": "Enter machine name",
-    "validators": []
+      "id": "q_machine",
+      "key": "machine",
+      "label": "Machine",
+      "type": "text",
+      "placeholder": "Enter machine name",
+      "validators": []
     },
     {
       "id": "q_status",
@@ -431,31 +450,21 @@
       ],
       "validators": [{ "type": "required" }]
     },
-      {
-      "id": "q_run_calendar",
-      "key": "run_calendar",
-      "label": "Run Calendar",
-      "type": "text",
-      "placeholder": "Enter calendar name",
-      "validators": []
-    },
-     {
-      "id": "extra",
+    {
+      "id": "q_extra",
       "key": "extra",
       "label": "Extra",
       "type": "text",
       "placeholder": "Enter extra information",
       "validators": []
-    }
-    ,
-     {
-      "id": "extra2",
+    },
+    {
+      "id": "q_extra2",
       "key": "extra2",
       "label": "Extra 2",
       "type": "text",
       "placeholder": "Enter extra information",
       "validators": []
     }
-
   ]
 }

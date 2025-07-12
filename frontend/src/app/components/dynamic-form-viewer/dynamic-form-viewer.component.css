@@ -23,6 +23,17 @@
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   width: 100%;
   box-sizing: border-box;
+}
+
+.mcq-multi-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: var(--surface-hover);
+  border-radius: 8px;
+  border: 1px solid var(--border);
   border: 1px solid rgba(37, 99, 235, 0.1);
   position: relative;
   overflow: hidden;
@@ -181,9 +192,73 @@ input, select, textarea {
   background: var(--surface);
   color: var(--text);
   box-sizing: border-box;
-  font-family: inherit;
 }
 
+/* **NEW: Validation states** */
+input.invalid, select.invalid {
+  border-color: var(--error) !important;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.1) !important;
+  background-color: rgba(239, 68, 68, 0.05);
+}
+
+input.valid, select.valid {
+  border-color: var(--success) !important;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.1) !important;
+}
+
+/* **NEW: Validation error messages** */
+.validation-error {
+  margin-top: 0.25rem;
+  color: var(--error);
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.validation-error::before {
+  content: "⚠️";
+  font-size: 0.9rem;
+}
+
+.validation-error small {
+  margin: 0;
+}
+
+/* **NEW: Conditional field styling** */
+.conditional-field {
+  transition: opacity 0.3s ease-in-out;
+  border-left: 3px solid var(--primary);
+  padding-left: 10px;
+  margin-left: 5px;
+}
+
+.field-dependency-info {
+  margin-top: 5px;
+  color: #6c757d;
+  font-style: italic;
+}
+
+.field-dependency-info small {
+  font-size: 11px;
+}
+
+/* Enhanced final condition display */
+.final-condition {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border: 2px solid var(--success);
+  border-radius: 10px;
+  padding: 0.75rem;
+  margin-top: 1rem;
+  font-family: 'Roboto Mono', monospace;
+  color: var(--success);
+  word-break: break-word;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.1);
+}
+
+/* Enhanced input styling with better focus states */
 input:hover, select:hover, textarea:hover {
   border-color: var(--primary-light);
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.06); /* Reduced shadow */
@@ -194,6 +269,20 @@ input:focus, select:focus, textarea:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12); /* Reduced shadow */
   background: #fefefe;
+}
+
+/* **NEW: Focus states for validation** */
+input.invalid:focus, select.invalid:focus {
+  border-color: var(--error) !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
+}
+
+input.valid:focus, select.valid:focus {
+  border-color: var(--success) !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15) !important;
+}
+
+/* Enhanced warning styling */
   transform: translateY(-1px);
 }
 
@@ -341,6 +430,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 /* Enhanced checkbox group */
+
 .checkbox-group {
   display: flex;
   flex-wrap: wrap;
@@ -625,6 +715,62 @@ select:disabled, input:disabled {
   color: #fca5a5;
 }
 
+/* Disabled field styling */
+select:disabled, input:disabled {
+  background-color: #f8f9fa !important;
+  border-color: #dee2e6 !important;
+  color: #6c757d !important;
+  cursor: not-allowed !important;
+  opacity: 0.7;
+}
+
+.field-disabled-info {
+  margin-top: 5px;
+  color: #6c757d;
+  font-style: italic;
+}
+
+.field-disabled-info small {
+  font-size: 11px;
+}
+
+/* Visual indication for disabled fields */
+.form-field:has(select:disabled) {
+  opacity: 0.8;
+}
+
+.form-field:has(input:disabled) {
+  opacity: 0.8;
+}
+
+/* Disabled field styling */
+select:disabled, input:disabled {
+  background-color: #f8f9fa !important;
+  border-color: #dee2e6 !important;
+  color: #6c757d !important;
+  cursor: not-allowed !important;
+  opacity: 0.7;
+}
+
+.field-disabled-info {
+  margin-top: 5px;
+  color: #6c757d;
+  font-style: italic;
+}
+
+.field-disabled-info small {
+  font-size: 11px;
+}
+
+/* Visual indication for disabled fields */
+.form-field:has(select:disabled) {
+  opacity: 0.8;
+}
+
+.form-field:has(input:disabled) {
+  opacity: 0.8;
+}
+
 /* Responsive breakpoints */
 @media (max-width: 1024px) {
   .form-box {
@@ -870,4 +1016,19 @@ textarea:focus,
   .collapse-btn {
     display: none;
   }
+}
+/* Animation for smooth transitions */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
 }
