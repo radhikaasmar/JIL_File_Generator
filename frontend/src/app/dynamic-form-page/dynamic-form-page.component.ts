@@ -10,6 +10,7 @@ import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { EnvironmentStateService } from '../services/environment-state.service';
+import { DaysOfWeekService } from '../services/days-of-week.service'; // Add this import
 
 @Component({
   selector: 'app-dynamic-form-page',
@@ -27,8 +28,9 @@ export class DynamicFormPageComponent implements OnInit {
     private formBuilder: DynamicFormBuilderService,
     private subformConfigService: SubformConfigService,
     private functionJobMappingService: FunctionJobMappingService,
-    private environmentStateService: EnvironmentStateService
-  ) {}
+    private environmentStateService: EnvironmentStateService,
+    private daysOfWeekService: DaysOfWeekService // Add this injection
+  )  {}
 
   ngOnInit() {
   this.loadSubformConfigs();
@@ -526,32 +528,32 @@ private setDefaultMachineValues(instance: SubformInstance, selectedEnvs: string[
 
 
 // Add this method to generate and download JIL files
-downloadJILFiles() {
-  const topInstance = this.subformInstances.find(s => s.type === 'top');
-  if (!topInstance) {
-    alert('No configuration found to generate JIL files');
-    return;
-  }
-this.debugDaysOfWeek(topInstance.form);
-  const selectedEnvs = this.getSelectedEnvironments(topInstance.form);
-  if (selectedEnvs.length === 0) {
-    alert('Please select at least one environment');
-    return;
+ downloadJILFiles() {
+    const topInstance = this.subformInstances.find(s => s.type === 'top');
+    if (!topInstance) {
+      alert('No configuration found to generate JIL files');
+      return;
+    }
+
+    const selectedEnvs = this.getSelectedEnvironments(topInstance.form);
+    if (selectedEnvs.length === 0) {
+      alert('Please select at least one environment');
+      return;
+    }
+
+    const baseJobName = this.generateBaseJobName(topInstance.form);
+    if (!baseJobName) {
+      alert('Please fill in the required fields to generate job name');
+      return;
+    }
+
+    selectedEnvs.forEach(env => {
+      const jilContent = this.generateJILContent(env, baseJobName, topInstance);
+      const fileName = `${baseJobName}_${env.toUpperCase()}.jil.txt`;
+      this.downloadFile(jilContent, fileName);
+    });
   }
 
-  const baseJobName = this.generateBaseJobName(topInstance.form);
-  if (!baseJobName) {
-    alert('Please fill in the required fields to generate job name');
-    return;
-  }
-
-  // Generate JIL files for each selected environment
-  selectedEnvs.forEach(env => {
-    const jilContent = this.generateJILContent(env, baseJobName, topInstance);
-    const fileName = `${baseJobName}_${env.toUpperCase()}.jil.txt`;
-    this.downloadFile(jilContent, fileName);
-  });
-}
 private generateJILContent(environment: string, baseJobName: string, topInstance: SubformInstance): string {
   let jilContent = '';
   
@@ -568,7 +570,7 @@ private generateJILContent(environment: string, baseJobName: string, topInstance
     jilContent += this.generateDynamicJobJIL(environment, baseJobName, topInstance, instance, instance.type);
     jilContent += '\n\n';
   });
-
+  
   return jilContent;
 }
 
@@ -589,7 +591,7 @@ private generateDynamicJobJIL(environment: string, baseJobName: string, topInsta
   } else {
     jil += `job_type: ${jobtitle.toLowerCase()}\n`;
   }
-  
+
   // Add box_name for non-box jobs only
   if (jobType !== 'box') {
     const boxName = jobForm.get('box_name')?.value || '';
@@ -597,7 +599,7 @@ private generateDynamicJobJIL(environment: string, baseJobName: string, topInsta
       jil += `box_name: ${boxName}\n`;
     }
   }
-  
+
   // 1. Add common fields from top form (applies to all job types)
   jil += this.extractCommonFields(topForm);
   
@@ -609,8 +611,10 @@ private generateDynamicJobJIL(environment: string, baseJobName: string, topInsta
   
   return jil;
 }
+
 private extractCommonFields(topForm: FormGroup): string {
   let jil = '';
+  
   const commonFieldMappings: {[key: string]: string} = {
     'permission': 'permission',
     'description': 'description',
@@ -643,8 +647,8 @@ private extractCommonFields(topForm: FormGroup): string {
     }
   });
 
-  // Handle days of week as individual checkboxes
-  const daysOfWeekString = this.extractDaysOfWeekFromIndividualCheckboxes(topForm);
+  // Handle days of week with new mcq_multi format
+  const daysOfWeekString = this.getDaysOfWeekJIL(topForm);
   if (daysOfWeekString) {
     jil += daysOfWeekString;
   }
@@ -657,85 +661,113 @@ private extractCommonFields(topForm: FormGroup): string {
       jil += `condition: ${conditionString}\n`;
     }
   }
-  
+
   return jil;
 }
-private extractDaysOfWeekFromIndividualCheckboxes(topForm: FormGroup): string {
-  const dayMapping: {[key: string]: string} = {
-    'monday': 'mo',
-    'tuesday': 'tu', 
-    'wednesday': 'we',
-    'thursday': 'th',
-    'friday': 'fr',
-    'saturday': 'sa',
-    'sunday': 'su'
+
+ // Updated getDaysOfWeekJIL method (use service directly)
+  private getDaysOfWeekJIL(topForm: FormGroup): string {
+    // Get selected days directly from the service
+    const selectedDays = this.daysOfWeekService.getSelectedDays();
+    
+    if (selectedDays && selectedDays.length > 0) {
+      return `days_of_week: ${selectedDays.join(',')}\n`;
+    }
+    
+    return '';
+  }
+
+
+private extractEnvironmentSpecificFields(jobForm: FormGroup, environment: string): string {
+  let jil = '';
+  
+  // Environment-specific field mappings
+  const envFieldMappings: {[key: string]: string} = {
+    'owner': 'owner',
+    'machine': 'machine',
+    'command': 'command'
   };
-  
-  const selectedDays: string[] = [];
-  
-  // Check each individual day control
-  Object.keys(dayMapping).forEach(day => {
-    const control = topForm.get(day);
-    if (control && control.value === true) {
-      selectedDays.push(dayMapping[day]);
+
+  Object.keys(envFieldMappings).forEach(field => {
+    const controlKey = `${environment}_${field}`;
+    const control = jobForm.get(controlKey);
+    
+    if (control && this.hasValidValue(control.value)) {
+      const jilFieldName = envFieldMappings[field];
+      const value = control.value;
+      
+      if (field === 'command') {
+        jil += `${jilFieldName}: "${value}"\n`;
+      } else {
+        jil += `${jilFieldName}: ${value}\n`;
+      }
     }
   });
-  
-  if (selectedDays.length > 0) {
-    return `days_of_week: ${selectedDays.join(',')}\n`;
-  }
-  
-  return '';
+
+  return jil;
 }
 
-private hasValidValue(value: any): boolean {
-  if (value === null || value === undefined || value === '') {
-    return false;
-  }
+private extractJobSpecificFields(jobForm: FormGroup, jobType: string): string {
+  let jil = '';
   
-  if (Array.isArray(value)) {
-    return value.length > 0;
-  }
+  // Job-specific field mappings based on job type
+  const jobSpecificMappings: {[key: string]: {[key: string]: string}} = {
+    'cmd': {
+      'std_out_file': 'std_out_file',
+      'std_err_file': 'std_err_file',
+      'profile': 'profile'
+    },
+    'fw': {
+      'watch_file': 'watch_file',
+      'watch_interval': 'watch_interval',
+      'max_run_alarm': 'max_run_alarm',
+      'job_load': 'job_load',
+      'priority': 'priority'
+    },
+    'cfw': {
+      'watch_file': 'watch_file',
+      'watch_interval': 'watch_interval',
+      'job_load': 'job_load',
+      'priority': 'priority'
+    },
+    'box': {
+      'start_time': 'start_times'
+    }
+  };
+
+  const mappings = jobSpecificMappings[jobType] || {};
   
-  return true;
-}
-private debugDaysOfWeek(topForm: FormGroup): void {
-  // Check for array-based control
-  const daysControl = topForm.get('days_of_week');
-  console.log('Days of week control:', daysControl);
-  console.log('Days of week value:', daysControl?.value);
-  
-  // Check for individual day controls
-  const dayNames = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-  console.log('Individual day controls:');
-  dayNames.forEach(day => {
-    const control = topForm.get(day);
-    console.log(`${day}:`, control?.value);
-  });
-  
-  // Check all form controls to see what's actually there
-  console.log('All form controls:', Object.keys(topForm.controls));
-  
-  // Look for any control that might contain day information
-  Object.keys(topForm.controls).forEach(key => {
-    if (key.toLowerCase().includes('day') || key.toLowerCase().includes('week')) {
-      console.log(`Found day-related control: ${key}`, topForm.get(key)?.value);
+  Object.keys(mappings).forEach(field => {
+    const control = jobForm.get(field);
+    
+    if (control && this.hasValidValue(control.value)) {
+      const jilFieldName = mappings[field];
+      const value = control.value;
+      
+      if (field === 'start_time') {
+        jil += `${jilFieldName}: "${value}"\n`;
+      } else if (['watch_file', 'std_out_file', 'std_err_file'].includes(field)) {
+        jil += `${jilFieldName}: "${value}"\n`;
+      } else {
+        jil += `${jilFieldName}: ${value}\n`;
+      }
     }
   });
+
+  return jil;
 }
-
-
 
 private buildConditionString(conditions: any[]): string {
   return conditions
     .map((condition, index) => {
-      const type = condition.type || '';
-      const job = condition.job || '';
-      const logic = condition.logic || '';
+      const type = condition.type;
+      const job = condition.job;
+      const logic = condition.logic;
       
-      if (!type || !job) return '';
+      if (!job || !type) return '';
       
       let conditionStr = `${type}(${job})`;
+      
       if (logic && logic !== 'NONE' && index < conditions.length - 1) {
         conditionStr += ` ${logic.toUpperCase()} `;
       }
@@ -743,82 +775,16 @@ private buildConditionString(conditions: any[]): string {
       return conditionStr;
     })
     .filter(str => str !== '')
-    .join('');
+    .join('') || '';
 }
 
-private extractEnvironmentSpecificFields(jobForm: FormGroup, environment: string): string {
-  let jil = '';
-  const environmentFields = ['owner', 'machine', 'command'];
-  
-  environmentFields.forEach(field => {
-    const controlKey = `${environment}_${field}`;
-    const control = jobForm.get(controlKey);
-    
-    if (control && control.value !== null && control.value !== undefined && control.value !== '') {
-      const value = control.value;
-      if (field === 'command') {
-        jil += `${field}: "${value}"\n`;
-      } else {
-        jil += `${field}: ${value}\n`;
-      }
-    }
-  });
-  
-  return jil;
+private hasValidValue(value: any): boolean {
+  if (value === null || value === undefined) return false;
+  if (typeof value === 'string') return value.trim() !== '';
+  if (typeof value === 'number') return !isNaN(value);
+  if (Array.isArray(value)) return value.length > 0;
+  return !!value;
 }
-
-private extractJobSpecificFields(jobForm: FormGroup, jobType: string): string {
-  let jil = '';
-  
-  // Define fields to exclude (common fields, environment fields, and system fields)
-  const excludeFields = new Set([
-    'funofjob', 'jobtitle', 'box_name', // System fields
-    'dev_owner', 'dev_machine', 'dev_command', // Environment fields
-    'uat_owner', 'uat_machine', 'uat_command',
-    'prod_owner', 'prod_machine', 'prod_command',
-    'cob_owner', 'cob_machine', 'cob_command'
-  ]);
-  
-  // Iterate through all controls in the job form
-  Object.keys(jobForm.controls).forEach(controlKey => {
-    // Skip excluded fields
-    if (excludeFields.has(controlKey)) {
-      return;
-    }
-    
-    const control = jobForm.get(controlKey);
-    if (control && control.value !== null && control.value !== undefined && control.value !== '') {
-      const value = control.value;
-      
-      // Handle different field types based on job type and field name
-      if (this.isFilePathField(controlKey)) {
-        jil += `${controlKey}: "${value}"\n`;
-      } else if (this.isTimeField(controlKey)) {
-        jil += `${controlKey}: "${value}"\n`;
-      } else if (typeof value === 'string' || typeof value === 'number') {
-        jil += `${controlKey}: ${value}\n`;
-      } else if (Array.isArray(value) && value.length > 0) {
-        jil += `${controlKey}: ${value.join(',')}\n`;
-      }
-    }
-  });
-  
-  return jil;
-}
-
-private isFilePathField(fieldName: string): boolean {
-  const filePathFields = [
-    'std_out_file', 'std_err_file', 'watch_file', 'profile',
-    'command', 'script_path', 'log_file', 'error_file'
-  ];
-  return filePathFields.includes(fieldName);
-}
-
-private isTimeField(fieldName: string): boolean {
-  const timeFields = ['start_time', 'start_times', 'end_time'];
-  return timeFields.includes(fieldName);
-}
-
 
 private downloadFile(content: string, fileName: string) {
   const blob = new Blob([content], { type: 'text/plain' });
@@ -831,6 +797,4 @@ private downloadFile(content: string, fileName: string) {
   document.body.removeChild(link);
   window.URL.revokeObjectURL(url);
 }
-
 }
-
