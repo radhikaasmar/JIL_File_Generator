@@ -653,3 +653,30 @@ input:focus, select:focus, textarea:focus {
 .fade-in {
   animation: fadeIn 0.3s ease-out;
 }
+/* Disabled field styling */
+select:disabled, input:disabled {
+  background-color: #f8f9fa !important;
+  border-color: #dee2e6 !important;
+  color: #6c757d !important;
+  cursor: not-allowed !important;
+  opacity: 0.7;
+}
+
+.field-disabled-info {
+  margin-top: 5px;
+  color: #6c757d;
+  font-style: italic;
+}
+
+.field-disabled-info small {
+  font-size: 11px;
+}
+
+/* Visual indication for disabled fields */
+.form-field:has(select:disabled) {
+  opacity: 0.8;
+}
+
+.form-field:has(input:disabled) {
+  opacity: 0.8;
+}

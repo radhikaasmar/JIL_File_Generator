@@ -10,6 +10,7 @@ export interface FunctionJobOption {
 @Injectable({ providedIn: 'root' })
 export class FunctionJobMappingService {
   private functionJobMappings: FunctionJobOption[] = [
+    { value: 'boxfunc', label: 'boxlable', jobType: 'box', subformType: 'box' },
     { value: 'ing', label: 'ING (CMD)', jobType: 'cmd', subformType: 'cmd' },
     { value: 'dq', label: 'DQ (CMD)', jobType: 'cmd', subformType: 'cmd' },
     { value: 'ext', label: 'EXT (CMD)', jobType: 'cmd', subformType: 'cmd' },
