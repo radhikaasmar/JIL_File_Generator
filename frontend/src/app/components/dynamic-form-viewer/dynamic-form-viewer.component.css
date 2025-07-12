@@ -282,9 +282,6 @@ input.valid:focus, select.valid:focus {
   box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15) !important;
 }
 
-/* Enhanced warning styling */
-  transform: translateY(-1px);
-}
 
 .final-condition {
   background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
