@@ -51,7 +51,7 @@
                       (change)="onFormChange()" />
                   </div>
 
-                  <!-- NEW: Time Group for Timezone and Start Time -->
+                  <!-- Time Group for Timezone and Start Time -->
                   <div *ngSwitchCase="'time-group'">
                     <label>{{ q.label }}</label>
                     <div class="time-group-container">
@@ -71,8 +71,23 @@
                     </div>
                   </div>
 
-
-
+                  <!-- MCQ Multi (Days of Week) - Clean Implementation -->
+                  <div *ngSwitchCase="'mcq_multi'">
+                    <label [ngClass]="{'required': hasRequiredValidator(q)}">{{ q.label }}</label>
+                    <div class="mcq-multi-group">
+                      <div *ngFor="let option of q.options" class="mcq-multi-item">
+                        <label>
+                          <input 
+                            type="checkbox" 
+                            [value]="option.value"
+                            [checked]="isOptionSelected(q.key, option.value)"
+                            (change)="onMcqMultiChange($event, q.key, option.value)"
+                          />
+                          {{ option.label }}
+                        </label>
+                      </div>
+                    </div>
+                  </div>
 
                   <!-- Checkbox Group -->
                   <div *ngSwitchCase="'checkbox-group'">
@@ -88,30 +103,26 @@
                     </div>
                   </div>
 
-                  <!-- In dynamic-form-viewer.component.html -->
-<!-- Environments Group -->
-<div *ngSwitchCase="'environments-group'">
-  <div *ngFor="let env of q.environments">
-    <ng-container *ngIf="isEnvironmentSelected(env.key)">
-      <h4>{{ env.label }} Environment</h4>
-      <div *ngFor="let field of env.fields" class="form-field">
-        <ng-container *ngIf="shouldShowEnvironmentField(env, field)">
-          <label [ngClass]="{'required': isEnvironmentFieldRequired(env.key, field.key)}">
-            {{ field.label }}
-          </label>
-          <input
-            [formControlName]="env.key + '_' + field.key"
-            [placeholder]="field.label"
-            [readonly]="isFieldReadonly(env.key + '_' + field.key)"
-            (input)="onFormChange()" />
-        </ng-container>
-      </div>
-    </ng-container>
-  </div>
-</div>
-
-
-
+                  <!-- Environments Group -->
+                  <div *ngSwitchCase="'environments-group'">
+                    <div *ngFor="let env of q.environments">
+                      <ng-container *ngIf="isEnvironmentSelected(env.key)">
+                        <h4>{{ env.label }} Environment</h4>
+                        <div *ngFor="let field of env.fields" class="form-field">
+                          <ng-container *ngIf="shouldShowEnvironmentField(env, field)">
+                            <label [ngClass]="{'required': isEnvironmentFieldRequired(env.key, field.key)}">
+                              {{ field.label }}
+                            </label>
+                            <input
+                              [formControlName]="env.key + '_' + field.key"
+                              [placeholder]="field.label"
+                              [readonly]="isFieldReadonly(env.key + '_' + field.key)"
+                              (input)="onFormChange()" />
+                          </ng-container>
+                        </div>
+                      </ng-container>
+                    </div>
+                  </div>
 
                   <!-- Conditions Array -->
                   <div *ngSwitchCase="'conditions-array'">
@@ -139,22 +150,6 @@
                     </div>
                     <div class="final-condition">
                       <strong>Condition String:</strong> {{ getFinalConditionString(q) }}
-                    </div>
-                  </div>
-
-                  <!-- Days of Week Checkbox Group -->
-                  <div *ngSwitchCase="'days-of-week'">
-                    <label>{{ q.label }}</label>
-                    <div class="checkbox-group">
-                      <div class="checkbox-item" *ngFor="let day of q.options">
-                        <input
-                          type="checkbox"
-                          [id]="day.value"
-                          [value]="day.value"
-                          [checked]="isDaySelected(day.value)"
-                          (change)="onDayOfWeekChange($event)" />
-                        <label [for]="day.value">{{ day.label }}</label>
-                      </div>
                     </div>
                   </div>
 

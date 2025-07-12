@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { FormBuilder, FormGroup, FormControl, Validators, ValidatorFn, FormArray } from '@angular/forms';
+import { FormBuilder, FormGroup, FormControl, Validators, ValidatorFn, AbstractControl, FormArray } from '@angular/forms';
 
 export interface SubformInstance {
   id: string;
@@ -17,36 +17,44 @@ export class DynamicFormBuilderService {
 
   buildForm(sections: any[]): FormGroup {
     const group: any = {};
+
     sections.forEach(section => {
       section.questions.forEach((q: any) => {
         if (q.type === 'conditions-array') {
-        // Explicitly type the FormArray to accept FormGroup elements
-        const arr = this.fb.array<FormGroup>([]);
-        if (q.item && q.item.fields) {
-          arr.push(this.buildConditionGroup(q.item.fields));
-        }
-        group[q.key] = arr;
-      }
-         else if (q.type === 'array') {
+          const arr = this.fb.array([]);
+          if (q.item && q.item.fields) {
+            const conditionGroup = this.buildConditionGroup(q.item.fields);
+            arr.push(conditionGroup as any);
+          }
+          group[q.key] = arr;
+        } 
+        else if (q.type === 'array') {
           group[q.key] = this.fb.array([]);
-        } else if (q.type === 'group') {
+        } 
+        else if (q.type === 'group') {
           const subGroup: any = {};
           q.fields.forEach((f: any) => {
             subGroup[f.key] = new FormControl(f.defaultValue || '');
           });
           group[q.key] = this.fb.group(subGroup);
-        } else if (q.type === 'checkbox-group') {
+        } 
+        else if (q.type === 'checkbox-group') {
           q.options.forEach((opt: any) => {
             group[opt.key] = new FormControl(false);
           });
-        } else if (q.type === 'environments-group') {
+        }
+        else if (q.type === 'mcq_multi') {
+          group[q.key] = new FormControl([]);
+        }
+        else if (q.type === 'environments-group') {
           q.environments.forEach((env: any) => {
             env.fields.forEach((field: any) => {
               const controlKey = `${env.key}_${field.key}`;
               group[controlKey] = new FormControl(field.defaultValue || '');
             });
           });
-        } else {
+        } 
+        else {
           let validators = this.mapValidators(q.validators);
           const validValidators = Array.isArray(validators)
             ? validators.filter((v: any) => typeof v === 'function')
@@ -57,6 +65,7 @@ export class DynamicFormBuilderService {
         }
       });
     });
+    
     return this.fb.group(group);
   }
 

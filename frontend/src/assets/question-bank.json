@@ -195,7 +195,7 @@
       "id": "q_days_of_week",
       "key": "days_of_week",
       "label": "Days of the week",
-      "type": "checkbox-group",
+      "type": "mcq_multi",
       "options": [
         { "value": "mo", "label": "Monday" },
         { "value": "tu", "label": "Tuesday" },
