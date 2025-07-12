@@ -281,24 +281,61 @@ private propagateOwnerValues(topForm: FormGroup, selectedEnvs: string[]) {
   }
 
   getJobNameForInstance(instance: SubformInstance): string {
-    if (instance.type === 'top') {
-      return this.generateTruncatedBaseJobName(instance.form);
+  if (instance.type === 'top') {
+    return this.generateTruncatedBaseJobName(instance.form);
+  }
+
+  const topInstance = this.subformInstances.find(s => s.type === 'top');
+  if (!topInstance) return '';
+
+  const baseJobName = this.generateBaseJobName(topInstance.form);
+  const funofjob = instance.form.get('funofjob')?.value || '';
+  const jobtitle = instance.form.get('jobtitle')?.value || '';
+
+  if (baseJobName && funofjob) {
+    // **NEW: Special handling for FW and CFW - only include function, not job type**
+    if (instance.type === 'fw' || instance.type === 'cfw') {
+      const fullJobName = `${baseJobName}_${funofjob.toUpperCase()}`;
+      return this.truncateJobNameForSubformFwCfw(fullJobName, topInstance.form, funofjob);
     }
-
-    const topInstance = this.subformInstances.find(s => s.type === 'top');
-    if (!topInstance) return '';
-
-    const baseJobName = this.generateBaseJobName(topInstance.form);
-    const funofjob = instance.form.get('funofjob')?.value || '';
-    const jobtitle = instance.form.get('jobtitle')?.value || '';
-
-    if (baseJobName && funofjob && jobtitle) {
+    
+    // **EXISTING: For other job types, include both function and job type**
+    if (jobtitle) {
       const fullJobName = `${baseJobName}_${funofjob.toUpperCase()}_${jobtitle.toUpperCase()}`;
       return this.truncateJobNameForSubform(fullJobName, topInstance.form);
     }
-
-    return baseJobName;
   }
+
+  return baseJobName;
+}
+// **NEW: Special truncation method for FW and CFW jobs (no job type)**
+private truncateJobNameForSubformFwCfw(fullJobName: string, topForm: FormGroup, functionOfJob: string): string {
+  if (fullJobName.length <= 60) {
+    return fullJobName;
+  }
+
+  // Get the original field values from top form
+  const fields = ['csi', 'efforttype', 'prodlob', 'purpose', 'loadfreq', 'loadlayer'];
+  const topValues = fields.map(f => topForm.get(f)?.value || '').map(v => v.toString().toUpperCase());
+
+  // Calculate space needed for function only (no job type for FW/CFW)
+  const functionLength = functionOfJob.length + 1; // +1 for underscore
+
+  // Calculate available space for the base job name
+  const availableSpaceForBase = 60 - functionLength;
+
+  if (availableSpaceForBase <= 0) {
+    return fullJobName.substring(0, 60);
+  }
+
+  // Build truncated base job name that fits in available space
+  const truncatedBaseJobName = this.truncateBaseJobNameToFit(topValues, availableSpaceForBase);
+
+  // Combine truncated base + function (no job type)
+  return `${truncatedBaseJobName}_${functionOfJob}`;
+}
+
+
 
 private truncateJobNameForSubform(fullJobName: string, topForm: FormGroup): string {
   if (fullJobName.length <= 60) {
@@ -582,15 +619,23 @@ private generateDynamicJobJIL(environment: string, baseJobName: string, topInsta
   // Generate job name
   const funofjob = jobForm.get('funofjob')?.value || '';
   const jobtitle = jobForm.get('jobtitle')?.value || '';
-  const jobName = `${baseJobName}_${funofjob.toUpperCase()}_${jobtitle.toUpperCase()}`;
+  let jobName: string;
+  if (funofjob.toLowerCase === 'fw' || funofjob.toLowerCase === 'cfw') {
+    // For FW and CFW, only include function, not job type
+    jobName = `${baseJobName}_${funofjob.toUpperCase()}`;
+  } else {
+    // For other job types, include both function and job type
+    jobName = `${baseJobName}_${funofjob.toUpperCase()}_${jobtitle.toUpperCase()}`;
+  }
+  // const jobName = `${baseJobName}_${funofjob.toUpperCase()}_${jobtitle.toUpperCase()}`;
   
   let jil = `insert_job: ${jobName}\n`;
   
   // Set job_type based on job type
   if (jobType === 'box') {
-    jil += `job_type: b\n`;
+    jil += `job_type: BOX\n`;
   } else {
-    jil += `job_type: ${jobtitle.toLowerCase()}\n`;
+    jil += `job_type: ${jobtitle.toUpperCase()}\n`;
   }
 
   // Add box_name for non-box jobs only
