@@ -68,7 +68,7 @@ export class DynamicFormPageComponent implements OnInit {
     // Always add top subform
     this.addSubformInstance('top', 'Common Configuration', false);
     // Always add box subform
-    this.addSubformInstance('box', 'Box Job #1', false,'boxfunc');
+    this.addSubformInstance('box', 'Box Job ', false,'boxfunc');
   }
 
   private addSubformInstance(type: string, displayName: string, removable: boolean, functionOfJob?: string) {
@@ -111,7 +111,8 @@ isFunctionSelected(functionValue: string): boolean {
   if (event.target.checked) {
     // Add the subform if checked
     const instanceCount = this.subformInstances.filter(s => s.type === option.subformType).length;
-    const displayName = `${option.subformType.toUpperCase()} Job #${instanceCount + 1}`;
+    const displayName = `${option.label.toUpperCase()}`;
+    // const displayName = `${option.label.toUpperCase()} Job #${instanceCount + 1}`;
     this.addSubformInstance(option.subformType, displayName, true, option.value);
 
     // After creating the subform, set default values
