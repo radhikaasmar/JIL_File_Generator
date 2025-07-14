@@ -147,7 +147,7 @@ get allFunctionOptions(): FunctionJobOption[] {
     if (a.value === 'boxfunc' && b.value !== 'boxfunc') return -1;
     if (a.value !== 'boxfunc' && b.value === 'boxfunc') return 1;
     // For other types, maintain alphabetical order by label
-    return a.label.localeCompare(b.label);
+    return 0;
   });
 }
 
@@ -1070,8 +1070,8 @@ isSectionCollapsed(sectionId: string): boolean {
       'top': 0,      // Common Configuration always first
       'box': 1,      // Box type always second
       'cmd': 2,      // CMD types after box
-      'fw': 3,       // FW types after CMD
-      'cfw': 4       // CFW types last
+      'fw': 2,       // FW types after CMD
+      'cfw': 2       // CFW types last
     };
 
     const orderA = typeOrder[a.type as keyof typeof typeOrder] ?? 999;
