@@ -142,7 +142,7 @@
           "key": "dev",
           "label": "DEV",
           "fields": [
-            { "key": "owner", "label": "Owner (DEV)", "type": "text" },
+            { "key": "owner", "label": "Owner-FID (DEV)", "type": "text" },
             { "key": "machine", "label": "Machine (DEV)", "type": "text" },
             { "key": "command", "label": "Command (DEV)", "type": "text" }
           ]
@@ -151,7 +151,7 @@
           "key": "prod",
           "label": "PROD",
           "fields": [
-            { "key": "owner", "label": "Owner (PROD)", "type": "text" },
+            { "key": "owner", "label": "Owner-FID (PROD)", "type": "text" },
             { "key": "machine", "label": "Machine (PROD)", "type": "text" },
             { "key": "command", "label": "Command (PROD)", "type": "text" }
           ]
@@ -160,7 +160,7 @@
           "key": "cob",
           "label": "COB",
           "fields": [
-            { "key": "owner", "label": "Owner (COB)", "type": "text" },
+            { "key": "owner", "label": "Owner-FID (COB)", "type": "text" },
             { "key": "machine", "label": "Machine (COB)", "type": "text" },
             { "key": "command", "label": "Command (COB)", "type": "text" }
           ]
