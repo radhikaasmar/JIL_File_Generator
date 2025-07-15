@@ -251,7 +251,7 @@ get allFunctionOptions(): FunctionJobOption[] {
     const boxInstance = this.subformInstances.find(s => s.type === 'box');
     if (!boxInstance) return baseJobName;
 
-    const boxFunofjob = boxInstance.form.get('funofjob')?.value || '';
+    const boxFunofjob = boxInstance.form.get('funofbox')?.value || '';
     const boxJobtitle = boxInstance.form.get('jobtitle')?.value || '';
 
     if (baseJobName && boxFunofjob && boxJobtitle) {
@@ -283,9 +283,15 @@ get allFunctionOptions(): FunctionJobOption[] {
     if (!topInstance) return '';
 
     const baseJobName = this.generateBaseJobName(topInstance.form);
-    const funofjob = instance.form.get('funofjob')?.value || '';
-    const jobtitle = instance.form.get('jobtitle')?.value || '';
-
+    let funofjob;
+      if (instance.type === 'box') {
+        // For box subforms, get the function from the box form
+        funofjob = instance.form.get('funofbox')?.value || '';
+      } else {
+        // For other subforms (cmd, fw, cfw), get from their own form
+        funofjob = instance.form.get('funofjob')?.value || '';
+      }
+      const jobtitle = instance.form.get('jobtitle')?.value || '';
     if (baseJobName && funofjob) {
       // Special handling for FW and CFW - only include function, not job type
       if (instance.type === 'fw' || instance.type === 'cfw') {

@@ -465,6 +465,13 @@
       "type": "text",
       "placeholder": "Enter extra information",
       "validators": []
+    },
+    {
+      "id": "q_funofbox",
+      "key": "funofbox",
+      "label": "Function of Box",
+      "type": "text",
+      "validators": [{ "type": "required" }]
     }
   ]
 }
