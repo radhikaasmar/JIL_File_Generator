@@ -9,9 +9,7 @@
         "q_csi",
         "q_efforttype",
         "q_prodlob",
-        "q_purpose",
-        "q_loadfreq",
-        "q_loadlayer"
+        "q_loadfreq"
       ]
     },
     {

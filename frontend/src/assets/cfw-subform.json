@@ -6,7 +6,9 @@
     {
       "title": "Insert Job Configuration",
       "questionIds": [
-        "q_funofjob",
+        "q_purpose",
+        "q_loadlayer",
+        "q_funofbox",
         "q_jobtitle"
       ]
     },
