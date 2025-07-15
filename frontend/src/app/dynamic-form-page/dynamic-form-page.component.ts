@@ -14,6 +14,7 @@ import { DaysOfWeekService } from '../services/days-of-week.service';
 import { JILFieldOrder, getFieldOrder, EXCLUDED_FROM_JIL, JOB_TYPE_RESTRICTIONS } from '../enums/jil-field-order.enum';
 import { JilOutputComponent } from '../components/jil-output/jil-output.component';
 import { CalendarService, CustomCalendar } from '../services/calendar.service';
+
 @Component({
   selector: 'app-dynamic-form-page',
   templateUrl: './dynamic-form-page.component.html',
@@ -33,6 +34,12 @@ export class DynamicFormPageComponent implements OnInit {
   previewJILContent: string = '';
   previewEnvironment: string = '';
   previewJobName: string = '';
+  
+  // Navigation tab properties
+  activeNavTab: string = '';
+  
+  // Collapsed subforms state
+  collapsedSubforms: {[key: string]: boolean} = {};
   
   // Collapsed sections
   collapsedSections: {[key: string]: boolean} = {};
@@ -58,6 +65,80 @@ export class DynamicFormPageComponent implements OnInit {
         this.environmentStateService.updateSelectedEnvironments(selectedEnvs);
       }
     }, 100);
+    
+    // Set default collapsed state
+    setTimeout(() => {
+      this.subformInstances.forEach(instance => {
+        // For example, collapse non-essential subforms by default
+        if (instance.type !== 'top' && instance.type !== 'box') {
+          this.collapsedSubforms[instance.id] = true;
+        }
+      });
+    }, 100);
+  }
+
+  // Navigation tab functionality
+  scrollToSubform(instanceId: string): void {
+    this.activeNavTab = instanceId;
+    const element = document.getElementById(`subform-${instanceId}`);
+    if (element) {
+      element.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start',
+        inline: 'nearest' 
+      });
+    }
+  }
+
+  // Get tab icon based on subform type
+  getTabIcon(type: string): string {
+    const icons: { [key: string]: string } = {
+      'top': '⚙️',
+      'box': '📦',
+      'cmd': '💻',
+      'fw': '👁️',
+      'cfw': '🔍'
+    };
+    return icons[type] || '📋';
+  }
+  // Get instance count for grouping
+  getInstanceCount(type: string): number {
+    return this.subformInstances.filter(instance => instance.type === type).length;
+  }
+
+  // Get instance number for display
+  getInstanceNumber(instance: SubformInstance): number {
+    const sameTypeInstances = this.subformInstances.filter(
+      inst => inst.type === instance.type
+    );
+    return sameTypeInstances.indexOf(instance) + 1;
+  }
+
+  // Update active tab on scroll
+  @HostListener('window:scroll')
+  onWindowScroll(): void {
+    const scrollPosition = window.pageYOffset;
+    
+    for (const instance of this.subformInstances) {
+      const element = document.getElementById(`subform-${instance.id}`);
+      if (element) {
+        const rect = element.getBoundingClientRect();
+        const elementTop = rect.top + scrollPosition;
+        
+        if (scrollPosition >= elementTop - 100) {
+          this.activeNavTab = instance.id;
+        }
+      }
+    }
+  }
+  // Toggle subform collapse
+  toggleSubformCollapse(instanceId: string): void {
+    this.collapsedSubforms[instanceId] = !this.collapsedSubforms[instanceId];
+  }
+
+  // Check if subform is collapsed
+  isSubformCollapsed(instanceId: string): boolean {
+    return this.collapsedSubforms[instanceId] || false;
   }
 
   private loadSubformConfigs() {
@@ -88,45 +169,40 @@ export class DynamicFormPageComponent implements OnInit {
     this.addSubformInstance('box', 'Box Job', false, 'boxfunc');
   }
 
- // In dynamic-form-page.component.ts - Update addSubformInstance method
-private addSubformInstance(type: string, displayName: string, removable: boolean, functionOfJob?: string) {
-  const config = this.subformConfigs[type];
-  if (!config) return;
+  private addSubformInstance(type: string, displayName: string, removable: boolean, functionOfJob?: string) {
+    const config = this.subformConfigs[type];
+    if (!config) return;
 
-  const form = this.formBuilder.buildSubform(config.sections);
+    const form = this.formBuilder.buildSubform(config.sections);
 
-  // Pre-fill function and job type if provided
-  if (functionOfJob) {
-    const functionOption = this.functionJobMappingService.getFunctionJobOption(functionOfJob);
-    if (functionOption) {
-      // Use different field names based on job type
-      if (type === 'box') {
-        form.get('funofbox')?.setValue(functionOfJob);
-      } else {
-        form.get('funofjob')?.setValue(functionOfJob);
+    // Pre-fill function and job type if provided
+    if (functionOfJob) {
+      const functionOption = this.functionJobMappingService.getFunctionJobOption(functionOfJob);
+      if (functionOption) {
+        // Use different field names based on job type
+        if (type === 'box') {
+          form.get('funofbox')?.setValue(functionOfJob);
+        } else {
+          form.get('funofjob')?.setValue(functionOfJob);
+        }
+        // Job type should always be set and fixed for all subforms
+        form.get('jobtitle')?.setValue(functionOption.jobType);
       }
-      
-      // Job type should always be set and fixed for all subforms
-      form.get('jobtitle')?.setValue(functionOption.jobType);
     }
+
+    const instance: SubformInstance = {
+      id: `${type}-${Date.now()}`,
+      type,
+      displayName,
+      functionOfJob,
+      form,
+      sections: config.sections,
+      removable
+    };
+
+    this.subformInstances.push(instance);
+    this.updateJobNames();
   }
-
-  const instance: SubformInstance = {
-    id: `${type}-${Date.now()}`,
-    type,
-    displayName,
-    functionOfJob,
-    form,
-    sections: config.sections,
-    removable
-  };
-
-  this.subformInstances.push(instance);
-  this.updateJobNames();
-}
-
-
-
 
   // **NEW: Get CMD function options**
   getCmdOptions(): FunctionJobOption[] {
@@ -142,20 +218,20 @@ private addSubformInstance(type: string, displayName: string, removable: boolean
     );
     const instanceNumber = existingInstances.length + 1;
     const displayName = `${option.label.toUpperCase()} #${instanceNumber}`;
-
+    
     this.addSubformInstance('cmd', displayName, true, option.value);
-
+    
     // Set default values for new instance
     const selectedEnvs = this.environmentStateService.getSelectedEnvironments();
     const newInstance = this.subformInstances[this.subformInstances.length - 1];
     this.setDefaultMachineValues(newInstance, selectedEnvs);
-
+    
     // Propagate owner values from box if exists
     const boxInstance = this.subformInstances.find(s => s.type === 'box');
     if (boxInstance) {
       this.propagateOwnerValuesFromBox(boxInstance.form);
     }
-
+    
     this.sortSubformInstances();
     // Close dropdown after selection
     this.showAddCmdDropdown = false;
@@ -168,20 +244,20 @@ private addSubformInstance(type: string, displayName: string, removable: boolean
     );
     const instanceNumber = existingInstances.length + 1;
     const displayName = instanceNumber > 1 ? `FW #${instanceNumber}` : 'FW';
-
+    
     this.addSubformInstance('fw', displayName, true, 'fw');
-
+    
     // Set default values for new instance
     const selectedEnvs = this.environmentStateService.getSelectedEnvironments();
     const newInstance = this.subformInstances[this.subformInstances.length - 1];
     this.setDefaultMachineValues(newInstance, selectedEnvs);
-
+    
     // Propagate owner values from box if exists
     const boxInstance = this.subformInstances.find(s => s.type === 'box');
     if (boxInstance) {
       this.propagateOwnerValuesFromBox(boxInstance.form);
     }
-
+    
     this.sortSubformInstances();
   }
 
@@ -192,20 +268,20 @@ private addSubformInstance(type: string, displayName: string, removable: boolean
     );
     const instanceNumber = existingInstances.length + 1;
     const displayName = instanceNumber > 1 ? `CFW #${instanceNumber}` : 'CFW';
-
+    
     this.addSubformInstance('cfw', displayName, true, 'cfw');
-
+    
     // Set default values for new instance
     const selectedEnvs = this.environmentStateService.getSelectedEnvironments();
     const newInstance = this.subformInstances[this.subformInstances.length - 1];
     this.setDefaultMachineValues(newInstance, selectedEnvs);
-
+    
     // Propagate owner values from box if exists
     const boxInstance = this.subformInstances.find(s => s.type === 'box');
     if (boxInstance) {
       this.propagateOwnerValuesFromBox(boxInstance.form);
     }
-
+    
     this.sortSubformInstances();
   }
 
@@ -244,7 +320,7 @@ private addSubformInstance(type: string, displayName: string, removable: boolean
       this.environmentStateService.updateSelectedEnvironments(selectedEnvs);
       this.updateEnvironmentValidators();
     }
-
+    
     // If change is from box form, propagate owner values to cmd/fw
     if (instance.type === 'box') {
       this.propagateOwnerValuesFromBox(instance.form);
@@ -254,7 +330,7 @@ private addSubformInstance(type: string, displayName: string, removable: boolean
   private propagateOwnerValuesFromBox(boxForm: FormGroup) {
     const selectedEnvs = this.environmentStateService.getSelectedEnvironments();
     const ownerValues: {[key: string]: string} = {};
-
+    
     // Extract owner values from box form
     selectedEnvs.forEach(env => {
       const ownerValue = boxForm.get(`${env}_owner`)?.value;
@@ -262,7 +338,7 @@ private addSubformInstance(type: string, displayName: string, removable: boolean
         ownerValues[env] = ownerValue;
       }
     });
-
+    
     // Set owner values in cmd and fw subforms (editable, not readonly)
     this.subformInstances
       .filter(instance => ['cmd', 'fw'].includes(instance.type))
@@ -274,27 +350,27 @@ private addSubformInstance(type: string, displayName: string, removable: boolean
             // Don't disable - keep it editable
           }
         });
+        
         // Also set machine defaults when propagating
         this.setDefaultMachineValues(instance, selectedEnvs);
       });
   }
 
   private updateJobNames() {
-  const topInstance = this.subformInstances.find(s => s.type === 'top');
-  if (!topInstance) return;
-
-  // Update box names for CMD, CFW, FW subforms - directly use box job name
-  const boxInstance = this.subformInstances.find(s => s.type === 'box');
-  if (boxInstance) {
-    const boxJobName = this.getJobNameForInstance(boxInstance);
+    const topInstance = this.subformInstances.find(s => s.type === 'top');
+    if (!topInstance) return;
     
-    this.subformInstances
-      .filter(instance => ['cmd', 'cfw', 'fw'].includes(instance.type))
-      .forEach(instance => {
-        instance.form.get('box_name')?.setValue(boxJobName);
-      });
+    // Update box names for CMD, CFW, FW subforms - directly use box job name
+    const boxInstance = this.subformInstances.find(s => s.type === 'box');
+    if (boxInstance) {
+      const boxJobName = this.getJobNameForInstance(boxInstance);
+      this.subformInstances
+        .filter(instance => ['cmd', 'cfw', 'fw'].includes(instance.type))
+        .forEach(instance => {
+          instance.form.get('box_name')?.setValue(boxJobName);
+        });
+    }
   }
-}
 
   // **FIXED: Generate base job name from common configuration only**
   private generateBaseJobName(topForm: FormGroup): string {
@@ -316,8 +392,6 @@ private addSubformInstance(type: string, displayName: string, removable: boolean
     return `${partialJobName}... (complete in subforms)`;
   }
 
-
-
   trackByInstanceId(index: number, instance: SubformInstance): string {
     return instance.id;
   }
@@ -327,62 +401,59 @@ private addSubformInstance(type: string, displayName: string, removable: boolean
     if (instance.type === 'top') {
       return this.generateTruncatedBaseJobName(instance.form);
     }
-
+    
     const topInstance = this.subformInstances.find(s => s.type === 'top');
     if (!topInstance) return '';
-
+    
     // Generate job name with correct field order: csi_effort type_prod/lob name_purpose_load frequency_load layer_function of box_job type
     return this.generateJobNameWithCorrectOrder(instance);
   }
 
   // **NEW: Generate job name with correct field order**
-// Update the generateJobNameWithCorrectOrder method
-private generateJobNameWithCorrectOrder(instance: SubformInstance): string {
-  const topInstance = this.subformInstances.find(s => s.type === 'top');
-  if (!topInstance) return '';
-
-  // Collect values in the correct order: csi_effort type_prod/lob name_purpose_load frequency_load layer_function of box_job type
-  const fieldOrder = [
-    { key: 'csi', form: topInstance.form },
-    { key: 'efforttype', form: topInstance.form },
-    { key: 'prodlob', form: topInstance.form },
-    { key: 'purpose', form: instance.form },
-    { key: 'loadfreq', form: topInstance.form },
-    { key: 'loadlayer', form: instance.form },
-    // Use funofbox for box jobs, funofjob for all others
-    { key: instance.type === 'box' ? 'funofbox' : 'funofjob', form: instance.form },
-  ];
-
-  // ALWAYS add job type for ALL subforms
-  fieldOrder.push({ key: 'jobtitle', form: instance.form });
-
-  const values = fieldOrder.map(field => {
-    const value = field.form.get(field.key)?.value || '';
-    return value.toString().toUpperCase();
-  });
-
-  const nonEmptyValues = values.filter(v => v !== '');
-  const fullJobName = nonEmptyValues.join('_');
-
-  // Apply truncation if needed
-  return this.applySmartTruncation(fullJobName, values);
-}
-
-
+  private generateJobNameWithCorrectOrder(instance: SubformInstance): string {
+    const topInstance = this.subformInstances.find(s => s.type === 'top');
+    if (!topInstance) return '';
+    
+    // Collect values in the correct order: csi_effort type_prod/lob name_purpose_load frequency_load layer_function of box_job type
+    const fieldOrder = [
+      { key: 'csi', form: topInstance.form },
+      { key: 'efforttype', form: topInstance.form },
+      { key: 'prodlob', form: topInstance.form },
+      { key: 'purpose', form: instance.form },
+      { key: 'loadfreq', form: topInstance.form },
+      { key: 'loadlayer', form: instance.form },
+      // Use funofbox for box jobs, funofjob for all others
+      { key: instance.type === 'box' ? 'funofbox' : 'funofjob', form: instance.form },
+    ];
+    
+    // ALWAYS add job type for ALL subforms
+    fieldOrder.push({ key: 'jobtitle', form: instance.form });
+    
+    const values = fieldOrder.map(field => {
+      const value = field.form.get(field.key)?.value || '';
+      return value.toString().toUpperCase();
+    });
+    
+    const nonEmptyValues = values.filter(v => v !== '');
+    const fullJobName = nonEmptyValues.join('_');
+    
+    // Apply truncation if needed
+    return this.applySmartTruncation(fullJobName, values);
+  }
 
   // **NEW: Smart truncation that prioritizes purpose field**
   private applySmartTruncation(fullJobName: string, orderedValues: string[]): string {
     if (fullJobName.length <= 60) {
       return fullJobName;
     }
-
+    
     const purposeIndex = 3; // Purpose is 4th field (index 3)
     const purpose = orderedValues[purposeIndex] || '';
     
     if (purpose.length === 0) {
       return fullJobName.substring(0, 60);
     }
-
+    
     // Calculate space needed for all other fields
     const otherValues = [...orderedValues];
     otherValues[purposeIndex] = '';
@@ -394,7 +465,7 @@ private generateJobNameWithCorrectOrder(instance: SubformInstance): string {
     if (availableForPurpose <= 0) {
       return otherValues.filter(v => v !== '').join('_').substring(0, 60);
     }
-
+    
     // Truncate purpose and rebuild
     const truncatedValues = [...orderedValues];
     truncatedValues[purposeIndex] = purpose.substring(0, availableForPurpose);
@@ -402,125 +473,52 @@ private generateJobNameWithCorrectOrder(instance: SubformInstance): string {
     return truncatedValues.filter(v => v !== '').join('_');
   }
 
-  // **DEPRECATED: Keep for backward compatibility but update logic**
-  private truncateJobNameForSubformFwCfw(fullJobName: string, topForm: FormGroup, functionOfJob: string): string {
-    if (fullJobName.length <= 60) {
-      return fullJobName;
+  // Add method to generate full job name for truncation check
+  private generateFullJobNameForTruncationCheck(instance: SubformInstance): string {
+    const topInstance = this.subformInstances.find(s => s.type === 'top');
+    if (!topInstance) return '';
+    
+    // Generate the full job name without any truncation
+    const fieldOrder = [
+      { key: 'csi', form: topInstance.form },
+      { key: 'efforttype', form: topInstance.form },
+      { key: 'prodlob', form: topInstance.form },
+      { key: 'purpose', form: instance.form },
+      { key: 'loadfreq', form: topInstance.form },
+      { key: 'loadlayer', form: instance.form },
+      { key: instance.type === 'box' ? 'funofbox' : 'funofjob', form: instance.form },
+    ];
+    
+    // Add job type only for non-FW/CFW jobs
+    if (instance.type !== 'fw' && instance.type !== 'cfw') {
+      fieldOrder.push({ key: 'jobtitle', form: instance.form });
     }
-
-    // Get the original field values from top form
-    const commonFields = ['csi', 'efforttype', 'prodlob', 'loadfreq'];
-    const topValues = commonFields.map(f => topForm.get(f)?.value || '').map(v => v.toString().toUpperCase());
     
-    // Calculate space needed for function only (no job type for FW/CFW)
-    const functionLength = functionOfJob.length + 1; // +1 for underscore
+    const values = fieldOrder.map(field => {
+      const value = field.form.get(field.key)?.value || '';
+      return value.toString().toUpperCase();
+    });
     
-    // Calculate available space for the base job name
-    const availableSpaceForBase = 60 - functionLength;
-    
-    if (availableSpaceForBase <= 0) {
-      return fullJobName.substring(0, 60);
-    }
-
-    // Build truncated base job name that fits in available space
-    const truncatedBaseJobName = this.truncateBaseJobNameToFit(topValues, availableSpaceForBase);
-    
-    // Combine truncated base + function (no job type)
-    return `${truncatedBaseJobName}_${functionOfJob}`;
+    return values.filter(v => v !== '').join('_');
   }
-
-  // **DEPRECATED: Keep for backward compatibility but update logic**
-  private truncateJobNameForSubform(fullJobName: string, topForm: FormGroup): string {
-    if (fullJobName.length <= 60) {
-      return fullJobName;
-    }
-
-    // Extract the function and job type from the full job name
-    const jobNameParts = fullJobName.split('_');
-    const functionOfJob = jobNameParts[jobNameParts.length - 2] || '';
-    const jobType = jobNameParts[jobNameParts.length - 1] || '';
-    
-    // Get the original field values from top form
-    const commonFields = ['csi', 'efforttype', 'prodlob', 'loadfreq'];
-    const topValues = commonFields.map(f => topForm.get(f)?.value || '').map(v => v.toString().toUpperCase());
-    
-    // Calculate space needed for function and job type (including underscores)
-    const functionAndTypeLength = functionOfJob.length + jobType.length + 2; // +2 for underscores
-    
-    // Calculate available space for the base job name (60 - function - job type)
-    const availableSpaceForBase = 60 - functionAndTypeLength;
-    
-    if (availableSpaceForBase <= 0) {
-      // If no space for base, just return truncated full name
-      return fullJobName.substring(0, 60);
-    }
-
-    // Build truncated base job name that fits in available space
-    const truncatedBaseJobName = this.truncateBaseJobNameToFit(topValues, availableSpaceForBase);
-    
-    // Combine truncated base + function + job type
-    return `${truncatedBaseJobName}_${functionOfJob}_${jobType}`;
-  }
-// Add method to generate full job name for truncation check
-private generateFullJobNameForTruncationCheck(instance: SubformInstance): string {
-  const topInstance = this.subformInstances.find(s => s.type === 'top');
-  if (!topInstance) return '';
-
-  // Generate the full job name without any truncation
-  const fieldOrder = [
-    { key: 'csi', form: topInstance.form },
-    { key: 'efforttype', form: topInstance.form },
-    { key: 'prodlob', form: topInstance.form },
-    { key: 'purpose', form: instance.form },
-    { key: 'loadfreq', form: topInstance.form },
-    { key: 'loadlayer', form: instance.form },
-    { key: instance.type === 'box' ? 'funofbox' : 'funofjob', form: instance.form },
-  ];
-
-  // Add job type only for non-FW/CFW jobs
-  if (instance.type !== 'fw' && instance.type !== 'cfw') {
-    fieldOrder.push({ key: 'jobtitle', form: instance.form });
-  }
-
-  const values = fieldOrder.map(field => {
-    const value = field.form.get(field.key)?.value || '';
-    return value.toString().toUpperCase();
-  });
-
-  return values.filter(v => v !== '').join('_');
-}
-  private truncateBaseJobNameToFit(values: string[], maxLength: number): string {
-    // For common fields only, no purpose field to truncate
-    let jobName = values.filter(v => v !== '').join('_');
-    
-    if (jobName.length <= maxLength) {
-      return jobName;
-    }
-
-    // Just cut the entire string if it's too long
-    return jobName.substring(0, maxLength);
-  }
-
-
 
   // **FIXED: Check if job name is truncated for each subform**
- isJobNameTruncated(instance: SubformInstance): boolean {
-  const topInstance = this.subformInstances.find(s => s.type === 'top');
-  if (!topInstance) return false;
-
-  if (instance.type === 'top') {
-    // For top form, check if partial job name indicates truncation
-    const commonFields = ['csi', 'efforttype', 'prodlob', 'loadfreq'];
-    const values = commonFields.map(f => instance.form.get(f)?.value || '').map(v => v.toString().toUpperCase());
-    const fullJobName = values.filter(v => v !== '').join('_');
+  isJobNameTruncated(instance: SubformInstance): boolean {
+    const topInstance = this.subformInstances.find(s => s.type === 'top');
+    if (!topInstance) return false;
+    
+    if (instance.type === 'top') {
+      // For top form, check if partial job name indicates truncation
+      const commonFields = ['csi', 'efforttype', 'prodlob', 'loadfreq'];
+      const values = commonFields.map(f => instance.form.get(f)?.value || '').map(v => v.toString().toUpperCase());
+      const fullJobName = values.filter(v => v !== '').join('_');
+      return fullJobName.length > 60;
+    }
+    
+    // For subforms, check if the full job name would be truncated
+    const fullJobName = this.generateFullJobNameForTruncationCheck(instance);
     return fullJobName.length > 60;
   }
-
-  // For subforms, check if the full job name would be truncated
-  const fullJobName = this.generateFullJobNameForTruncationCheck(instance);
-  return fullJobName.length > 60;
-}
-
 
   getDebugInfo(): any {
     return {
@@ -538,10 +536,10 @@ private generateFullJobNameForTruncationCheck(instance: SubformInstance): string
   private updateEnvironmentValidators() {
     const topInstance = this.subformInstances.find(s => s.type === 'top');
     if (!topInstance) return;
-
+    
     // Get selected environments from top form
     const selectedEnvs = this.getSelectedEnvironments(topInstance.form);
-
+    
     // Update validators for all other subforms
     this.subformInstances
       .filter(instance => instance.type !== 'top')
@@ -553,19 +551,19 @@ private generateFullJobNameForTruncationCheck(instance: SubformInstance): string
   private getSelectedEnvironments(topForm: FormGroup): string[] {
     const selectedEnvs: string[] = [];
     const envKeys = ['dev', 'uat', 'prod', 'cob'];
-
+    
     envKeys.forEach(env => {
       if (topForm.get(env)?.value) {
         selectedEnvs.push(env);
       }
     });
-
+    
     return selectedEnvs;
   }
 
   private setEnvironmentFieldValidators(instance: SubformInstance, selectedEnvs: string[]) {
     const envKeys = ['dev', 'uat', 'prod', 'cob'];
-
+    
     envKeys.forEach(env => {
       const isSelected = selectedEnvs.includes(env);
       
@@ -610,7 +608,7 @@ private generateFullJobNameForTruncationCheck(instance: SubformInstance): string
       'prod': 'V169912_EAP_GCG_NAM_INGESTION_PROD',
       'cob': 'V169912_EAP_GCG_NAM_INGESTION_COB'
     };
-
+    
     if (['cmd', 'fw'].includes(instance.type)) {
       selectedEnvs.forEach(env => {
         const machineControl = instance.form.get(`${env}_machine`);
@@ -621,7 +619,6 @@ private generateFullJobNameForTruncationCheck(instance: SubformInstance): string
       });
     }
   }
-
   // JIL Preview and Download methods
   previewJILForEnvironment(environment: string) {
     const topInstance = this.subformInstances.find(s => s.type === 'top');
@@ -659,7 +656,7 @@ private generateFullJobNameForTruncationCheck(instance: SubformInstance): string
     this.previewJobName = '';
   }
 
-  downloadFromPreview(event: {content: string, fileName: string}) {
+ downloadFromPreview(event: { content: string; fileName: string }): void {
     this.downloadFile(event.content, event.fileName);
   }
 
