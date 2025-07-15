@@ -23,6 +23,12 @@
       ]
     },
     {
+      "title": "Condition (Dependencies)",
+      "questionIds": [
+        "q_conditions"
+      ]
+    },
+    {
       "title": "Runtime Configuration",
       "questionIds": [
         "q_std_out_file",

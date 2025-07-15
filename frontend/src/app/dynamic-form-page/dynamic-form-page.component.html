@@ -1,94 +1,135 @@
 <div class="dynamic-form-container">
   <div class="form-header">
-    <!-- <h1>Dynamic Form Configuration</h1> -->
-
-    <!-- Compact Add Function Section -->
-    <div class="add-function-section" *ngIf="getAvailableEnvironments().length === 0 || allFunctionOptions.length > 0">
-      <div class="section-header">
-        <button class="collapse-btn" (click)="toggleSectionCollapse('add-function')"
-                [title]="isSectionCollapsed('add-function') ? 'Expand section' : 'Collapse section'">
-          <svg class="collapse-icon" [class.rotated]="!isSectionCollapsed('add-function')" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
-          </svg>
-        </button>
-        <label>Add Function of Job</label>
-      </div>
-
-      <div class="function-checkbox-list" [class.collapsed]="isSectionCollapsed('add-function')">
-  <label *ngFor="let option of allFunctionOptions">
-  <input
-    type="checkbox"
-    [checked]="isFunctionSelected(option.value)"
-    (change)="onFunctionCheckboxChange($event, option)">
-  {{ option.label }}
-</label>
-
-</div>
-
-    </div>
+    <h1>Dynamic Form Configuration</h1>
   </div>
 
-  <!-- Subforms Container -->
+  <!-- Subform Instances -->
   <div class="subforms-container">
-    <div *ngFor="let instance of subformInstances; trackBy: trackByInstanceId" class="subform-wrapper">
+    <div
+      *ngFor="let instance of subformInstances; trackBy: trackByInstanceId"
+      class="subform-wrapper"
+      [ngClass]="'subform-' + instance.type">
+
+      <!-- Subform Header -->
       <div class="subform-header">
         <div class="header-left">
-          <button class="collapse-btn" (click)="toggleSectionCollapse(instance.id)"
-                  [title]="isSectionCollapsed(instance.id) ? 'Expand form' : 'Collapse form'">
-            <svg class="collapse-icon" [class.rotated]="!isSectionCollapsed(instance.id)" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
-            </svg>
-          </button>
           <h2>{{ instance.displayName }}</h2>
         </div>
-
-        <button *ngIf="instance.removable" class="remove-btn" (click)="removeSubformInstance(instance.id)">
+        <button
+          *ngIf="instance.removable"
+          (click)="removeSubformInstance(instance.id)"
+          class="remove-btn"
+          type="button">
           Remove
         </button>
       </div>
 
-      <div [class.collapsed]="isSectionCollapsed(instance.id)">
-        <app-dynamic-form-viewer
-          [sections]="instance.sections"
-          [form]="instance.form"
-          [subformContext]="instance"
-          [jobNameForDisplay]="getJobNameForInstance(instance)"
-          [isJobNameTruncatedForDisplay]="isJobNameTruncated(instance)"
-          (formChange)="onSubformChange(instance)">
-        </app-dynamic-form-viewer>
+      <!-- Job Name Display for non-top subforms -->
+      <div *ngIf="instance.type !== 'top'" class="job-name-display">
+        <strong>Job Name:</strong> {{ getJobNameForInstance(instance) }}
+        <div *ngIf="isJobNameTruncated(instance)" class="warning">
+          Warning: Job name is limited to 60 characters and has been truncated.
+        </div>
       </div>
+
+      <!-- Dynamic Form Viewer for this subform -->
+      <app-dynamic-form-viewer
+        [sections]="instance.sections"
+        [form]="instance.form"
+        [subformContext]="instance"
+        (formChange)="onSubformChange(instance)">
+      </app-dynamic-form-viewer>
+    </div>
+  </div>
+
+  <!-- Add Function Buttons Section -->
+  <div class="add-function-buttons-section">
+    <div class="section-header">
+      <h3>Add Function Jobs</h3>
+      <p class="section-description">Add specific job types to your configuration</p>
+    </div>
+
+    <div class="function-buttons-container">
+      <!-- Add CMD Button -->
+      <div class="function-button-group">
+        <button 
+          class="add-function-btn cmd-btn" 
+          (click)="showAddCmdDropdown = !showAddCmdDropdown"
+
+          >
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          Add CMD
+        </button>
+        
+        <!-- CMD Dropdown -->
+        <div class="cmd-dropdown" [class.show]="showAddCmdDropdown" *ngIf="showAddCmdDropdown">
+          <div class="dropdown-header">
+            <span>Select CMD Function</span>
+            <button class="close-dropdown" (click)="showAddCmdDropdown = false">×</button>
+          </div>
+          <div class="dropdown-options">
+            <button 
+              *ngFor="let option of getCmdOptions()" 
+              class="dropdown-option"
+              (click)="addCmdFunction(option)">
+              {{ option.label }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add FW Button -->
+      <button 
+        class="add-function-btn fw-btn" 
+        (click)="addFwFunction()"
+>
+        <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+          <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+        </svg>
+        Add FW
+      </button>
+
+      <!-- Add CFW Button -->
+      <button 
+        class="add-function-btn cfw-btn" 
+        (click)="addCfwFunction()">
+        <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        Add CFW
+      </button>
     </div>
   </div>
 
   <!-- JIL Actions Section -->
-  <div class="jil-actions-section" *ngIf="getAvailableEnvironments().length > 0">
+  <div class="jil-actions-section">
     <div class="actions-header">
-      <h3>JIL File Actions</h3>
+      <h3>JIL Actions</h3>
     </div>
-
+    
     <div class="actions-content">
       <div class="buttons-row">
         <div class="preview-group">
-          <label class="section-label">Preview JIL Files:</label>
+          <div class="section-label">Preview JIL</div>
           <div class="preview-buttons">
-            <button
-              *ngFor="let env of getAvailableEnvironments()"
-              class="btn btn-preview"
-              (click)="previewJILForEnvironment(env)"
-              [title]="'Preview JIL for ' + env.toUpperCase() + ' environment'">
-              <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
-              </svg>
+            <button 
+              *ngFor="let env of getAvailableEnvironments()" 
+              class="preview-btn"
+              (click)="previewJILForEnvironment(env)">
               Preview {{ env.toUpperCase() }}
             </button>
           </div>
         </div>
-
+        
         <div class="download-group">
-          <button class="btn btn-download" (click)="downloadJILFiles()">
-            <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
-            </svg>
+          <div class="section-label">Download JIL Files</div>
+          <button 
+            class="download-btn"
+            (click)="downloadJILFiles()"
+            [disabled]="getAvailableEnvironments().length === 0">
             Download All JIL Files
           </button>
         </div>
@@ -96,13 +137,13 @@
     </div>
   </div>
 
-  <!-- JIL Preview Component -->
+  <!-- JIL Output Component -->
   <app-jil-output
-    [generatedJIL]="previewJILContent"
-    [showJIL]="showJILPreview"
-    [environment]="previewEnvironment"
-    [jobName]="previewJobName"
-    (closePreview)="closeJILPreview()"
-    (downloadJIL)="downloadFromPreview($event)">
-  </app-jil-output>
+  [generatedJIL]="previewJILContent"
+  [showJIL]="showJILPreview"
+  [environment]="previewEnvironment"
+  [jobName]="previewJobName"
+  (closePreview)="closeJILPreview()"
+  (downloadJIL)="downloadFromPreview($event)">
+</app-jil-output>
 </div>

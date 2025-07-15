@@ -1,15 +1,6 @@
 <div class="form-box">
-  <!-- <div class="collapsible-header">
-    <h2>Dynamic Form Viewer</h2>
-  </div> -->
+
   <div>
-    <!-- Job Name Display for All Form Types -->
-<!-- <div class="integrated-job-display" *ngIf="integratedJobValue">
-  {{ integratedJobValue }}
-  <div *ngIf="isJobNameTruncated" class="warning">
-    Warning: Job name is limited to 60 characters and has been truncated.
-  </div>
-</div> -->
 
     <form *ngIf="form" [formGroup]="form">
       <div class="form-fields">
@@ -17,13 +8,6 @@
           <div class="form-section" [ngClass]="{'insert-job-section': isInsertJobSection(section)}">
             <h3>{{ section.title }}</h3>
 
-            <!-- Special handling for Insert Job Configuration section -->
-            <div *ngIf="isInsertJobSection(section)" class="integrated-job-display">
-              {{ integratedJobValue }}
-              <div *ngIf="isJobNameTruncated" class="warning">
-                Warning: Job name is limited to 60 characters and has been truncated.
-              </div>
-            </div>
 
             <!-- Regular form fields -->
             <div [ngClass]="{'insert-job-fields': isInsertJobSection(section)}">

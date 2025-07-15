@@ -450,6 +450,45 @@
       ],
       "validators": [{ "type": "required" }]
     },
+     {
+      "id": "q_conditions2",
+      "key": "conditions2",
+      "label": "Conditions2",
+      "type": "conditions-array",
+      "item": {
+        "type": "group",
+        "fields": [
+          {
+            "key": "type",
+            "label": "Type",
+            "type": "dropdown",
+            "options": [
+              { "value": "success", "label": "Success" },
+              { "value": "failure", "label": "Failure" },
+              { "value": "terminated", "label": "Terminated" },
+              { "value": "done", "label": "Done" },
+              { "value": "notrunning", "label": "Not Running" },
+              { "value": "started", "label": "Started" }
+            ]
+          },
+          {
+            "key": "job",
+            "label": "Job",
+            "type": "text",
+            "placeholder": "e.g., jobA"
+          },
+          {
+            "key": "logic",
+            "label": "Logic",
+            "type": "dropdown",
+            "options": [
+              { "value": "and", "label": "AND" },
+              { "value": "or", "label": "OR" }
+            ]
+          }
+        ]
+      }
+    },
     {
       "id": "q_extra",
       "key": "extra",

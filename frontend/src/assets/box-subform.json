@@ -25,9 +25,16 @@
       ]
     },
     {
+      "title": "Condition (Dependencies)",
+      "questionIds": [
+        "q_conditions"
+      ]
+    },
+    {
       "title": "Time Configuration",
       "questionIds": [
-        "q_start_time"
+        "q_start_time",
+        "q_conditions2"
       ]
     }
   ]

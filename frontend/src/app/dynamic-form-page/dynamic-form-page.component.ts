@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { LoadFrequencyService } from '../services/load-frequency.service';
 import { FormGroup, Validators } from '@angular/forms';
 import { DynamicQuestionService } from '../services/dynamic-question.service';
@@ -24,6 +24,18 @@ import { JilOutputComponent } from '../components/jil-output/jil-output.componen
 export class DynamicFormPageComponent implements OnInit {
   subformInstances: SubformInstance[] = [];
   subformConfigs: {[key: string]: ResolvedSubformConfig} = {};
+  
+  // Add Function Button Properties
+  showAddCmdDropdown: boolean = false;
+  
+  // JIL Preview Properties
+  showJILPreview: boolean = false;
+  previewJILContent: string = '';
+  previewEnvironment: string = '';
+  previewJobName: string = '';
+  
+  // Collapsed sections
+  collapsedSections: {[key: string]: boolean} = {};
 
   constructor(
     private questionService: DynamicQuestionService,
@@ -68,7 +80,7 @@ export class DynamicFormPageComponent implements OnInit {
     // Always add top subform
     this.addSubformInstance('top', 'Common Configuration', false);
     // Always add box subform
-    this.addSubformInstance('box', 'Box Job ', false,'boxfunc');
+    this.addSubformInstance('box', 'Box Job', false, 'boxfunc');
   }
 
   private addSubformInstance(type: string, displayName: string, removable: boolean, functionOfJob?: string) {
@@ -100,73 +112,119 @@ export class DynamicFormPageComponent implements OnInit {
     this.updateJobNames();
   }
 
+  // **NEW: Get CMD function options**
+  getCmdOptions(): FunctionJobOption[] {
+    return this.allFunctionOptions.filter(option => 
+      option.subformType === 'cmd' && option.value !== 'boxfunc'
+    );
+  }
 
-// Add a method to check if a function is currently selected
-isFunctionSelected(functionValue: string): boolean {
-  return this.subformInstances.some(instance => instance.functionOfJob === functionValue);
-}
-
-
-  onFunctionCheckboxChange(event: any, option: FunctionJobOption) {
-  if (event.target.checked) {
-    // Add the subform if checked
-    const instanceCount = this.subformInstances.filter(s => s.type === option.subformType).length;
-    const displayName = `${option.label.toUpperCase()}`;
-    // const displayName = `${option.label.toUpperCase()} Job #${instanceCount + 1}`;
-    this.addSubformInstance(option.subformType, displayName, true, option.value);
-
-    // After creating the subform, set default values
+  // **NEW: Add CMD function with numbered instances**
+  addCmdFunction(option: FunctionJobOption): void {
+    const existingInstances = this.subformInstances.filter(
+      instance => instance.functionOfJob === option.value
+    );
+    const instanceNumber = existingInstances.length + 1;
+    const displayName = `${option.label.toUpperCase()} #${instanceNumber}`;
+    
+    this.addSubformInstance('cmd', displayName, true, option.value);
+    
+    // Set default values for new instance
     const selectedEnvs = this.environmentStateService.getSelectedEnvironments();
     const newInstance = this.subformInstances[this.subformInstances.length - 1];
-
-    // Set machine defaults immediately
     this.setDefaultMachineValues(newInstance, selectedEnvs);
-
-    // If box form exists, propagate owner values
+    
+    // Propagate owner values from box if exists
     const boxInstance = this.subformInstances.find(s => s.type === 'box');
     if (boxInstance) {
       this.propagateOwnerValuesFromBox(boxInstance.form);
     }
-  } else {
-    // Remove the subform if unchecked
-    this.subformInstances = this.subformInstances.filter(
-      instance => instance.functionOfJob !== option.value
-    );
-    this.updateJobNames();
+    
+    this.sortSubformInstances();
+    
+    // Close dropdown after selection
+    this.showAddCmdDropdown = false;
   }
 
-  // Sort to ensure proper order (box always after top, before others)
-  this.sortSubformInstances();
-}
+  // **NEW: Add FW function (allows duplicates)**
+  addFwFunction(): void {
+    const existingInstances = this.subformInstances.filter(
+      instance => instance.functionOfJob === 'fw'
+    );
+    const instanceNumber = existingInstances.length + 1;
+    const displayName = instanceNumber > 1 ? `FW #${instanceNumber}` : 'FW';
+    
+    this.addSubformInstance('fw', displayName, true, 'fw');
+    
+    // Set default values for new instance
+    const selectedEnvs = this.environmentStateService.getSelectedEnvironments();
+    const newInstance = this.subformInstances[this.subformInstances.length - 1];
+    this.setDefaultMachineValues(newInstance, selectedEnvs);
+    
+    // Propagate owner values from box if exists
+    const boxInstance = this.subformInstances.find(s => s.type === 'box');
+    if (boxInstance) {
+      this.propagateOwnerValuesFromBox(boxInstance.form);
+    }
+    
+    this.sortSubformInstances();
+  }
+
+  // **NEW: Add CFW function (allows duplicates)**
+  addCfwFunction(): void {
+    const existingInstances = this.subformInstances.filter(
+      instance => instance.functionOfJob === 'cfw'
+    );
+    const instanceNumber = existingInstances.length + 1;
+    const displayName = instanceNumber > 1 ? `CFW #${instanceNumber}` : 'CFW';
+    
+    this.addSubformInstance('cfw', displayName, true, 'cfw');
+    
+    // Set default values for new instance
+    const selectedEnvs = this.environmentStateService.getSelectedEnvironments();
+    const newInstance = this.subformInstances[this.subformInstances.length - 1];
+    this.setDefaultMachineValues(newInstance, selectedEnvs);
+    
+    // Propagate owner values from box if exists
+    const boxInstance = this.subformInstances.find(s => s.type === 'box');
+    if (boxInstance) {
+      this.propagateOwnerValuesFromBox(boxInstance.form);
+    }
+    
+    this.sortSubformInstances();
+  }
 
 
-get allFunctionOptions(): FunctionJobOption[] {
-  const options = this.functionJobMappingService.getAllFunctionJobOptions();
-  return options.sort((a, b) => {
-    // Box type (boxfunc) always comes first
-    if (a.value === 'boxfunc' && b.value !== 'boxfunc') return -1;
-    if (a.value !== 'boxfunc' && b.value === 'boxfunc') return 1;
-    // For other types, maintain alphabetical order by label
-    return 0;
-  });
-}
 
+  // **NEW: Close dropdown when clicking outside**
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event): void {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.function-button-group')) {
+      this.showAddCmdDropdown = false;
+    }
+  }
 
-
-
+  get allFunctionOptions(): FunctionJobOption[] {
+    const options = this.functionJobMappingService.getAllFunctionJobOptions();
+    return options.sort((a, b) => {
+      // Box type (boxfunc) always comes first
+      if (a.value === 'boxfunc' && b.value !== 'boxfunc') return -1;
+      if (a.value !== 'boxfunc' && b.value === 'boxfunc') return 1;
+      // For other types, maintain alphabetical order by label
+      return 0;
+    });
+  }
 
   removeSubformInstance(instanceId: string) {
-  this.subformInstances = this.subformInstances.filter(instance => instance.id !== instanceId);
-  this.updateJobNames();
-
-  // Sort to maintain proper order
-  this.sortSubformInstances();
-}
-
+    this.subformInstances = this.subformInstances.filter(instance => instance.id !== instanceId);
+    this.updateJobNames();
+    // Sort to maintain proper order
+    this.sortSubformInstances();
+  }
 
   onSubformChange(instance: SubformInstance) {
     this.updateJobNames();
-
     if (instance.type === 'top') {
       const selectedEnvs = this.getSelectedEnvironments(instance.form);
       this.environmentStateService.updateSelectedEnvironments(selectedEnvs);
@@ -202,7 +260,6 @@ get allFunctionOptions(): FunctionJobOption[] {
             // Don't disable - keep it editable
           }
         });
-
         // Also set machine defaults when propagating
         this.setDefaultMachineValues(instance, selectedEnvs);
       });
@@ -264,6 +321,7 @@ get allFunctionOptions(): FunctionJobOption[] {
           return this.truncateJobNameForSubform(fullBoxName, topInstance.form);
         }
       }
+
       return fullBoxName;
     }
 
@@ -284,14 +342,15 @@ get allFunctionOptions(): FunctionJobOption[] {
 
     const baseJobName = this.generateBaseJobName(topInstance.form);
     let funofjob;
-      if (instance.type === 'box') {
-        // For box subforms, get the function from the box form
-        funofjob = instance.form.get('funofbox')?.value || '';
-      } else {
-        // For other subforms (cmd, fw, cfw), get from their own form
-        funofjob = instance.form.get('funofjob')?.value || '';
-      }
-      const jobtitle = instance.form.get('jobtitle')?.value || '';
+    if (instance.type === 'box') {
+      // For box subforms, get the function from the box form
+      funofjob = instance.form.get('funofbox')?.value || '';
+    } else {
+      // For other subforms (cmd, fw, cfw), get from their own form
+      funofjob = instance.form.get('funofjob')?.value || '';
+    }
+    const jobtitle = instance.form.get('jobtitle')?.value || '';
+
     if (baseJobName && funofjob) {
       // Special handling for FW and CFW - only include function, not job type
       if (instance.type === 'fw' || instance.type === 'cfw') {
@@ -464,18 +523,17 @@ get allFunctionOptions(): FunctionJobOption[] {
   }
 
   getDebugInfo(): any {
-  return {
-    subformCount: this.subformInstances.length,
-    availableFunctions: this.allFunctionOptions.length, // Changed from availableFunctionOptions
-    instances: this.subformInstances.map(i => ({
-      id: i.id,
-      type: i.type,
-      functionOfJob: i.functionOfJob,
-      removable: i.removable
-    }))
-  };
-}
-
+    return {
+      subformCount: this.subformInstances.length,
+      availableFunctions: this.allFunctionOptions.length,
+      instances: this.subformInstances.map(i => ({
+        id: i.id,
+        type: i.type,
+        functionOfJob: i.functionOfJob,
+        removable: i.removable
+      }))
+    };
+  }
 
   private updateEnvironmentValidators() {
     const topInstance = this.subformInstances.find(s => s.type === 'top');
@@ -526,6 +584,7 @@ get allFunctionOptions(): FunctionJobOption[] {
             // Remove validators
             control.clearValidators();
           }
+
           control.updateValueAndValidity();
         }
       });
@@ -563,77 +622,62 @@ get allFunctionOptions(): FunctionJobOption[] {
       });
     }
   }
-// Add these properties to the component class
-showJILPreview: boolean = false;
-previewJILContent: string = '';
-previewEnvironment: string = '';
-previewJobName: string = '';
 
-// Add these methods to the component
+  // JIL Preview and Download methods
+  previewJILForEnvironment(environment: string) {
+    const topInstance = this.subformInstances.find(s => s.type === 'top');
+    if (!topInstance) {
+      alert('No configuration found to generate JIL preview');
+      return;
+    }
 
-// Method to generate preview for specific environment
-previewJILForEnvironment(environment: string) {
-  const topInstance = this.subformInstances.find(s => s.type === 'top');
-  if (!topInstance) {
-    alert('No configuration found to generate JIL preview');
-    return;
+    const selectedEnvs = this.getSelectedEnvironments(topInstance.form);
+    if (!selectedEnvs.includes(environment)) {
+      alert(`${environment.toUpperCase()} environment is not selected`);
+      return;
+    }
+
+    const baseJobName = this.generateBaseJobName(topInstance.form);
+    if (!baseJobName) {
+      alert('Please fill in the required fields to generate job name');
+      return;
+    }
+
+    // Generate JIL content for preview
+    const jilContent = this.generateJILContent(environment, baseJobName, topInstance);
+
+    // Set preview data
+    this.previewJILContent = jilContent;
+    this.previewEnvironment = environment;
+    this.previewJobName = baseJobName;
+    this.showJILPreview = true;
   }
 
-  const selectedEnvs = this.getSelectedEnvironments(topInstance.form);
-  if (!selectedEnvs.includes(environment)) {
-    alert(`${environment.toUpperCase()} environment is not selected`);
-    return;
+  closeJILPreview() {
+    this.showJILPreview = false;
+    this.previewJILContent = '';
+    this.previewEnvironment = '';
+    this.previewJobName = '';
   }
 
-  const baseJobName = this.generateBaseJobName(topInstance.form);
-  if (!baseJobName) {
-    alert('Please fill in the required fields to generate job name');
-    return;
+  downloadFromPreview(event: {content: string, fileName: string}) {
+    this.downloadFile(event.content, event.fileName);
   }
 
-  // Generate JIL content for preview
-  const jilContent = this.generateJILContent(environment, baseJobName, topInstance);
+  getAvailableEnvironments(): string[] {
+    const topInstance = this.subformInstances.find(s => s.type === 'top');
+    if (!topInstance) return [];
+    return this.getSelectedEnvironments(topInstance.form);
+  }
 
-  // Set preview data
-  this.previewJILContent = jilContent;
-  this.previewEnvironment = environment;
-  this.previewJobName = baseJobName;
-  this.showJILPreview = true;
-}
+  toggleSectionCollapse(sectionId: string) {
+    this.collapsedSections[sectionId] = !this.collapsedSections[sectionId];
+  }
 
-// Method to close preview
-closeJILPreview() {
-  this.showJILPreview = false;
-  this.previewJILContent = '';
-  this.previewEnvironment = '';
-  this.previewJobName = '';
-}
+  isSectionCollapsed(sectionId: string): boolean {
+    return this.collapsedSections[sectionId] || false;
+  }
 
-// Method to handle download from preview
-downloadFromPreview(event: {content: string, fileName: string}) {
-  this.downloadFile(event.content, event.fileName);
-}
-
-// Method to get available environments for preview buttons
-getAvailableEnvironments(): string[] {
-  const topInstance = this.subformInstances.find(s => s.type === 'top');
-  if (!topInstance) return [];
-
-  return this.getSelectedEnvironments(topInstance.form);
-}
-// Add these properties to the component class
-collapsedSections: {[key: string]: boolean} = {};
-
-// Add these methods
-toggleSectionCollapse(sectionId: string) {
-  this.collapsedSections[sectionId] = !this.collapsedSections[sectionId];
-}
-
-isSectionCollapsed(sectionId: string): boolean {
-  return this.collapsedSections[sectionId] || false;
-}
-
-  // Enhanced JIL generation with enum-based ordering and filtering
   downloadJILFiles() {
     const topInstance = this.subformInstances.find(s => s.type === 'top');
     if (!topInstance) {
@@ -680,21 +724,15 @@ isSectionCollapsed(sectionId: string): boolean {
     return jilContent;
   }
 
-  // Updated generateDynamicJobJIL method with enum-based ordering and filtering
   private generateDynamicJobJIL(environment: string, baseJobName: string, topInstance: SubformInstance, jobInstance: SubformInstance, jobType: string): string {
     const jobForm = jobInstance.form;
     const topForm = topInstance.form;
 
-    // Generate job name
-    const funofjob = jobForm.get('funofjob')?.value || '';
-    const jobtitle = jobForm.get('jobtitle')?.value || '';
-    let jobName: string;
+    // Use the existing getJobNameForInstance method to generate job name
+    const jobName = this.getJobNameForInstance(jobInstance);
 
-    if (funofjob.toLowerCase() === 'fw' || funofjob.toLowerCase() === 'cfw') {
-      jobName = `${baseJobName}_${funofjob.toUpperCase()}`;
-    } else {
-      jobName = `${baseJobName}_${funofjob.toUpperCase()}_${jobtitle.toUpperCase()}`;
-    }
+    // Get jobtitle for job_type field
+    const jobtitle = jobForm.get('jobtitle')?.value || '';
 
     // Collect all field values in a map
     const jilFields: {[key: string]: string} = {};
@@ -816,25 +854,36 @@ isSectionCollapsed(sectionId: string): boolean {
     }
   }
 
-  private collectJobSpecificFieldsFiltered(jobForm: FormGroup, jobType: string, jilFields: {[key: string]: string}) {
-    switch (jobType) {
-      case 'cmd':
-        this.collectCmdFieldsFiltered(jobForm, jilFields);
-        break;
-      case 'fw':
-        this.collectFwFieldsFiltered(jobForm, jilFields);
-        break;
-      case 'cfw':
-        this.collectCfwFieldsFiltered(jobForm, jilFields);
-        break;
-      case 'box':
-        this.collectBoxFieldsFiltered(jobForm, jilFields);
-        break;
+private collectJobSpecificFieldsFiltered(jobForm: FormGroup, jobType: string, jilFields: {[key: string]: string}) {
+  // Process conditions for all job types
+  const conditions = jobForm.get('conditions')?.value;
+  if (conditions && Array.isArray(conditions) && conditions.length > 0) {
+    const conditionString = this.buildConditionString(conditions);
+    if (conditionString) {
+      jilFields['condition'] = conditionString;
     }
-
-    // Auto-detect any additional job-specific fields (filtered)
-    this.autoDetectJobSpecificFieldsFiltered(jobForm, jilFields, jobType);
   }
+  
+  // Then continue with existing switch statement
+  switch (jobType) {
+    case 'cmd':
+      this.collectCmdFieldsFiltered(jobForm, jilFields);
+      break;
+    case 'fw':
+      this.collectFwFieldsFiltered(jobForm, jilFields);
+      break;
+    case 'cfw':
+      this.collectCfwFieldsFiltered(jobForm, jilFields);
+      break;
+    case 'box':
+      this.collectBoxFieldsFiltered(jobForm, jilFields);
+      break;
+  }
+  
+  // Auto-detect any additional job-specific fields (filtered)
+  this.autoDetectJobSpecificFieldsFiltered(jobForm, jilFields, jobType);
+}
+
 
   private collectCmdFieldsFiltered(jobForm: FormGroup, jilFields: {[key: string]: string}) {
     const stdOutFile = jobForm.get('std_out_file')?.value;
@@ -909,7 +958,6 @@ isSectionCollapsed(sectionId: string): boolean {
     }
   }
 
-  // Helper method to check if a field is allowed for a specific job type
   private isFieldAllowedForJobType(fieldName: string, jobType: string): boolean {
     // Check if field is globally excluded
     if (EXCLUDED_FROM_JIL.includes(fieldName)) {
@@ -925,7 +973,6 @@ isSectionCollapsed(sectionId: string): boolean {
     return true;
   }
 
-  // Auto-detect additional fields from top form (with filtering)
   private autoDetectAdditionalFieldsFiltered(form: FormGroup, jilFields: {[key: string]: string}, jobType: string) {
     Object.keys(form.controls).forEach(controlKey => {
       // Skip if already processed
@@ -947,7 +994,6 @@ isSectionCollapsed(sectionId: string): boolean {
       const control = form.get(controlKey);
       if (control && this.hasValidValue(control.value)) {
         const value = control.value;
-
         // Only include simple values (string, number, boolean)
         if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
           jilFields[controlKey] = value.toString();
@@ -956,7 +1002,6 @@ isSectionCollapsed(sectionId: string): boolean {
     });
   }
 
-  // Auto-detect job-specific fields (with filtering)
   private autoDetectJobSpecificFieldsFiltered(jobForm: FormGroup, jilFields: {[key: string]: string}, jobType: string) {
     const explicitlyHandledFields = this.getExplicitlyHandledFieldsForJobType(jobType);
 
@@ -980,7 +1025,6 @@ isSectionCollapsed(sectionId: string): boolean {
       const control = jobForm.get(controlKey);
       if (control && this.hasValidValue(control.value)) {
         const value = control.value;
-
         // Only include simple values
         if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
           jilFields[controlKey] = value.toString();
@@ -1006,7 +1050,6 @@ isSectionCollapsed(sectionId: string): boolean {
     }
   }
 
-  // Generate JIL content in the order defined by the enum
   private generateOrderedJIL(jilFields: {[key: string]: string}): string {
     let jil = '';
 
@@ -1038,11 +1081,9 @@ isSectionCollapsed(sectionId: string): boolean {
         if (!job || !type) return '';
 
         let conditionStr = `${type}(${job})`;
-
         if (logic && logic !== 'NONE' && index < conditions.length - 1) {
           conditionStr += ` ${logic.toUpperCase()} `;
         }
-
         return conditionStr;
       })
       .filter(str => str !== '')
@@ -1060,6 +1101,7 @@ isSectionCollapsed(sectionId: string): boolean {
   private downloadFile(content: string, fileName: string) {
     const blob = new Blob([content], { type: 'text/plain' });
     const url = window.URL.createObjectURL(blob);
+
     const link = document.createElement('a');
     link.href = url;
     link.download = fileName;
@@ -1070,21 +1112,20 @@ isSectionCollapsed(sectionId: string): boolean {
   }
 
   private sortSubformInstances(): void {
-  this.subformInstances.sort((a, b) => {
-    // Define the desired order
-    const typeOrder = {
-      'top': 0,      // Common Configuration always first
-      'box': 1,      // Box type always second
-      'cmd': 2,      // CMD types after box
-      'fw': 2,       // FW types after CMD
-      'cfw': 2       // CFW types last
-    };
+    this.subformInstances.sort((a, b) => {
+      // Define the desired order
+      const typeOrder = {
+        'top': 0, // Common Configuration always first
+        'box': 1, // Box type always second
+        'cmd': 2, // CMD types after box
+        'fw': 2, // FW types after CMD
+        'cfw': 2 // CFW types last
+      };
 
-    const orderA = typeOrder[a.type as keyof typeof typeOrder] ?? 999;
-    const orderB = typeOrder[b.type as keyof typeof typeOrder] ?? 999;
+      const orderA = typeOrder[a.type as keyof typeof typeOrder] ?? 999;
+      const orderB = typeOrder[b.type as keyof typeof typeOrder] ?? 999;
 
-    return orderA - orderB;
-  });
-}
-
+      return orderA - orderB;
+    });
+  }
 }

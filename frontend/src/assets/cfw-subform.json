@@ -23,6 +23,12 @@
       ]
     },
     {
+      "title": "Condition (Dependencies)",
+      "questionIds": [
+        "q_conditions"
+      ]
+    },
+    {
       "title": "Performance Configuration",
       "questionIds": [
         "q_job_load",

@@ -31,18 +31,19 @@
       ]
     },
     {
-      "title": "File Watching",
+      "title": "Condition (Dependencies)",
       "questionIds": [
-        "q_watch_file",
-        "q_watch_interval",
-        "q_extra"
+        "q_conditions"
       ]
     },
     {
-      "title": "additional",
+      "title": "File Watching",
       "questionIds": [
-        "q_extra2"
+        "q_watch_file",
+        "q_watch_interval"
+        
       ]
     }
+    
   ]
 }

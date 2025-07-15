@@ -32,12 +32,6 @@
       ]
     },
     {
-      "title": "Condition (Dependencies)",
-      "questionIds": [
-        "q_conditions"
-      ]
-    },
-    {
       "title": "Other Settings",
       "questionIds": [
         "q_description",
