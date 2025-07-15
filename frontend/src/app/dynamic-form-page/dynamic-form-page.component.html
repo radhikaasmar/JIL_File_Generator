@@ -42,67 +42,39 @@
     </div>
   </div>
 
-  <!-- Add Function Buttons Section -->
-  <div class="add-function-buttons-section">
-    <div class="section-header">
-      <h3>Add Function Jobs</h3>
-      <p class="section-description">Add specific job types to your configuration</p>
-    </div>
+  <div class="function-button-group">
+  <div class="function-buttons-row">
+    <!-- Add CFW Button -->
+    <button class="btn-function btn-add-cfw" (click)="addCfwFunction()">
+      <span class="btn-function-icon">🔄</span>
+      Add CFW
+    </button>
 
-    <div class="function-buttons-container">
-      <!-- Add CMD Button -->
-      <div class="function-button-group">
-        <button 
-          class="add-function-btn cmd-btn" 
-          (click)="showAddCmdDropdown = !showAddCmdDropdown"
+    <!-- Add FW Button -->
+    <button class="btn-function btn-add-fw" (click)="addFwFunction()">
+      <span class="btn-function-icon">👁️</span>
+      Add FW
+    </button>
 
-          >
-          <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-          </svg>
-          Add CMD
-        </button>
-        
-        <!-- CMD Dropdown -->
-        <div class="cmd-dropdown" [class.show]="showAddCmdDropdown" *ngIf="showAddCmdDropdown">
-          <div class="dropdown-header">
-            <span>Select CMD Function</span>
-            <button class="close-dropdown" (click)="showAddCmdDropdown = false">×</button>
-          </div>
-          <div class="dropdown-options">
-            <button 
-              *ngFor="let option of getCmdOptions()" 
-              class="dropdown-option"
-              (click)="addCmdFunction(option)">
-              {{ option.label }}
-            </button>
-          </div>
+    <!-- Add CMD Button with Dropdown -->
+    <div class="cmd-dropdown-container">
+      <button class="btn-function btn-add-cmd" (click)="toggleCmdDropdown()">
+        <span class="btn-function-icon">⚡</span>
+        Add CMD
+        <span class="btn-function-icon">▼</span>
+      </button>
+      
+      <div class="cmd-dropdown" [class.show]="showAddCmdDropdown">
+        <div class="cmd-dropdown-item" 
+             *ngFor="let option of getCmdOptions()" 
+             (click)="addCmdFunction(option)">
+          <span>{{ option.label }}</span>
         </div>
       </div>
-
-      <!-- Add FW Button -->
-      <button 
-        class="add-function-btn fw-btn" 
-        (click)="addFwFunction()"
->
-        <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-          <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-        </svg>
-        Add FW
-      </button>
-
-      <!-- Add CFW Button -->
-      <button 
-        class="add-function-btn cfw-btn" 
-        (click)="addCfwFunction()">
-        <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-        </svg>
-        Add CFW
-      </button>
     </div>
   </div>
+</div>
+
 
  <!-- JIL Actions Section -->
   <div class="jil-actions-section" *ngIf="getAvailableEnvironments().length > 0">

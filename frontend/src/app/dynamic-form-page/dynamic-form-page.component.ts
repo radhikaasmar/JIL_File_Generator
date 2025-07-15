@@ -75,6 +75,9 @@ export class DynamicFormPageComponent implements OnInit {
       });
     });
   }
+      toggleCmdDropdown(): void {
+  this.showAddCmdDropdown = !this.showAddCmdDropdown;
+}
 
   private initializeDefaultSubforms() {
     // Always add top subform
