@@ -13,7 +13,7 @@ import { EnvironmentStateService } from '../services/environment-state.service';
 import { DaysOfWeekService } from '../services/days-of-week.service';
 import { JILFieldOrder, getFieldOrder, EXCLUDED_FROM_JIL, JOB_TYPE_RESTRICTIONS } from '../enums/jil-field-order.enum';
 import { JilOutputComponent } from '../components/jil-output/jil-output.component';
-
+import { CalendarService, CustomCalendar } from '../services/calendar.service';
 @Component({
   selector: 'app-dynamic-form-page',
   templateUrl: './dynamic-form-page.component.html',
@@ -44,7 +44,8 @@ export class DynamicFormPageComponent implements OnInit {
     private functionJobMappingService: FunctionJobMappingService,
     private environmentStateService: EnvironmentStateService,
     private daysOfWeekService: DaysOfWeekService,
-    private loadFrequencyService: LoadFrequencyService
+    private loadFrequencyService: LoadFrequencyService,
+    private calendarService: CalendarService
   ) {}
 
   ngOnInit() {
@@ -702,9 +703,39 @@ private generateFullJobNameForTruncationCheck(instance: SubformInstance): string
       this.downloadFile(jilContent, fileName);
     });
   }
+onCalendarSelected(calendarName: string) {
+  const topInstance = this.subformInstances.find(s => s.type === 'top');
+  if (topInstance) {
+    const runCalendarControl = topInstance.form.get('run_calendar');
+    if (runCalendarControl) {
+      runCalendarControl.setValue(calendarName);
+      runCalendarControl.markAsTouched();
+    }
+    this.updateJobNames();
+  }
+}
+
+onCustomCalendarCreated(calendar: CustomCalendar) {
+  const topInstance = this.subformInstances.find(s => s.type === 'top');
+  if (topInstance) {
+    const runCalendarControl = topInstance.form.get('run_calendar');
+    if (runCalendarControl) {
+      runCalendarControl.setValue(calendar.extendedCalendar);
+      runCalendarControl.markAsTouched();
+    }
+    this.updateJobNames();
+  }
+}
 
   private generateJILContent(environment: string, baseJobName: string, topInstance: SubformInstance): string {
     let jilContent = '';
+  
+  // Add custom calendars at the top
+  const customCalendars = this.calendarService.getCustomCalendars();
+  customCalendars.forEach(calendar => {
+    jilContent += this.calendarService.generateCalendarJIL(calendar);
+    jilContent += '\n\n';
+  });
     
     // 1. Generate Box Job first
     const boxInstance = this.subformInstances.find(s => s.type === 'box');

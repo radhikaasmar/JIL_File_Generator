@@ -1,0 +1,116 @@
+.calendar-dialog-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.calendar-dialog-box {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  padding: 2rem 2.5rem;
+  min-width: 400px;
+  max-width: 95vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.calendar-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 1.5rem;
+}
+
+.calendar-dialog-header h3 {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.calendar-dialog-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #888;
+  transition: color 0.2s;
+}
+.calendar-dialog-close:hover {
+  color: #d32f2f;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.2rem 2rem;
+}
+.form-field.full-width {
+  grid-column: 1 / span 2;
+}
+.form-field label {
+  font-weight: 500;
+  margin-bottom: 0.3rem;
+  display: block;
+}
+.form-field input,
+.form-field textarea {
+  width: 100%;
+  padding: 0.5rem;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  margin-bottom: 0.2rem;
+  box-sizing: border-box;
+}
+.form-field textarea {
+  resize: vertical;
+}
+.field-hint {
+  font-size: 0.85em;
+  color: #888;
+  margin-bottom: 0.2rem;
+}
+.validation-error {
+  color: #d32f2f;
+  font-size: 0.9em;
+  margin-top: 0.1rem;
+}
+.required {
+  color: #d32f2f;
+}
+.calendar-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+.btn {
+  padding: 0.5rem 1.2rem;
+  border-radius: 5px;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-primary {
+  background: #1976d2;
+  color: #fff;
+}
+.btn-primary:disabled {
+  background: #90caf9;
+  cursor: not-allowed;
+}
+.btn-secondary {
+  background: #eee;
+  color: #333;
+}
+.btn-secondary:hover {
+  background: #e0e0e0;
+}

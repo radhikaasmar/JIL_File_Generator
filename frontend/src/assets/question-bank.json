@@ -217,6 +217,7 @@
       "key": "run_calendar",
       "label": "Run Calendar",
       "type": "text",
+      "controlType": "textbox",
       "placeholder": "Enter calendar name",
       "validators": [],
       "dependsOn": {

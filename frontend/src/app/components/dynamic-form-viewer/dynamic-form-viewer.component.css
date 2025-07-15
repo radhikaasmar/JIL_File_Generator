@@ -80,7 +80,32 @@
   align-items: center;
   gap: 0.5rem; /* Reduced from 0.75rem */
 }
+.form-container {
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
+}
+.dynamic-form-container {
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
+}
+.calendar-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 10000;
+  isolation: isolate;
+}
 
+/* Blur effect for entire page when popup is open */
+.page-blur {
+  filter: blur(4px);
+  pointer-events: none;
+  user-select: none;
+}
 .form-section {
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
   border-radius: 12px; /* Reduced from 16px */
@@ -91,6 +116,8 @@
   width: 100%;
   box-sizing: border-box;
   box-shadow: 0 2px 12px rgba(37, 99, 235, 0.04); /* Reduced shadow */
+   position: relative;
+  z-index: 1;
 }
 
 .form-section:hover {

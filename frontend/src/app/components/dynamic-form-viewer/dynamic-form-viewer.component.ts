@@ -1,20 +1,28 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormGroup, FormArray } from '@angular/forms';
+import { ReactiveFormsModule, FormGroup, FormArray, FormControl, AbstractControl } from '@angular/forms';
 import { DynamicFormBuilderService, SubformInstance } from '../../services/dynamic-form-builder.service';
 import { EnvironmentStateService } from '../../services/environment-state.service';
 import { DaysOfWeekService } from '../../services/days-of-week.service';
 import { LoadFrequencyService } from '../../services/load-frequency.service';
 import { Subscription } from 'rxjs';
+import { CalendarService, CustomCalendar } from '../../services/calendar.service';
+import { CalendarPopupComponent } from '../calendar-popup/calendar-popup.component';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-dynamic-form-viewer',
   templateUrl: './dynamic-form-viewer.component.html',
   standalone: true,
   styleUrls: ['./dynamic-form-viewer.component.css'],
-  imports: [CommonModule, ReactiveFormsModule]
+  imports: [CommonModule, ReactiveFormsModule, FormsModule,CalendarPopupComponent]
 })
 export class DynamicFormViewerComponent implements OnInit, OnDestroy {
+  // For run_calendar UI logic
+  selectedCalendarOption: string = '';
+  showDropdown: boolean = false;
+  predefinedCalendars: string[] = [];
+  showCalendarPopup: boolean = false;
   @Input() sections: any[] = [];
   @Input() form!: FormGroup;
   @Input() subformContext?: SubformInstance;
@@ -31,7 +39,8 @@ export class DynamicFormViewerComponent implements OnInit, OnDestroy {
     private formBuilder: DynamicFormBuilderService,
     private environmentStateService: EnvironmentStateService,
     private daysOfWeekService: DaysOfWeekService,
-    private loadFrequencyService: LoadFrequencyService
+    private loadFrequencyService: LoadFrequencyService,
+     private calendarService: CalendarService
   ) {}
 
   ngOnInit() {
@@ -53,6 +62,17 @@ export class DynamicFormViewerComponent implements OnInit, OnDestroy {
     if (loadFreqControl && loadFreqControl.value) {
       this.loadFrequencyService.updateLoadFrequency(loadFreqControl.value);
     }
+    
+    // Load predefined calendars from JSON
+    fetch('assets/calendars.json')
+      .then(res => res.json())
+      .then(data => {
+        if (data && Array.isArray(data.predefinedCalendars)) {
+          this.predefinedCalendars = data.predefinedCalendars;
+        }
+      });
+
+    // If you want to load from a service, do it here instead of hardcoding
   }
 
   ngOnDestroy() {
@@ -85,6 +105,14 @@ isFieldDisabled(fieldKey: string): boolean {
   
   return false;
 }
+onCalendarSelected(calendarName: string) {
+  const runCalendarControl = this.form.get('run_calendar');
+  if (runCalendarControl) {
+    runCalendarControl.setValue(calendarName);
+  }
+  this.onFormChange();
+}
+
 
 getDisabledReason(fieldKey: string): string | null {
   if (!this.subformContext) return null;
@@ -426,26 +454,46 @@ onLoadFrequencyChange() {
     return field.options || [];
   }
 
-  getFinalConditionString(q: any): string {
-    const arr = this.getConditionsArray(q.key);
-    if (arr.length === 0) return 'No conditions defined';
+  // --- run_calendar UI logic methods ---
+  onCalendarDropdownChange(value: string): void {
+    this.selectedCalendarOption = value;
+    if (value === 'custom') {
+      this.showCalendarPopup = true;
+    } else if (value) {
+      this.form.get('run_calendar')?.setValue(value);
+    }
+  }
+getFinalConditionString(q: any): string {
+  const conditions = this.form.get(q.key)?.value;
+  if (!conditions || !Array.isArray(conditions)) return '';
+  
+  return conditions
+    .map((condition: any, index: number) => {
+      const type = condition.type;
+      const job = condition.job;
+      const logic = condition.logic;
+      
+      if (!job || !type) return '';
+      
+      let conditionStr = `${type}(${job})`;
+      if (logic && logic !== 'NONE' && index < conditions.length - 1) {
+        conditionStr += ` ${logic.toUpperCase()} `;
+      }
+      
+      return conditionStr;
+    })
+    .filter(str => str !== '')
+    .join('') || '';
+}
 
-    return arr.controls
-      .map((ctrl, idx) => {
-        const type = ctrl.get('type')?.value;
-        const job = ctrl.get('job')?.value;
-        const logic = ctrl.get('logic')?.value;
 
-        if (!job || !type) return '';
-
-        let conditionStr = `${type}(${job})`;
-        if (logic && logic !== 'NONE' && idx < arr.length - 1) {
-          conditionStr += ` ${logic.toUpperCase()} `;
-        }
-        return conditionStr;
-      })
-      .filter(str => str !== '')
-      .join('') || 'No conditions defined';
+  onCustomCalendarCreated(calendar: any) {
+    if (calendar && calendar.extendedCalendar) {
+      this.form.get('run_calendar')?.setValue(calendar.extendedCalendar);
+      this.selectedCalendarOption = calendar.extendedCalendar;
+      // Optionally store the custom calendar for JIL output
+    }
+    this.showCalendarPopup = false;
   }
 
 // In dynamic-form-viewer.component.ts
@@ -579,5 +627,10 @@ private generateTruncatedJobName(fields: string[]): string {
       return false;
     }
     return this.selectedEnvironments.includes(envKey);
+  }
+
+  // Add this helper method for template casting
+  asFormControl(ctrl: AbstractControl | null): FormControl {
+    return ctrl as FormControl;
   }
 }

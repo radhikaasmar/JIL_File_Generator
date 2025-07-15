@@ -39,21 +39,21 @@
                     <ng-container *ngIf="q.key === 'run_calendar'">
                       <div *ngIf="shouldShowField(q.key)" class="conditional-field">
                         <label [ngClass]="{'required': hasRequiredValidator(q)}">{{ q.label }}</label>
-                        <input
-                          [formControlName]="q.key"
-                          [placeholder]="q.placeholder"
-                          [type]="getInputType(q)"
-                          [maxlength]="getMaxLength(q)"
-                          [pattern]="getPattern(q)"
-                          [class]="getInputClass(q.key)"
-                          (input)="onFormChange()"
-                          (blur)="onFieldBlur(q.key)" />
-
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                          <input [formControlName]="q.key" placeholder="Enter calendar name" style="flex: 1 1 auto;" />
+                          <select #calendarSelect style="flex: 1 1 auto; max-width: 200px;" (change)="onCalendarDropdownChange(calendarSelect.value)">
+                            <option value="">Select calendar...</option>
+                            <option *ngFor="let cal of predefinedCalendars" [value]="cal">{{ cal }}</option>
+                          </select>
+                          <button type="button" class=" btn-primary " (click)="showCalendarPopup = true">
+                            + Custom Calendar
+                          </button>
+                        </div>
+                      
                         <!-- Validation Error Display -->
                         <div *ngIf="hasValidationError(q.key)" class="validation-error">
                           <small>{{ getValidationErrorMessage(q.key, q) }}</small>
                         </div>
-
                         <div class="field-dependency-info">
                           <small>Visible when Load Frequency is Monthly or Custom</small>
                         </div>
@@ -238,5 +238,10 @@
         </ng-container>
       </div>
     </form>
+      <app-calendar-popup *ngIf="showCalendarPopup"
+                          [isVisible]="showCalendarPopup"
+                          (close)="showCalendarPopup = false"
+                          (calendarCreated)="onCustomCalendarCreated($event)">
+                        </app-calendar-popup>
   </div>
 </div>
