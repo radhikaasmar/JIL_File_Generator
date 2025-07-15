@@ -35,7 +35,7 @@ export function getFieldOrder(fieldName: string): number {
 // Define fields that should NEVER appear in JIL files (naming convention only)
 export const EXCLUDED_FROM_JIL = [
   'csi', 'efforttype', 'prodlob', 'purpose', 'loadfreq', 'loadlayer',
-  'dev', 'uat', 'prod', 'cob', 'environments', 'funofjob', 'jobtitle'
+  'dev', 'uat', 'prod', 'cob', 'environments', 'funofjob', 'jobtitle','funofbox'
 ];
 
 // Define job-type specific field restrictions

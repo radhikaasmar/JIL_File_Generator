@@ -1042,6 +1042,7 @@ textarea:focus,
   animation: fadeIn 0.3s ease-out;
 }
 /* Read-only field styling */
+/* In dynamic-form-viewer.component.css - Ensure consistent read-only styling */
 .readonly-field {
   display: flex;
   justify-content: space-between;
@@ -1075,7 +1076,7 @@ textarea:focus,
   font-weight: 500;
 }
 
-/* Hover effect matching your design system */
+/* Hover effect for read-only fields */
 .readonly-field:hover {
   background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
   transform: translateY(-1px);

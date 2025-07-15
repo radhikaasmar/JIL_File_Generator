@@ -65,32 +65,68 @@ export class DynamicFormViewerComponent implements OnInit, OnDestroy {
   }
 
   // **NEW: Check if a field should be disabled**
-  isFieldDisabled(fieldKey: string): boolean {
-    if (!this.subformContext) return false;
-    
-    // Disable function of job and job type dropdowns in non-top subforms
-    if ((fieldKey === 'funofjob' || fieldKey === 'jobtitle') && 
-        ['box', 'cmd', 'cfw', 'fw'].includes(this.subformContext.type)) {
-      return true;
-    }
-    
-    return false;
+isFieldDisabled(fieldKey: string): boolean {
+  if (!this.subformContext) return false;
+  
+  // Job type should be fixed for ALL subforms (including box)
+  if (fieldKey === 'jobtitle') {
+    return true;
   }
+  
+  // Function of job should be fixed for all non-box subforms
+  if (fieldKey === 'funofjob' && this.subformContext.type !== 'box') {
+    return true;
+  }
+  
+  // Function of box should be editable ONLY for box job types
+  if (fieldKey === 'funofbox' && this.subformContext.type !== 'box') {
+    return true;
+  }
+  
+  return false;
+}
 
-  // **NEW: Get disabled reason for user feedback**
-  getDisabledReason(fieldKey: string): string | null {
-    if (!this.subformContext) return null;
-    
-    if (fieldKey === 'funofjob' && ['box', 'cmd', 'cfw', 'fw'].includes(this.subformContext.type)) {
-      return 'Function of Job is automatically set based on subform selection';
-    }
-    
-    if (fieldKey === 'jobtitle' && ['box', 'cmd', 'cfw', 'fw'].includes(this.subformContext.type)) {
-      return 'Job Type is automatically determined by the subform type';
-    }
-    
-    return null;
+getDisabledReason(fieldKey: string): string | null {
+  if (!this.subformContext) return null;
+  
+  if (fieldKey === 'jobtitle') {
+    return 'Job Type is automatically determined by the subform type';
   }
+  
+  if (fieldKey === 'funofjob' && this.subformContext.type !== 'box') {
+    return 'Function of Job is automatically set based on subform selection';
+  }
+  
+  if (fieldKey === 'funofbox' && this.subformContext.type !== 'box') {
+    return 'Function field is not applicable for this job type';
+  }
+  
+  return null;
+}
+
+
+shouldShowAsReadonly(fieldKey: string): boolean {
+  if (!this.subformContext) return false;
+  
+  // Job type is read-only for ALL subforms
+  if (fieldKey === 'jobtitle') {
+    return true;
+  }
+  
+  // Function of job is read-only for non-box job types
+  if (fieldKey === 'funofjob' && this.subformContext.type !== 'box') {
+    return true;
+  }
+  
+  // Function of box is read-only for non-box job types only
+  if (fieldKey === 'funofbox' && this.subformContext.type !== 'box') {
+    return true;
+  }
+  
+  return false;
+}
+
+
 
   // **NEW: Get input type based on validators**
   getInputType(question: any): string {
@@ -135,12 +171,6 @@ export class DynamicFormViewerComponent implements OnInit, OnDestroy {
     return patternValidator ? patternValidator.value : '';
   }
   // **NEW: Check if field should be shown as read-only**
-shouldShowAsReadonly(fieldKey: string): boolean {
-  if (!this.subformContext) return false;
-    
-    return (fieldKey === 'funofjob' || fieldKey === 'jobtitle') && 
-          ['box', 'cmd', 'cfw', 'fw'].includes(this.subformContext.type);
-  }
 
   // **NEW: Get display value for read-only fields**
   getDisplayValue(fieldKey: string, question: any): string {
@@ -418,37 +448,33 @@ onLoadFrequencyChange() {
       .join('') || 'No conditions defined';
   }
 
-  get integratedJobValue(): string {
-  // If job name is passed from parent, use it
+// In dynamic-form-viewer.component.ts
+get integratedJobValue(): string {
   if (this.jobNameForDisplay) {
     return this.jobNameForDisplay;
   }
-  
-  // Fallback to original logic for top forms
+
   if (!this.form) return '';
   
+  // For top form, only show fields that exist in common configuration
   if (this.subformContext?.type === 'top') {
-    const fields = ['csi', 'efforttype', 'prodlob', 'purpose', 'loadfreq', 'loadlayer'];
-    return this.generateTruncatedJobName(fields);
+    const commonFields = ['csi', 'efforttype', 'prodlob', 'loadfreq'];
+    return this.generateTruncatedJobName(commonFields);
   }
-  
+
   return '';
 }
 
-  private generateTruncatedJobName(fields: string[]): string {
-    const values = fields.map(f => this.form.get(f)?.value || '').map(v => v.toString().toUpperCase());
-    const nonEmptyValues = values.filter(v => v !== '');
-    
-    if (nonEmptyValues.length === 0) return 'Job name will appear here';
-    
-    const fullJobName = nonEmptyValues.join('_');
-    
-    if (fullJobName.length <= 60) {
-      return fullJobName;
-    }
-    
-    return this.truncateWithPurpose(values);
-  }
+private generateTruncatedJobName(fields: string[]): string {
+  const values = fields.map(f => this.form.get(f)?.value || '').map(v => v.toString().toUpperCase());
+  const nonEmptyValues = values.filter(v => v !== '');
+  
+  if (nonEmptyValues.length === 0) return 'Job name will appear here (complete in subforms)';
+  
+  const partialJobName = nonEmptyValues.join('_');
+  return `${partialJobName}... (complete in subforms)`;
+}
+
 
   private truncateWithPurpose(values: string[]): string {
     const purposeIndex = 3;
