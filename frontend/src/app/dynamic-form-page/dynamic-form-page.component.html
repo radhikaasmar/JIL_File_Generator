@@ -1,11 +1,11 @@
 <div class="dynamic-form-container">
   <div class="form-header">
     <h1>Dynamic Form Configuration</h1>
-    
+
     <!-- Navigation Tab Bar -->
     <div class="nav-tab-bar">
       <div class="nav-tabs">
-        <button 
+        <button
           *ngFor="let instance of subformInstances; trackBy: trackByInstanceId"
           class="nav-tab"
           [class.active]="activeNavTab === instance.id"
@@ -23,27 +23,27 @@
 
   <!-- Subforms Container with Collapse Functionality -->
   <div class="subforms-container">
-    <div 
-      *ngFor="let instance of subformInstances; trackBy: trackByInstanceId" 
+    <div
+      *ngFor="let instance of subformInstances; trackBy: trackByInstanceId"
       class="subform-wrapper"
       [id]="'subform-' + instance.id"
     >
       <div class="subform-header" (click)="toggleSubformCollapse(instance.id)">
         <div class="header-left">
           <button class="collapse-btn" type="button">
-            <svg class="collapse-icon" 
+            <svg class="collapse-icon"
                  [class.rotated]="isSubformCollapsed(instance.id)"
-                 fill="none" 
-                 stroke="currentColor" 
+                 fill="none"
+                 stroke="currentColor"
                  viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
             </svg>
           </button>
           <h2>{{ instance.displayName }}</h2>
         </div>
-        
-        <button 
-          *ngIf="instance.removable" 
+
+        <button
+          *ngIf="instance.removable"
           class="remove-btn"
           (click)="removeSubformInstance(instance.id); $event.stopPropagation()"
         >
@@ -59,7 +59,7 @@
             Job name has been truncated to meet the 60-character limit
           </div>
         </div>
-        
+
 
         <app-dynamic-form-viewer
           [sections]="instance.sections"
@@ -74,29 +74,31 @@
   </div>
 
   <!-- Add Function Section - Moved to bottom -->
+  <br>
+  <div>
   <div class="add-function-section">
-    
+
     <div class="section-header">
-      <button 
-        class="collapse-btn" 
+      <button
+        class="collapse-btn"
         type="button"
         (click)="toggleSectionCollapse('add-functions')"
       >
-        <svg class="collapse-icon" 
+        <svg class="collapse-icon"
              [class.rotated]="isSectionCollapsed('add-functions')"
-             fill="none" 
-             stroke="currentColor" 
+             fill="none"
+             stroke="currentColor"
              viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
         </svg>
       </button>
       <label>Add Functions</label>
     </div>
-    
+
     <div class="function-button-group" [class.collapsed]="isSectionCollapsed('add-functions')">
       <div class="function-buttons-row">
         <!-- CFW Button -->
-        <button 
+        <button
           class="btn-function btn-add-cfw"
           (click)="addCfwFunction()"
           type="button"
@@ -109,7 +111,7 @@
         </button>
 
         <!-- FW Button -->
-        <button 
+        <button
           class="btn-function btn-add-fw"
           (click)="addFwFunction()"
           type="button"
@@ -120,10 +122,10 @@
           </svg>
           Add FW
         </button>
-          
+
         <!-- CMD Dropdown -->
         <div class="cmd-dropdown-container">
-          <button 
+          <button
             class="btn-function btn-add-cmd"
             (click)="toggleCmdDropdown()"
             type="button"
@@ -136,9 +138,9 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
             </svg>
           </button>
-          
+
           <div class="cmd-dropdown" [class.show]="showAddCmdDropdown">
-            <div 
+            <div
               *ngFor="let option of getCmdOptions()"
               class="cmd-dropdown-item"
               (click)="addCmdFunction(option)"
@@ -147,23 +149,23 @@
             </div>
           </div>
         </div>
-      
-    </div>
-  
-  </div>
 
+    </div>
+
+  </div>
+  </div>
   <!-- JIL Actions Section - Only show when environment is selected -->
   <div class="jil-actions-section" *ngIf="getAvailableEnvironments().length > 0">
     <div class="actions-header">
       <h3>JIL Actions</h3>
     </div>
-    
+
     <div class="actions-content">
       <div class="buttons-row">
         <div class="preview-group">
           <label class="section-label">Preview JIL Files</label>
           <div class="preview-buttons">
-            <button 
+            <button
               *ngFor="let env of getAvailableEnvironments()"
               class="btn btn-preview"
               (click)="previewJILForEnvironment(env)"
@@ -177,9 +179,9 @@
             </button>
           </div>
         </div>
-        
+
         <div class="download-group">
-          <button 
+          <button
             class="btn btn-download"
             (click)="downloadJILFiles()"
             type="button"
@@ -198,7 +200,7 @@
 <!-- JIL Preview Modal -->
 <div *ngIf="showJILPreview" class="jil-preview-overlay">
   <app-jil-output
-   
+
    [generatedJIL]="previewJILContent"
   [showJIL]="showJILPreview"
   [environment]="previewEnvironment"
