@@ -269,7 +269,7 @@ export class DynamicFormPageComponent implements OnInit {
     const instanceNumber = existingInstances.length + 1;
     const displayName = instanceNumber > 1 ? `CFW #${instanceNumber}` : 'CFW';
     
-    this.addSubformInstance('cfw', displayName, true, 'cfw');
+    this.addSubformInstance('cmd', displayName, true, 'cfw');
     
     // Set default values for new instance
     const selectedEnvs = this.environmentStateService.getSelectedEnvironments();
@@ -676,30 +676,38 @@ export class DynamicFormPageComponent implements OnInit {
   }
 
   downloadJILFiles() {
-    const topInstance = this.subformInstances.find(s => s.type === 'top');
-    if (!topInstance) {
-      alert('No configuration found to generate JIL files');
-      return;
-    }
-
-    const selectedEnvs = this.getSelectedEnvironments(topInstance.form);
-    if (selectedEnvs.length === 0) {
-      alert('Please select at least one environment');
-      return;
-    }
-
-    const baseJobName = this.generateBaseJobName(topInstance.form);
-    if (!baseJobName) {
-      alert('Please fill in the required fields to generate job name');
-      return;
-    }
-
-    selectedEnvs.forEach(env => {
-      const jilContent = this.generateJILContent(env, baseJobName, topInstance);
-      const fileName = `${baseJobName}_${env.toUpperCase()}.jil.txt`;
-      this.downloadFile(jilContent, fileName);
-    });
+  const topInstance = this.subformInstances.find(s => s.type === 'top');
+  if (!topInstance) {
+    alert('No configuration found to generate JIL files');
+    return;
   }
+
+  const selectedEnvs = this.getSelectedEnvironments(topInstance.form);
+  if (selectedEnvs.length === 0) {
+    alert('Please select at least one environment');
+    return;
+  }
+
+  // Get the box job name instead of base job name
+  const boxInstance = this.subformInstances.find(s => s.type === 'box');
+  if (!boxInstance) {
+    alert('No box job found to generate file name');
+    return;
+  }
+
+  const boxJobName = this.getJobNameForInstance(boxInstance);
+  if (!boxJobName) {
+    alert('Please fill in the required fields to generate box job name');
+    return;
+  }
+
+  selectedEnvs.forEach(env => {
+    const jilContent = this.generateJILContent(env, boxJobName, topInstance);
+    const fileName = `${boxJobName}_${env.toUpperCase()}.jil.txt`;
+    this.downloadFile(jilContent, fileName);
+  });
+}
+
 onCalendarSelected(calendarName: string) {
   const topInstance = this.subformInstances.find(s => s.type === 'top');
   if (topInstance) {
