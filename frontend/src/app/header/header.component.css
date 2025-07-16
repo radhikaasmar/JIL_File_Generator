@@ -126,7 +126,7 @@
   transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
 }
 .classic-upload-btn:hover, .classic-upload-btn:focus {
-  background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+  background: linear-gradient(135deg,  #00c8ff 0%,#2feb25  100%);
   transform: translateY(-1px) scale(1.03);
   box-shadow: 0 4px 16px rgba(37, 99, 235, 0.18);
   outline: none;

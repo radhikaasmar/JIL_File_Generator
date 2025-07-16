@@ -21,6 +21,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   error: string = '';
   selectedFileName: string = '';
   showUploadDialog: boolean = false;
+  cmdJobsBySubform: { [subform: string]: any[] } = {};
 
   constructor(
     private parserConfig: ParserConfigService,
@@ -88,6 +89,10 @@ export class HeaderComponent implements OnInit, OnDestroy {
     // Split content into job blocks
     const blocks = content.split(/(?=insert_job:)/i).map(b => b.trim()).filter(b => b);
     const jobs: any[] = [];
+    const cmdJobsBySubform: { [subform: string]: any[] } = {};
+    const allowedSubforms = [
+      'ING', 'DQ', 'EXT', 'LD', 'NDM', 'PG', 'RP', 'RV', 'RE', 'CS', 'PURGE', 'PUB', 'DRV', 'CFW'
+    ];
     const normalizedMapping: {[key: string]: string} = {};
     Object.keys(this.keyMapping).forEach(k => {
       normalizedMapping[k.trim().toLowerCase()] = this.keyMapping[k];
@@ -120,6 +125,19 @@ export class HeaderComponent implements OnInit, OnDestroy {
           data['loadlayer'] = parts[5];
           data['funofjob'] = parts[6].toLowerCase();
           if (parts.length > 7) data['jobtitle'] = parts[7].toLowerCase();
+        }
+        // Subform extraction for CMD jobs using split('_')[6]
+        if ((data['job_type'] || '').toUpperCase() === 'CMD') {
+          const parts = data['insert_job'].split('_');
+          let subform = '';
+          if (parts.length > 6) {
+            subform = parts[6].toUpperCase();
+          }
+          if (allowedSubforms.includes(subform)) {
+            data['subform'] = subform;
+            if (!cmdJobsBySubform[subform]) cmdJobsBySubform[subform] = [];
+            cmdJobsBySubform[subform].push(data);
+          }
         }
       }
       // Normalize dropdown values
@@ -159,8 +177,10 @@ export class HeaderComponent implements OnInit, OnDestroy {
     }
     this.loading = false;
     this.error = '';
+    this.cmdJobsBySubform = cmdJobsBySubform; // Make available on the component
     console.log('Parsed jobs (header):', jobs);
-    this.mainFormPopulation.sendParsedData(jobs);
+    console.log('CMD jobs grouped by subform:', cmdJobsBySubform);
+    this.mainFormPopulation.sendParsedData({ jobs, cmdJobsBySubform });
     this.router.navigate(['/dynamic-form']);
   }
 }

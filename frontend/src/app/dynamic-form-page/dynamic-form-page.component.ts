@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { LoadFrequencyService } from '../services/load-frequency.service';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, FormArray } from '@angular/forms';
 import { DynamicQuestionService } from '../services/dynamic-question.service';
 import { DynamicFormBuilderService, SubformInstance } from '../services/dynamic-form-builder.service';
 import { SubformConfigService, ResolvedSubformConfig } from '../services/subform-config.service';
@@ -45,6 +45,9 @@ export class DynamicFormPageComponent implements OnInit {
   // Collapsed sections
   collapsedSections: {[key: string]: boolean} = {};
   private parsedDataSubscription: any;
+  loadingSubform: string | null = null;
+  loadedJobs: { [subform: string]: any[] } = {};
+  cmdJobsBySubform: { [subform: string]: any[] } = {};
 
   constructor(
     private questionService: DynamicQuestionService,
@@ -78,8 +81,10 @@ export class DynamicFormPageComponent implements OnInit {
         }
       });
     }, 100);
-     this.parsedDataSubscription = this.mainFormPopulation.parsedData$.subscribe(jobs => {
-      if (Array.isArray(jobs) && jobs.length > 0) {
+     this.parsedDataSubscription = this.mainFormPopulation.parsedData$.subscribe(async data => {
+      if (data && Array.isArray(data.jobs) && data.jobs.length > 0) {
+        const jobs = data.jobs;
+        this.cmdJobsBySubform = data.cmdJobsBySubform || {};
         // Patch box subform
         const boxJob = jobs.find(j => (j.job_type || '').toUpperCase() === 'BOX');
         const boxInstance = this.subformInstances.find(s => s.type === 'box');
@@ -96,22 +101,31 @@ export class DynamicFormPageComponent implements OnInit {
         }
         // Handle CMD/FW/CFW jobs
         const functionJobs = jobs.filter(j => ['CMD','FW','CFW'].includes((j.job_type || '').toUpperCase()));
-        functionJobs.forEach(job => {
-          // Check if a subform for this job already exists (by insert_job or unique fields)
-          let instance = this.subformInstances.find(s => s.type === job.job_type.toLowerCase() && s.form.get('insert_job')?.value === job.insert_job);
-          if (!instance) {
-            // Dynamically add subform
-            const displayName = job.insert_job || job.job_type;
-            this.addSubformInstance(job.job_type.toLowerCase(), displayName, true, job.funofjob);
-            instance = this.subformInstances[this.subformInstances.length - 1];
+        for (const job of functionJobs) {
+          let type = job.job_type.toLowerCase();
+          let subformType = type;
+          if (type === 'cfw') {
+            subformType = 'cfw';
+          } else if (type === 'fw') {
+            subformType = 'fw';
+          } else {
+            subformType = 'cmd';
           }
-          // Patch the subform
-          Object.keys(job).forEach(key => {
-            if (instance.form.get(key)) {
-              instance.form.get(key)?.setValue(job[key]);
+          this.addSubformInstance(subformType, job.insert_job, true, job.funofjob);
+          const instance = this.subformInstances[this.subformInstances.length - 1];
+          // Patch the subform with this job's data
+          for (const key of Object.keys(job)) {
+            const control = instance.form.get(key);
+            if (control) {
+              if (key === 'conditions' && Array.isArray(job[key]) && control instanceof FormArray) {
+                await this.patchConditionsStepwise(control, job[key], () => this.formBuilder.buildConditionGroup(instance.sections.find(sec => sec.questions.some((q: any) => q.key === 'conditions')).questions.find((q: any) => q.key === 'conditions').item.fields));
+              } else {
+                control.setValue(job[key]);
+              }
             }
-          });
-        });
+          }
+        }
+        // You can now use cmdJobsBySubform for grouped display if needed
       }
     });
   }
@@ -1218,5 +1232,27 @@ private getExplicitlyHandledFieldsForJobType(jobType: string): string[] {
 
       return orderA - orderB;
     });
+  }
+
+  onSubformOpened(subform: string) {
+    this.loadingSubform = subform;
+    setTimeout(() => {
+      this.loadedJobs[subform] = this.cmdJobsBySubform[subform] || [];
+      this.loadingSubform = null;
+    }, 500); // Simulate async delay
+  }
+
+  // Helper for stepwise patching of conditions FormArray
+  async patchConditionsStepwise(formArray: any, conditions: any[], buildConditionGroup: () => any) {
+    for (let i = 0; i < conditions.length; i++) {
+      while (formArray.length <= i) {
+        formArray.push(buildConditionGroup());
+      }
+      formArray.at(i).patchValue(conditions[i]);
+      // If not the last, and logic is AND/OR, wait for the next row to appear
+      if (i < conditions.length - 1 && (conditions[i].logic === 'and' || conditions[i].logic === 'or')) {
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+    }
   }
 }
