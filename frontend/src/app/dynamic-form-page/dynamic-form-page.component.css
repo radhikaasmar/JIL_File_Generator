@@ -89,6 +89,8 @@
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   max-width: 100%;
   box-sizing: border-box;
+  position: relative;
+  z-index: 10;
 }
 
 .add-function-section:hover {
@@ -221,6 +223,7 @@
 .cmd-dropdown-container {
   position: relative;
   display: inline-block;
+  z-index: 11;
 }
 
 /* Fixed CMD Dropdown - Enhanced Visibility */

@@ -75,6 +75,7 @@
 
   <!-- Add Function Section - Moved to bottom -->
   <div class="add-function-section">
+    
     <div class="section-header">
       <button 
         class="collapse-btn" 
@@ -119,7 +120,7 @@
           </svg>
           Add FW
         </button>
-
+          
         <!-- CMD Dropdown -->
         <div class="cmd-dropdown-container">
           <button 
@@ -146,8 +147,9 @@
             </div>
           </div>
         </div>
-      </div>
+      
     </div>
+  
   </div>
 
   <!-- JIL Actions Section - Only show when environment is selected -->
@@ -191,7 +193,7 @@
       </div>
     </div>
   </div>
-</div>
+
 
 <!-- JIL Preview Modal -->
 <div *ngIf="showJILPreview" class="jil-preview-overlay">
@@ -204,4 +206,5 @@
   (closePreview)="closeJILPreview()"
   (downloadJIL)="downloadFromPreview($event)">
   ></app-jil-output>
+</div>
 </div>
