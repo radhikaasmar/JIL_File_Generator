@@ -1,0 +1,20 @@
+<div class="dialog-overlay">
+  <div class="dialog-box">
+    <button class="close-btn" (click)="closeDialog()" title="Close">&times;</button>
+    <h2>Choose your File</h2>
+    <div class="upload-section">
+      <input id="fileInput" type="file" accept=".txt" (change)="onFileSelected($event)" hidden />
+      <button class="classic-upload-btn" type="button" (click)="fileInput.click()">
+        <svg class="classic-upload-icon" viewBox="0 0 20 20" fill="currentColor" width="20" height="20" style="margin-right: 0.5rem; vertical-align: middle;">
+          <path d="M4 16v2h12v-2M12 12V4m0 0l-4 4m4-4l4 4" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </svg>
+        <span style="vertical-align: middle; font-weight: 600;">upload your jil.txt File</span>
+      </button>
+      <input #fileInput type="file" accept=".txt" (change)="onFileSelected($event)" style="display: none;" />
+      <span class="file-name" *ngIf="selectedFileName">{{ selectedFileName }}</span>
+    </div>
+    <div class="divider"></div>
+    <div *ngIf="loading" class="loading-spinner"><span class="spinner"></span> Loading...</div>
+    <div *ngIf="error" class="error-alert">{{ error }}</div>
+  </div>
+</div> 

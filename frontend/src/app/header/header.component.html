@@ -15,6 +15,15 @@
         </svg>
       </button>
       
+      <button class="classic-upload-btn" type="button" (click)="openUploadDialog()">
+        <svg class="classic-upload-icon" viewBox="0 0 20 20" fill="currentColor" width="20" height="20" style="margin-right: 0.5rem; vertical-align: middle;">
+          <path d="M4 16v2h12v-2M12 12V4m0 0l-4 4m4-4l4 4" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </svg>
+        <span style="vertical-align: middle; font-weight: 600;">Upload JIL</span>
+      </button>
+      <app-file-upload-dialog *ngIf="showUploadDialog" (fileParsed)="onFileParsed($event)" (closed)="onDialogClosed()"></app-file-upload-dialog>
+      <span class="file-name" *ngIf="selectedFileName">{{ selectedFileName }}</span>
+      <span class="error-alert" *ngIf="error">{{ error }}</span>
       <div class="header-datetime">
         <svg class="datetime-icon" viewBox="0 0 24 24" fill="currentColor">
           <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>

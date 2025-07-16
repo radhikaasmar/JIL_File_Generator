@@ -14,6 +14,7 @@ import { DaysOfWeekService } from '../services/days-of-week.service';
 import { JILFieldOrder, getFieldOrder, EXCLUDED_FROM_JIL, JOB_TYPE_RESTRICTIONS } from '../enums/jil-field-order.enum';
 import { JilOutputComponent } from '../components/jil-output/jil-output.component';
 import { CalendarService, CustomCalendar } from '../services/calendar.service';
+import { MainFormPopulationService } from '../services/main-form-population.service';
 
 @Component({
   selector: 'app-dynamic-form-page',
@@ -43,6 +44,7 @@ export class DynamicFormPageComponent implements OnInit {
   
   // Collapsed sections
   collapsedSections: {[key: string]: boolean} = {};
+  private parsedDataSubscription: any;
 
   constructor(
     private questionService: DynamicQuestionService,
@@ -52,7 +54,8 @@ export class DynamicFormPageComponent implements OnInit {
     private environmentStateService: EnvironmentStateService,
     private daysOfWeekService: DaysOfWeekService,
     private loadFrequencyService: LoadFrequencyService,
-    private calendarService: CalendarService
+     private calendarService: CalendarService,
+    private mainFormPopulation: MainFormPopulationService
   ) {}
 
   ngOnInit() {
@@ -75,6 +78,48 @@ export class DynamicFormPageComponent implements OnInit {
         }
       });
     }, 100);
+     this.parsedDataSubscription = this.mainFormPopulation.parsedData$.subscribe(jobs => {
+      if (Array.isArray(jobs) && jobs.length > 0) {
+        // Patch box subform
+        const boxJob = jobs.find(j => (j.job_type || '').toUpperCase() === 'BOX');
+        const boxInstance = this.subformInstances.find(s => s.type === 'box');
+        const topInstance = this.subformInstances.find(s => s.type === 'top');
+        if (boxJob && boxInstance && topInstance) {
+          Object.keys(boxJob).forEach(key => {
+            if (topInstance.form.get(key)) {
+              topInstance.form.get(key)?.setValue(boxJob[key]);
+            }
+            if (boxInstance.form.get(key)) {
+              boxInstance.form.get(key)?.setValue(boxJob[key]);
+            }
+          });
+        }
+        // Handle CMD/FW/CFW jobs
+        const functionJobs = jobs.filter(j => ['CMD','FW','CFW'].includes((j.job_type || '').toUpperCase()));
+        functionJobs.forEach(job => {
+          // Check if a subform for this job already exists (by insert_job or unique fields)
+          let instance = this.subformInstances.find(s => s.type === job.job_type.toLowerCase() && s.form.get('insert_job')?.value === job.insert_job);
+          if (!instance) {
+            // Dynamically add subform
+            const displayName = job.insert_job || job.job_type;
+            this.addSubformInstance(job.job_type.toLowerCase(), displayName, true, job.funofjob);
+            instance = this.subformInstances[this.subformInstances.length - 1];
+          }
+          // Patch the subform
+          Object.keys(job).forEach(key => {
+            if (instance.form.get(key)) {
+              instance.form.get(key)?.setValue(job[key]);
+            }
+          });
+        });
+      }
+    });
+  }
+
+  ngOnDestroy() {
+    if (this.parsedDataSubscription) {
+      this.parsedDataSubscription.unsubscribe();
+    }
   }
 
   // Navigation tab functionality
@@ -620,34 +665,42 @@ export class DynamicFormPageComponent implements OnInit {
     }
   }
   // JIL Preview and Download methods
-  previewJILForEnvironment(environment: string) {
-    const topInstance = this.subformInstances.find(s => s.type === 'top');
-    if (!topInstance) {
-      alert('No configuration found to generate JIL preview');
-      return;
-    }
-
-    const selectedEnvs = this.getSelectedEnvironments(topInstance.form);
-    if (!selectedEnvs.includes(environment)) {
-      alert(`${environment.toUpperCase()} environment is not selected`);
-      return;
-    }
-
-    const baseJobName = this.generateBaseJobName(topInstance.form);
-    if (!baseJobName) {
-      alert('Please fill in the required fields to generate job name');
-      return;
-    }
-
-    // Generate JIL content for preview
-    const jilContent = this.generateJILContent(environment, baseJobName, topInstance);
-    
-    // Set preview data
-    this.previewJILContent = jilContent;
-    this.previewEnvironment = environment;
-    this.previewJobName = baseJobName;
-    this.showJILPreview = true;
+ previewJILForEnvironment(environment: string) {
+  const topInstance = this.subformInstances.find(s => s.type === 'top');
+  if (!topInstance) {
+    alert('No configuration found to generate JIL preview');
+    return;
   }
+
+  const selectedEnvs = this.getSelectedEnvironments(topInstance.form);
+  if (!selectedEnvs.includes(environment)) {
+    alert(`${environment.toUpperCase()} environment is not selected`);
+    return;
+  }
+
+  // Change: Use box job name instead of base job name
+  const boxInstance = this.subformInstances.find(s => s.type === 'box');
+  if (!boxInstance) {
+    alert('No box job found to generate preview');
+    return;
+  }
+
+  const boxJobName = this.getJobNameForInstance(boxInstance);
+  if (!boxJobName) {
+    alert('Please fill in the required fields to generate box job name');
+    return;
+  }
+
+  // Generate JIL content for preview using box job name
+  const jilContent = this.generateJILContent(environment, boxJobName, topInstance);
+  
+  // Set preview data with box job name
+  this.previewJILContent = jilContent;
+  this.previewEnvironment = environment;
+  this.previewJobName = boxJobName; // Changed from baseJobName to boxJobName
+  this.showJILPreview = true;
+}
+
 
   closeJILPreview() {
     this.showJILPreview = false;

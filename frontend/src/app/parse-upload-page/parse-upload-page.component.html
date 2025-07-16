@@ -1,0 +1,18 @@
+<div class="parse-upload-container">
+  <h2>Parse & Upload <span class="filetype">.txt</span> File</h2>
+  <div class="file-upload-group">
+    <input id="fileInput" type="file" accept=".txt" (change)="onFileSelected($event)" hidden />
+    <button class="upload-btn" type="button" (click)="fileInput.click()">
+      <span class="upload-icon">📤</span> Choose .txt File
+    </button>
+    <span class="file-name" *ngIf="selectedFileName">{{ selectedFileName }}</span>
+  </div>
+  <div *ngIf="loading" class="loading-spinner" aria-label="Loading"></div>
+  <div *ngIf="error" class="error-alert">{{ error }}</div>
+  <div *ngIf="parsedData" class="parsed-data-card">
+    <h3>Parsed Data</h3>
+    <pre>{{ parsedData | json }}</pre>
+    <button class="populate-btn" (click)="populateMainForm()">Populate Main Form</button>
+  </div>
+</div>
+<input #fileInput type="file" accept=".txt" style="display:none" (change)="onFileSelected($event)" /> 
