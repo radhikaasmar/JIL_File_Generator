@@ -48,6 +48,8 @@ export class DynamicFormPageComponent implements OnInit {
   loadingSubform: string | null = null;
   loadedJobs: { [subform: string]: any[] } = {};
   cmdJobsBySubform: { [subform: string]: any[] } = {};
+  private configsLoaded = false;
+  private bufferedParsedData: any = null;
 
   constructor(
     private questionService: DynamicQuestionService,
@@ -82,51 +84,11 @@ export class DynamicFormPageComponent implements OnInit {
       });
     }, 100);
      this.parsedDataSubscription = this.mainFormPopulation.parsedData$.subscribe(async data => {
-      if (data && Array.isArray(data.jobs) && data.jobs.length > 0) {
-        const jobs = data.jobs;
-        this.cmdJobsBySubform = data.cmdJobsBySubform || {};
-        // Patch box subform
-        const boxJob = jobs.find(j => (j.job_type || '').toUpperCase() === 'BOX');
-        const boxInstance = this.subformInstances.find(s => s.type === 'box');
-        const topInstance = this.subformInstances.find(s => s.type === 'top');
-        if (boxJob && boxInstance && topInstance) {
-          Object.keys(boxJob).forEach(key => {
-            if (topInstance.form.get(key)) {
-              topInstance.form.get(key)?.setValue(boxJob[key]);
-            }
-            if (boxInstance.form.get(key)) {
-              boxInstance.form.get(key)?.setValue(boxJob[key]);
-            }
-          });
-        }
-        // Handle CMD/FW/CFW jobs
-        const functionJobs = jobs.filter(j => ['CMD','FW','CFW'].includes((j.job_type || '').toUpperCase()));
-        for (const job of functionJobs) {
-          let type = job.job_type.toLowerCase();
-          let subformType = type;
-          if (type === 'cfw') {
-            subformType = 'cfw';
-          } else if (type === 'fw') {
-            subformType = 'fw';
-          } else {
-            subformType = 'cmd';
-          }
-          this.addSubformInstance(subformType, job.insert_job, true, job.funofjob);
-          const instance = this.subformInstances[this.subformInstances.length - 1];
-          // Patch the subform with this job's data
-          for (const key of Object.keys(job)) {
-            const control = instance.form.get(key);
-            if (control) {
-              if (key === 'conditions' && Array.isArray(job[key]) && control instanceof FormArray) {
-                await this.patchConditionsStepwise(control, job[key], () => this.formBuilder.buildConditionGroup(instance.sections.find(sec => sec.questions.some((q: any) => q.key === 'conditions')).questions.find((q: any) => q.key === 'conditions').item.fields));
-              } else {
-                control.setValue(job[key]);
-              }
-            }
-          }
-        }
-        // You can now use cmdJobsBySubform for grouped display if needed
+      if (!this.configsLoaded) {
+        this.bufferedParsedData = data;
+        return;
       }
+      await this.processParsedData(data);
     });
   }
 
@@ -213,6 +175,12 @@ export class DynamicFormPageComponent implements OnInit {
           }
         });
         this.initializeDefaultSubforms();
+        this.configsLoaded = true;
+        // If there was buffered parsed data, process it now
+        if (this.bufferedParsedData) {
+          this.processParsedData(this.bufferedParsedData);
+          this.bufferedParsedData = null;
+        }
       });
     });
   }
@@ -229,17 +197,44 @@ export class DynamicFormPageComponent implements OnInit {
   }
 
   private addSubformInstance(type: string, displayName: string, removable: boolean, functionOfJob?: string) {
-    const config = this.subformConfigs[type];
-    if (!config) return;
-
+    // Normalize type to lowercase for all comparisons
+    const normalizedType = type.toLowerCase();
+    let config = this.subformConfigs[normalizedType];
+    // Fallback for dynamic CMD subforms (case-insensitive)
+    const knownCmdSubforms = [
+      'ing', 'dq', 'ext', 'ld', 'ndm', 'pg', 'rp', 'rv', 're', 'cs', 'purge', 'pub', 'drv'
+    ];
+    if (!config && knownCmdSubforms.includes(normalizedType)) {
+      config = this.subformConfigs['cmd'];
+      console.debug('Using CMD config fallback for subform type:', normalizedType);
+    }
+    if (!config) {
+      console.warn('No config found for subform type:', normalizedType, 'Display name:', displayName);
+      return;
+    }
     const form = this.formBuilder.buildSubform(config.sections);
-
+    // Ensure 'conditions' FormArray exists and has at least one group if needed
+    if (form && form.get('conditions') === null) {
+      // Find the section and question for 'conditions'
+      const conditionsSection = config.sections.find(sec => sec.questions && sec.questions.some((q: any) => q.key === 'conditions'));
+      if (conditionsSection) {
+        const conditionsQuestion = conditionsSection.questions.find((q: any) => q.key === 'conditions');
+        if (conditionsQuestion && conditionsQuestion.type === 'conditions-array') {
+          const arr = new FormArray<FormGroup<any>>([]);
+          // Always add at least one group
+          if (conditionsQuestion.item && conditionsQuestion.item.fields) {
+            arr.push(this.formBuilder.buildConditionGroup(conditionsQuestion.item.fields));
+          }
+          form.addControl('conditions', arr);
+        }
+      }
+    }
     // Pre-fill function and job type if provided
     if (functionOfJob) {
       const functionOption = this.functionJobMappingService.getFunctionJobOption(functionOfJob);
       if (functionOption) {
         // Use different field names based on job type
-        if (type === 'box') {
+        if (normalizedType === 'box') {
           form.get('funofbox')?.setValue(functionOfJob);
         } else {
           form.get('funofjob')?.setValue(functionOfJob);
@@ -248,19 +243,18 @@ export class DynamicFormPageComponent implements OnInit {
         form.get('jobtitle')?.setValue(functionOption.jobType);
       }
     }
-
     const instance: SubformInstance = {
-      id: `${type}-${Date.now()}`,
-      type,
+      id: `${normalizedType}-${Date.now()}`,
+      type: normalizedType,
       displayName,
       functionOfJob,
       form,
       sections: config.sections,
       removable
     };
-
     this.subformInstances.push(instance);
     this.updateJobNames();
+    console.debug('Created subform instance:', instance);
   }
 
   // **NEW: Get CMD function options**
@@ -1244,15 +1238,134 @@ private getExplicitlyHandledFieldsForJobType(jobType: string): string[] {
 
   // Helper for stepwise patching of conditions FormArray
   async patchConditionsStepwise(formArray: any, conditions: any[], buildConditionGroup: () => any) {
+    // Always clear the array first
+    while (formArray.length > 0) {
+      formArray.removeAt(0);
+    }
+    // Add enough controls and patch values
     for (let i = 0; i < conditions.length; i++) {
-      while (formArray.length <= i) {
-        formArray.push(buildConditionGroup());
-      }
+      formArray.push(buildConditionGroup());
       formArray.at(i).patchValue(conditions[i]);
       // If not the last, and logic is AND/OR, wait for the next row to appear
       if (i < conditions.length - 1 && (conditions[i].logic === 'and' || conditions[i].logic === 'or')) {
         await new Promise(resolve => setTimeout(resolve, 50));
       }
+    }
+  }
+
+  // Add this method to handle parsed data after configs are loaded
+  private async processParsedData(data: any) {
+    if (data && Array.isArray(data.jobs) && data.jobs.length > 0) {
+      const jobs = data.jobs;
+      this.cmdJobsBySubform = data.cmdJobsBySubform || {};
+      // Patch box subform
+      const boxJob = jobs.find((j: any) => (j.job_type || '').toUpperCase() === 'BOX');
+      const boxInstance = this.subformInstances.find((s: any) => s.type === 'box');
+      const topInstance = this.subformInstances.find((s: any) => s.type === 'top');
+      if (boxJob && boxInstance && topInstance) {
+        Object.keys(boxJob).forEach(key => {
+          if (topInstance.form.get(key)) {
+            topInstance.form.get(key)?.setValue(boxJob[key]);
+          }
+          if (boxInstance.form.get(key)) {
+            boxInstance.form.get(key)?.setValue(boxJob[key]);
+          }
+        });
+      }
+      // --- NEW LOGIC: Create all required subforms first ---
+      const functionJobs = jobs.filter((j: any) => ['CMD','FW','CFW'].includes((j.job_type || '').toUpperCase()));
+      // Remove all existing function subforms before recreating
+      this.subformInstances = this.subformInstances.filter((s: any) => ['top','box'].includes(s.type));
+      // Create all required subforms (one per job)
+      for (const job of functionJobs) {
+        let type = job.job_type.toLowerCase();
+        let subformType = type;
+        if (type === 'cfw') {
+          subformType = 'cfw';
+        } else if (type === 'fw') {
+          subformType = 'fw';
+        } else if (type === 'cmd' && job.subform) {
+          subformType = job.subform.toLowerCase();
+        } else {
+          subformType = 'cmd';
+        }
+        this.addSubformInstance(subformType, job.insert_job, true, job.funofjob);
+      }
+      // --- END NEW LOGIC ---
+      // Now patch the data into each subform
+      const typeIndexMap: { [type: string]: number } = {};
+      for (const job of functionJobs) {
+        let type = job.job_type.toLowerCase();
+        let subformType = type;
+        if (type === 'cfw') {
+          subformType = 'cfw';
+        } else if (type === 'fw') {
+          subformType = 'fw';
+        } else if (type === 'cmd' && job.subform) {
+          subformType = job.subform.toLowerCase();
+        } else {
+          subformType = 'cmd';
+        }
+        const index = typeIndexMap[subformType] || 0;
+        const instance = this.subformInstances.filter((s: any) => s.type === subformType)[index];
+        if (instance) {
+          for (const key of Object.keys(job)) {
+            const control = instance.form.get(key);
+            if (control) {
+              if (
+                key === 'conditions' &&
+                Array.isArray(job[key])
+              ) {
+                if (control && control instanceof FormArray) {
+                  // Remove all controls
+                  while (control.length > 0) {
+                    control.removeAt(0);
+                  }
+                  // Add a group for each item in the data
+                  const section = instance.sections.find((sec: any) => sec.questions.some((q: any) => q.key === 'conditions'));
+                  const question = section?.questions.find((q: any) => q.key === 'conditions');
+                  const fields = question?.item?.fields || [];
+                  for (let i = 0; i < job[key].length; i++) {
+                    control.push(this.formBuilder.buildConditionGroup(fields));
+                    control.at(i).patchValue(job[key][i]);
+                  }
+                }
+              } else if (key === 'conditions' && (!control || !(control instanceof FormArray))) {
+                console.warn(`Skipping patch for 'conditions': control missing or not a FormArray in subform type '${subformType}'`, {
+                  instance,
+                  job,
+                  formKeys: Object.keys(instance.form.controls),
+                  formValue: instance.form.value
+                });
+              } else {
+                if (control) {
+                  // For known dropdown fields, ensure the value is valid
+                  const dropdownFields = ['loadlayer', 'efforttype', 'prodlob', 'loadfreq', 'jobtitle', 'status'];
+                  if (dropdownFields.includes(key)) {
+                    // Get allowed options from question bank (hardcoded for now)
+                    let allowedOptions: string[] = [];
+                    if (key === 'loadlayer') allowedOptions = ['STG', 'STD', 'EXT'];
+                    if (key === 'efforttype') allowedOptions = ['REG', 'BAU'];
+                    if (key === 'prodlob') allowedOptions = ['DEP', 'BCD', 'CRS', 'MTG', 'INV', 'PLN', 'XLOB'];
+                    if (key === 'loadfreq') allowedOptions = ['D', 'W', 'M', 'C'];
+                    if (key === 'jobtitle') allowedOptions = ['fw', 'box', 'cmd', 'cfw'];
+                    if (key === 'status') allowedOptions = ['failure', 'inactive', 'on_hold', 'on_ice', 'on_noexec', 'success', 'terminated'];
+                    let value = job[key];
+                    if (!allowedOptions.includes(value)) {
+                      value = allowedOptions[0] || '';
+                    }
+                    control.setValue(value);
+                  } else {
+                    control.setValue(job[key]);
+                  }
+                }
+              }
+            }
+          }
+        }
+        typeIndexMap[subformType] = index + 1;
+      }
+      // You can now use cmdJobsBySubform for grouped display if needed
     }
   }
 }

@@ -4,6 +4,7 @@ import { ParserConfigService } from '../services/parser-config.service';
 import { MainFormPopulationService } from '../services/main-form-population.service';
 import { Router } from '@angular/router';
 import { FileUploadDialogComponent } from '../components/file-upload-dialog/file-upload-dialog.component';
+import levenshtein from 'js-levenshtein';
 
 @Component({
   selector: 'app-header',
@@ -97,17 +98,42 @@ export class HeaderComponent implements OnInit, OnDestroy {
     Object.keys(this.keyMapping).forEach(k => {
       normalizedMapping[k.trim().toLowerCase()] = this.keyMapping[k];
     });
+    const knownKeys = Object.keys(normalizedMapping);
+
+    // Dedicated CMD subform parsers
+    const cmdParsers: { [key: string]: (lines: string[], normalizedMapping: any, knownKeys: string[]) => any } = {
+      'ext': this.parseExtCmdJob,
+      'ld': this.parseLdCmdJob,
+      'ing': this.parseIngCmdJob,
+      // Add more as needed
+    };
 
     for (const block of blocks) {
       const lines = block.split(/\r?\n/).map(line => line.trim()).filter(line => line);
-      const data: any = {};
+      let data: any = {};
       let i = 0;
+      // Generic parse for job_type
       while (i < lines.length) {
         let delimiterMatch = lines[i].match(/^([^:=]+)\s*[:=]\s*(.+)$/);
         if (delimiterMatch) {
-          const rawKey = delimiterMatch[1].trim().toLowerCase();
-          const mappedKey = normalizedMapping[rawKey] || rawKey;
-          data[mappedKey] = delimiterMatch[2].trim();
+          let rawKey = delimiterMatch[1].trim().toLowerCase();
+          let mappedKey = normalizedMapping[rawKey];
+          if (!mappedKey) {
+            // Fuzzy match fallback for typos
+            let minDist = 3, bestKey = '';
+            for (const k of knownKeys) {
+              const dist = levenshtein(rawKey, k);
+              if (dist < minDist) {
+                minDist = dist;
+                bestKey = k;
+              }
+            }
+            if (minDist <= 2) mappedKey = normalizedMapping[bestKey];
+          }
+          if (!mappedKey) mappedKey = rawKey; // fallback to rawKey
+          // Strip leading/trailing quotes from value
+          let value = delimiterMatch[2].trim().replace(/^['"]+|['"]+$/g, '');
+          data[mappedKey] = value;
           i++;
           continue;
         }
@@ -135,6 +161,12 @@ export class HeaderComponent implements OnInit, OnDestroy {
           }
           if (allowedSubforms.includes(subform)) {
             data['subform'] = subform;
+            // Use dedicated parser if available
+            const parserKey = subform.toLowerCase();
+            if (cmdParsers[parserKey]) {
+              data = cmdParsers[parserKey](lines, normalizedMapping, knownKeys);
+              data['subform'] = subform;
+            }
             if (!cmdJobsBySubform[subform]) cmdJobsBySubform[subform] = [];
             cmdJobsBySubform[subform].push(data);
           }
@@ -155,7 +187,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
       });
       // Map start_times to start_time
       if (data['start_times']) {
-        data['start_time'] = data['start_times'].replace(/['"]+/g, '').trim();
+        data['start_time'] = data['start_times'].replace(/["']+/g, '').trim();
       }
       // Parse condition string into array for conditions field
       if (data['condition']) {
@@ -173,6 +205,16 @@ export class HeaderComponent implements OnInit, OnDestroy {
         }
         data['conditions'] = conds.length ? conds : [{ type: '', job: '', logic: 'NONE' }];
       }
+      // Fill missing required fields with empty string
+      const requiredFields = ['insert_job', 'job_type', 'owner', 'permission', 'description', 'timezone', 'status'];
+      for (const field of requiredFields) {
+        if (!data[field]) {
+          data[field] = '';
+          if (field !== 'owner') {
+            console.warn(`Missing required field: ${field} in job block`, data);
+          }
+        }
+      }
       jobs.push(data);
     }
     this.loading = false;
@@ -182,5 +224,54 @@ export class HeaderComponent implements OnInit, OnDestroy {
     console.log('CMD jobs grouped by subform:', cmdJobsBySubform);
     this.mainFormPopulation.sendParsedData({ jobs, cmdJobsBySubform });
     this.router.navigate(['/dynamic-form']);
+  }
+
+  // Dedicated CMD subform parsers
+  private parseExtCmdJob(lines: string[], normalizedMapping: any, knownKeys: string[]): any {
+    // Custom parsing logic for EXT CMD jobs
+    const data: any = {};
+    lines.forEach(line => {
+      let delimiterMatch = line.match(/^([^:=]+)\s*[:=]\s*(.+)$/);
+      if (delimiterMatch) {
+        let rawKey = delimiterMatch[1].trim().toLowerCase();
+        let mappedKey = normalizedMapping[rawKey] || rawKey;
+        let value = delimiterMatch[2].trim().replace(/^['"]+|['"]+$/g, '');
+        data[mappedKey] = value;
+      }
+    });
+    // Add any EXT-specific logic here
+    return data;
+  }
+
+  private parseLdCmdJob(lines: string[], normalizedMapping: any, knownKeys: string[]): any {
+    // Custom parsing logic for LD CMD jobs
+    const data: any = {};
+    lines.forEach(line => {
+      let delimiterMatch = line.match(/^([^:=]+)\s*[:=]\s*(.+)$/);
+      if (delimiterMatch) {
+        let rawKey = delimiterMatch[1].trim().toLowerCase();
+        let mappedKey = normalizedMapping[rawKey] || rawKey;
+        let value = delimiterMatch[2].trim().replace(/^['"]+|['"]+$/g, '');
+        data[mappedKey] = value;
+      }
+    });
+    // Add any LD-specific logic here
+    return data;
+  }
+
+  private parseIngCmdJob(lines: string[], normalizedMapping: any, knownKeys: string[]): any {
+    // Custom parsing logic for ING CMD jobs
+    const data: any = {};
+    lines.forEach(line => {
+      let delimiterMatch = line.match(/^([^:=]+)\s*[:=]\s*(.+)$/);
+      if (delimiterMatch) {
+        let rawKey = delimiterMatch[1].trim().toLowerCase();
+        let mappedKey = normalizedMapping[rawKey] || rawKey;
+        let value = delimiterMatch[2].trim().replace(/^['"]+|['"]+$/g, '');
+        data[mappedKey] = value;
+      }
+    });
+    // Add any ING-specific logic here
+    return data;
   }
 }
