@@ -1116,3 +1116,48 @@ textarea:focus,
   outline: 2px solid rgba(37, 99, 235, 0.2);
   outline-offset: 2px;
 }
+
+/* ── overall container holding all env columns ───────── */
+.env-config-container {
+  display: flex;
+  flex-wrap: nowrap;        /* prevent wrapping to next line */
+  gap: 1rem;                /* slightly reduce gap */
+  margin-top: 1rem;
+  overflow-x: auto;         /* horizontal scroll if needed */
+}
+
+/* ── a single environment column (dev / prod …) ──────── */
+.env-column {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 200px;          /* reduce min-width from 240px to 200px */
+  min-width: 200px;
+  max-width: 300px;         /* add max-width to prevent too wide columns */
+  gap: 0.15rem;
+  border-left: 3px solid var(--primary-color, #007bff);
+  padding: 0.75rem;         /* reduce padding slightly */
+  background: var(--background-light, #f8f9fa);
+  border-radius: 4px;
+}
+
+/* ── environment column header ──────────────────────── */
+.env-column h4 {
+  margin: 0 0 0.5rem 0;
+  color: var(--primary-color, #007bff);
+  font-size: 1rem;          /* slightly smaller font */
+  font-weight: 600;
+  border-bottom: 1px solid var(--border-color, #dee2e6);
+  padding-bottom: 0.25rem;
+}
+
+/* ── make form fields more compact ──────────────────── */
+.env-field {
+  margin-bottom: 0.15rem;    /* reduce spacing between fields */
+}
+
+.env-field input {
+  font-size: 0.9rem;        /* slightly smaller input text */
+  padding: 0.5rem;          /* reduce input padding */
+}
+
+

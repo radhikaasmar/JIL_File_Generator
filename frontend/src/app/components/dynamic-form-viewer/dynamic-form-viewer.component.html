@@ -49,7 +49,7 @@
                             + Custom Calendar
                           </button>
                         </div>
-                      
+
                         <!-- Validation Error Display -->
                         <div *ngIf="hasValidationError(q.key)" class="validation-error">
                           <small>{{ getValidationErrorMessage(q.key, q) }}</small>
@@ -163,25 +163,48 @@
                   </div>
 
                   <!-- Environments Group -->
-                  <div *ngSwitchCase="'environments-group'">
-                    <div *ngFor="let env of q.environments">
-                      <ng-container *ngIf="isEnvironmentSelected(env.key)">
-                        <h4>{{ env.label }} Environment</h4>
-                        <div *ngFor="let field of env.fields" class="form-field">
-                          <ng-container *ngIf="shouldShowEnvironmentField(env, field)">
-                            <label [ngClass]="{'required': isEnvironmentFieldRequired(env.key, field.key)}">
-                              {{ field.label }}
-                            </label>
-                            <input
-                              [formControlName]="env.key + '_' + field.key"
-                              [placeholder]="field.label"
-                              [readonly]="isFieldReadonly(env.key + '_' + field.key)"
-                              (input)="onFormChange()" />
-                          </ng-container>
-                        </div>
-                      </ng-container>
-                    </div>
-                  </div>
+<div *ngSwitchCase="'environments-group'">
+
+  <!-- show the whole block only if at least one env is selected -->
+  <ng-container *ngIf="hasSelectedEnvironments(q)">
+
+    <div class="env-config-container">
+
+      <!-- one column per selected environment -->
+      <ng-container *ngFor="let env of q.environments">
+        <ng-container *ngIf="isEnvironmentSelected(env.key)">
+
+          <div class="env-column" [attr.data-env]="env.key">
+            <h4>{{ env.label }} Environment</h4>
+
+            <div *ngFor="let field of env.fields" class="form-field env-field">
+              <ng-container *ngIf="shouldShowEnvironmentField(env, field)">
+                <label
+                  [ngClass]="{
+                    required: isEnvironmentFieldRequired(env.key, field.key)
+                  }"
+                >
+                  {{ field.label }}
+                </label>
+
+                <input
+                  [formControlName]="env.key + '_' + field.key"
+                  [placeholder]="field.label"
+                  [readonly]="isFieldReadonly(env.key + '_' + field.key)"
+                  (input)="onFormChange()" />
+              </ng-container>
+            </div>
+          </div>
+
+        </ng-container>
+      </ng-container>
+
+    </div>
+  </ng-container>
+</div>
+
+
+
 
                   <!-- Conditions Array -->
                   <div *ngSwitchCase="'conditions-array'">
