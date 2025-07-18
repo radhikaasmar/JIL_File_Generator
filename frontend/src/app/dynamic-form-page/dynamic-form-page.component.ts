@@ -180,7 +180,40 @@ for (const job of functionJobs) {
   console.log('About to create subform instance...');
 
   try {
-    this.addSubformInstance(subformType, job.insert_job, true, job.funofjob);
+    let displayName: string;
+    const existingInstances = this.subformInstances.filter(
+      instance => instance.type === subformType
+    );
+    const instanceNumber = existingInstances.length + 1;
+
+    if (subformType === 'cmd') {
+      // Extract function from job name or use funofjob
+      const functionName = job.funofjob?.toUpperCase() || 'CMD';
+      
+      // Use existing function job mapping for consistency
+      const functionOption = this.functionJobMappingService.getFunctionJobOption(functionName.toLowerCase());
+      
+      if (functionOption) {
+        // Use the same logic as manual creation
+        const sameTypeInstances = this.subformInstances.filter(
+          instance => instance.functionOfJob === functionOption.value
+        );
+        const typeInstanceNumber = sameTypeInstances.length + 1;
+        displayName = `${functionOption.label.toUpperCase()} #${typeInstanceNumber}`;
+      } else {
+        // Fallback if function not found in mapping
+        displayName = instanceNumber > 1 ? `${functionName} #${instanceNumber}` : functionName;
+      }
+    } else if (subformType === 'fw') {
+      displayName = instanceNumber > 1 ? `FW #${instanceNumber}` : 'FW';
+    } else if (subformType === 'cfw') {
+      displayName = instanceNumber > 1 ? `CFW #${instanceNumber}` : 'CFW';
+    } else {
+      displayName = job.insert_job; // fallback
+    }
+
+    // Use the generated display name instead of job.insert_job
+    this.addSubformInstance(subformType, displayName, true, job.funofjob);
     const instance = this.subformInstances[this.subformInstances.length - 1];
     if (!instance || !instance.form) {
       console.error('Failed to create subform instance for job:', job.insert_job);
