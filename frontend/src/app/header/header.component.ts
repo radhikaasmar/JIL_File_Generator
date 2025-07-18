@@ -190,21 +190,29 @@ export class HeaderComponent implements OnInit, OnDestroy {
         data['start_time'] = data['start_times'].replace(/["']+/g, '').trim();
       }
       // Parse condition string into array for conditions field
-      if (data['condition']) {
-        // Split by AND/OR (case-insensitive), keep logic
-        const conds: any[] = [];
-        const regex = /([a-zA-Z_]+)\(([^)]+)\)(?:\s+(AND|OR)\s+)?/gi;
-        let match;
-        let lastLogic = 'NONE';
-        while ((match = regex.exec(data['condition'])) !== null) {
-          const type = match[1].toLowerCase();
-          const job = match[2];
-          const logic = match[3] ? match[3].toLowerCase() : lastLogic;
-          conds.push({ type, job, logic: logic || 'NONE' });
-          lastLogic = logic || 'NONE';
-        }
-        data['conditions'] = conds.length ? conds : [{ type: '', job: '', logic: 'NONE' }];
+     // Parse condition string into array for conditions field
+    if (data['condition']) {
+      // Split by AND/OR (case-insensitive), keep logic
+      const conds: any[] = [];
+      const regex = /([a-zA-Z_]+)\(([^)]+)\)(?:\s+(AND|OR)\s+)?/gi;
+      let match;
+      
+      while ((match = regex.exec(data['condition'])) !== null) {
+        const type = match[1].toLowerCase();
+        const job = match[2];
+        const nextLogic = match[3] ? match[3].toLowerCase() : 'NONE';
+        
+        conds.push({ type, job, logic: nextLogic });
       }
+      
+      // **FIX: Ensure the last condition always has logic = "NONE"**
+      if (conds.length > 0) {
+        conds[conds.length - 1].logic = 'NONE';
+      }
+      
+      data['conditions'] = conds.length ? conds : [{ type: '', job: '', logic: 'NONE' }];
+    }
+
       // Fill missing required fields with empty string
       const requiredFields = ['insert_job', 'job_type', 'owner', 'permission', 'description', 'timezone', 'status'];
       for (const field of requiredFields) {

@@ -145,93 +145,103 @@ ngOnInit() {
         console.log('Finished patching box job data');
       }
       
-      // Handle CMD/FW/CFW jobs
-      const functionJobs = jobs.filter(j => ['CMD','FW','CFW'].includes((j.job_type || '').toUpperCase()));
-      console.log('Function jobs to process:', functionJobs.length);
-      console.log('Function jobs:', functionJobs.map(j => ({ type: j.job_type, name: j.insert_job })));
-      
-      for (const job of functionJobs) {
-        console.log('=== PROCESSING JOB ===');
-        console.log('Job:', job.insert_job);
-        console.log('Job type:', job.job_type);
-        
-        let type = job.job_type.toLowerCase();
-        let subformType = type;
-        
-        if (type === 'cfw') {
-          subformType = 'cfw';
-        } else if (type === 'fw') {
-          subformType = 'fw';
-        } else {
-          subformType = 'cmd';
-        }
-        
-        console.log('Determined subform type:', subformType);
-        console.log('About to create subform instance...');
-        
+    // Handle CMD/FW/CFW jobs
+const functionJobs = jobs.filter(j => ['CMD','FW','CFW'].includes((j.job_type || '').toUpperCase()));
+console.log('Function jobs to process:', functionJobs.length);
+console.log('Function jobs:', functionJobs.map(j => ({ type: j.job_type, name: j.insert_job })));
+
+for (const job of functionJobs) {
+  console.log('=== PROCESSING JOB ===');
+  console.log('Job:', job.insert_job);
+  console.log('Job type:', job.job_type);
+
+  // Extract missing fields from job name if not present
+  if (job.insert_job && (!job.purpose || !job.loadlayer || !job.funofjob)) {
+    const jobParts = job.insert_job.split('_');
+    if (jobParts.length >= 7) {
+      if (!job.purpose) job.purpose = jobParts[3];
+      if (!job.loadlayer) job.loadlayer = jobParts[5]; 
+      if (!job.funofjob) job.funofjob = jobParts[6].toUpperCase(); // Ensure uppercase
+      if (!job.jobtitle) job.jobtitle = job.job_type?.toLowerCase() || 'cmd';
+    }
+  }
+
+  let type = job.job_type.toLowerCase();
+  let subformType = type;
+  if (type === 'cfw') {
+    subformType = 'cfw';
+  } else if (type === 'fw') {
+    subformType = 'fw';
+  } else {
+    subformType = 'cmd';
+  }
+
+  console.log('Determined subform type:', subformType);
+  console.log('About to create subform instance...');
+
+  try {
+    this.addSubformInstance(subformType, job.insert_job, true, job.funofjob);
+    const instance = this.subformInstances[this.subformInstances.length - 1];
+    if (!instance || !instance.form) {
+      console.error('Failed to create subform instance for job:', job.insert_job);
+      console.error('Instance created:', instance);
+      continue;
+    }
+
+    console.log('Successfully created subform instance:', instance.id);
+    console.log('Instance form controls:', Object.keys(instance.form.controls));
+
+    // Patch the subform with this job's data
+    console.log('Starting to patch job data...');
+    for (const key of Object.keys(job)) {
+      const control = instance.form.get(key);
+      if (control) {
+        console.log(`Patching field: ${key} with value:`, job[key]);
         try {
-          this.addSubformInstance(subformType, job.insert_job, true, job.funofjob);
-          const instance = this.subformInstances[this.subformInstances.length - 1];
-          
-          if (!instance || !instance.form) {
-            console.error('Failed to create subform instance for job:', job.insert_job);
-            console.error('Instance created:', instance);
-            continue;
-          }
-          
-          console.log('Successfully created subform instance:', instance.id);
-          console.log('Instance form controls:', Object.keys(instance.form.controls));
-          
-          // Patch the subform with this job's data
-          console.log('Starting to patch job data...');
-          
-          for (const key of Object.keys(job)) {
-            const control = instance.form.get(key);
-            
-            if (control) {
-              console.log(`Patching field: ${key} with value:`, job[key]);
-              
-              try {
-                if (key === 'conditions' && Array.isArray(job[key]) && control instanceof FormArray) {
-                  console.log('About to patch conditions for job:', job.insert_job);
-                  console.log('Conditions data:', job[key]);
-                  console.log('FormArray before patching:', control);
-                  console.log('FormArray length:', control.length);
-                  
-                  const conditionSection = instance.sections.find(sec => 
-                    sec.questions.some((q: any) => q.key === 'conditions')
-                  );
-                  console.log('Found condition section:', conditionSection);
-                  
-                  if (conditionSection) {
-                    const conditionQuestion = conditionSection.questions.find((q: any) => q.key === 'conditions');
-                    console.log('Found condition question:', conditionQuestion);
-                    
-                    await this.patchConditionsStepwise(control, job[key], () => 
-                      this.formBuilder.buildConditionGroup(conditionQuestion.item.fields)
-                    );
-                  } else {
-                    console.error('No condition section found for job:', job.insert_job);
-                  }
-                } else {
-                  control.setValue(job[key]);
-                  console.log(`Successfully set ${key} to:`, job[key]);
-                }
-              } catch (error) {
-                console.error(`Error patching field ${key} for job ${job.insert_job}:`, error);
-              }
+          if (key === 'conditions' && Array.isArray(job[key]) && control instanceof FormArray) {
+            console.log('About to patch conditions for job:', job.insert_job);
+            console.log('Conditions data:', job[key]);
+            console.log('FormArray before patching:', control);
+            console.log('FormArray length:', control.length);
+
+            const conditionSection = instance.sections.find(sec =>
+              sec.questions.some((q: any) => q.key === 'conditions')
+            );
+            console.log('Found condition section:', conditionSection);
+            if (conditionSection) {
+              const conditionQuestion = conditionSection.questions.find((q: any) => q.key === 'conditions');
+              console.log('Found condition question:', conditionQuestion);
+              await this.patchConditionsStepwise(control, job[key], () =>
+                this.formBuilder.buildConditionGroup(conditionQuestion.item.fields)
+              );
             } else {
-              console.log(`No control found for field: ${key}`);
+              console.error('No condition section found for job:', job.insert_job);
             }
+          } else {
+            // Normalize specific fields that need case conversion
+            let valueToSet = job[key];
+            if (key === 'funofjob' && typeof valueToSet === 'string') {
+              valueToSet = valueToSet.toUpperCase(); // Convert to uppercase to match dropdown
+            }
+            
+            control.setValue(valueToSet);
+            console.log(`Successfully set ${key} to:`, valueToSet);
           }
-          
-          console.log('Finished patching job:', job.insert_job);
-          
         } catch (error) {
-          console.error('Error processing job:', job.insert_job, error);
-          continue;
+          console.error(`Error patching field ${key} for job ${job.insert_job}:`, error);
         }
+      } else {
+        console.log(`No control found for field: ${key}`);
       }
+    }
+    console.log('Finished patching job:', job.insert_job);
+  } catch (error) {
+    console.error('Error processing job:', job.insert_job, error);
+    continue;
+  }
+}
+
+
       
       console.log('=== FINISHED PROCESSING ALL JOBS ===');
       console.log('Final subform instances:', this.subformInstances.map(i => ({ id: i.id, type: i.type })));
